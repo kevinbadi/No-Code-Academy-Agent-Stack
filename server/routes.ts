@@ -123,12 +123,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const data = await storage.createLinkedinAgentLeads({
         timestamp: new Date(req.body.timestamp || new Date()),
-        invitesSent: req.body.invitesSent,
-        invitesAccepted: req.body.invitesAccepted,
-        dailyLimit: req.body.dailyLimit,
-        profilesProcessed: req.body.profilesProcessed,
+        dailySent: req.body.dailySent,
+        dailyAccepted: req.body.dailyAccepted,
+        totalSent: req.body.totalSent,
+        totalAccepted: req.body.totalAccepted,
+        processedProfiles: req.body.processedProfiles,
+        maxInvitations: req.body.maxInvitations,
+        status: req.body.status,
+        csvLink: req.body.csvLink,
+        jsonLink: req.body.jsonLink,
+        connectionStatus: req.body.connectionStatus,
         rawLog: req.body.rawLog,
-        additionalData: req.body.additionalData
+        processData: req.body.processData
       });
       
       res.status(201).json(data);
