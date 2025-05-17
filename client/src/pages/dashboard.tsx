@@ -129,17 +129,7 @@ export default function Dashboard() {
           </div>
         </div>
         
-        {/* Error Alert */}
-        {metricsError && (
-          <Card className="mb-8 border-red-200 bg-red-50">
-            <CardContent className="p-4 flex items-center">
-              <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
-              <p className="text-red-700">
-                Failed to load metrics: {metricsError instanceof Error ? metricsError.message : "Unknown error"}
-              </p>
-            </CardContent>
-          </Card>
-        )}
+        {/* Error handling moved to individual components */}
         
         {/* Loading overlay */}
         {isLoading && (
