@@ -1,4 +1,9 @@
-import { User, InsertUser, Metric, InsertMetric, Activity, InsertActivity } from "@shared/schema";
+import { 
+  User, InsertUser, 
+  Metric, InsertMetric, 
+  Activity, InsertActivity,
+  LinkedinAgentLeads, InsertLinkedinAgentLeads
+} from "@shared/schema";
 
 // Interface for storage operations
 export interface IStorage {
@@ -15,25 +20,34 @@ export interface IStorage {
   // Activities
   getActivities(limit?: number): Promise<Activity[]>;
   createActivity(activity: InsertActivity): Promise<Activity>;
+  
+  // LinkedIn Agent Leads
+  getLinkedinAgentLeads(limit?: number): Promise<LinkedinAgentLeads[]>;
+  getLatestLinkedinAgentLeads(): Promise<LinkedinAgentLeads | undefined>;
+  createLinkedinAgentLeads(data: InsertLinkedinAgentLeads): Promise<LinkedinAgentLeads>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private metrics: Map<number, Metric>;
   private activities: Map<number, Activity>;
+  private linkedinAgentLeads: Map<number, LinkedinAgentLeads>;
   
   userCurrentId: number;
   metricCurrentId: number;
   activityCurrentId: number;
+  linkedinAgentLeadsCurrentId: number;
 
   constructor() {
     this.users = new Map();
     this.metrics = new Map();
     this.activities = new Map();
+    this.linkedinAgentLeads = new Map();
     
     this.userCurrentId = 1;
     this.metricCurrentId = 1;
     this.activityCurrentId = 1;
+    this.linkedinAgentLeadsCurrentId = 1;
     
     // Initialize with some sample metrics
     const today = new Date();
@@ -148,6 +162,34 @@ export class MemStorage implements IStorage {
     };
     this.activities.set(id, activity);
     return activity;
+  }
+  
+  // LinkedIn Agent Leads methods
+  async getLinkedinAgentLeads(limit?: number): Promise<LinkedinAgentLeads[]> {
+    const leads = Array.from(this.linkedinAgentLeads.values())
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    
+    return limit ? leads.slice(0, limit) : leads;
+  }
+  
+  async getLatestLinkedinAgentLeads(): Promise<LinkedinAgentLeads | undefined> {
+    const leads = await this.getLinkedinAgentLeads(1);
+    return leads.length > 0 ? leads[0] : undefined;
+  }
+  
+  async createLinkedinAgentLeads(data: InsertLinkedinAgentLeads): Promise<LinkedinAgentLeads> {
+    const id = this.linkedinAgentLeadsCurrentId++;
+    // Ensure timestamp is set
+    const timestamp = data.timestamp || new Date();
+    
+    const leads: LinkedinAgentLeads = {
+      ...data,
+      id,
+      timestamp
+    };
+    
+    this.linkedinAgentLeads.set(id, leads);
+    return leads;
   }
 }
 

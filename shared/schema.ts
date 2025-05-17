@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, timestamp, real } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, real, json } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -54,3 +54,22 @@ export const insertActivitySchema = createInsertSchema(activities).omit({
 
 export type InsertActivity = z.infer<typeof insertActivitySchema>;
 export type Activity = typeof activities.$inferSelect;
+
+// LinkedIn Agent Data Schema - stores detailed webhook response data
+export const linkedinAgentLeads = pgTable("linkedin_agent_leads", {
+  id: serial("id").primaryKey(),
+  timestamp: timestamp("timestamp").notNull().defaultNow(),
+  invitesSent: integer("invites_sent").notNull(),
+  invitesAccepted: integer("invites_accepted").notNull(),
+  dailyLimit: integer("daily_limit"),
+  profilesProcessed: integer("profiles_processed"),
+  rawLog: text("raw_log"),
+  additionalData: json("additional_data")
+});
+
+export const insertLinkedinAgentLeadsSchema = createInsertSchema(linkedinAgentLeads).omit({
+  id: true
+});
+
+export type InsertLinkedinAgentLeads = z.infer<typeof insertLinkedinAgentLeadsSchema>;
+export type LinkedinAgentLeads = typeof linkedinAgentLeads.$inferSelect;
