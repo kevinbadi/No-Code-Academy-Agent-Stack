@@ -1,0 +1,38 @@
+[vite] connecting...
+[vite] connected.
+Warning: validateDOMNesting(...): <a> cannot appear as a descendant of &lt;a&gt;.
+    at a
+    at a
+    at https://39b04a57-4ae1-4f1d-9b55-4c18773af83d-00-28y2zvzq46w5r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=20070371:337:18
+    at NavItem (https://39b04a57-4ae1-4f1d-9b55-4c18773af83d-00-28y2zvzq46w5r.kirk.replit.dev/src/components/sidebar.tsx:33:20)
+    at div
+    at nav
+    at aside
+    at Sidebar (https://39b04a57-4ae1-4f1d-9b55-4c18773af83d-00-28y2zvzq46w5r.kirk.replit.dev/src/components/sidebar.tsx:61:22)
+    at div
+    at Dashboard (https://39b04a57-4ae1-4f1d-9b55-4c18773af83d-00-28y2zvzq46w5r.kirk.replit.dev/src/pages/dashboard.tsx?t=1747517083450:35:37)
+    at Route (https://39b04a57-4ae1-4f1d-9b55-4c18773af83d-00-28y2zvzq46w5r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=20070371:323:16)
+    at Switch (https://39b04a57-4ae1-4f1d-9b55-4c18773af83d-00-28y2zvzq46w5r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=20070371:379:17)
+    at Router
+    at Provider (https://39b04a57-4ae1-4f1d-9b55-4c18773af83d-00-28y2zvzq46w5r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-QH6QJCMS.js?v=0f0c020c:39:15)
+    at TooltipProvider (https://39b04a57-4ae1-4f1d-9b55-4c18773af83d-00-28y2zvzq46w5r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca37810:50:5)
+    at QueryClientProvider (https://39b04a57-4ae1-4f1d-9b55-4c18773af83d-00-28y2zvzq46w5r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=0e8ac128:2805:3)
+    at App
+[vite] hot updated: /src/components/webhook-status.tsx
+[vite] hot updated: /src/index.css?v=n5iMGpHH2NYmt4bS9YRT1
+useState is not defined
+useState is not defined
+The above error occurred in the <WebhookStatus> component:
+
+    at WebhookStatus (https://39b04a57-4ae1-4f1d-9b55-4c18773af83d-00-28y2zvzq46w5r.kirk.replit.dev/src/components/webhook-status.tsx?t=1747517263022:26:21)
+    at div
+    at main
+    at div
+    at Dashboard (https://39b04a57-4ae1-4f1d-9b55-4c18773af83d-00-28y2zvzq46w5r.kirk.replit.dev/src/pages/dashboard.tsx?t=1747517083450:35:37)
+    at Route (https://39b04a57-4ae1-4f1d-9b55-4c18773af83d-00-28y2zvzq46w5r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=20070371:323:16)
+    at Switch (https://39b04a57-4ae1-4f1d-9b55-4c18773af83d-00-28y2zvzq46w5r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=20070371:379:17)
+    at Router
+    at Provider (https://39b04a57-4ae1-4f1d-9b55-4c18773af83d-00-28y2zvzq46w5r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-QH6QJCMS.js?v=0f0c020c:39:15)
+    at TooltipProvider (https://39b04a57-4ae1-4f1d-9b55-4c18773af83d-00-28y2zvzq46w5r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca37810:50:5)
+    at QueryClientProvider (https://39b04a57-4ae1-4f1d-9b55-4c18773af83d-00-28y2zvzq46w5r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=0e8ac128:2805:3)
+    at App
