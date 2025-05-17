@@ -13,24 +13,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Triggering Make.com webhook:", webhookUrl);
       
-      // Start a non-blocking webhook call
-      // We don't await this since it may time out
+      // Simplified webhook call with just the request_results parameter
       fetch(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          source: "dashboard",
-          timestamp: new Date().toISOString()
-        }),
-        // Set a short timeout since we don't need to wait for it
-        signal: AbortSignal.timeout(5000)
+          request_results: true
+        })
       }).then(response => {
         console.log("Webhook response status:", response.status, response.statusText);
       }).catch(err => {
-        // This is expected as the webhook may take time to process
-        console.log("Webhook triggered (response may be delayed):", err.message);
+        console.log("Webhook error:", err.message);
       });
       
       // Log activity
