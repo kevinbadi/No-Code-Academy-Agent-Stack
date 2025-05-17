@@ -7,6 +7,7 @@ type IconType = "paper-plane" | "user-check" | "percentage";
 interface MetricCardProps {
   title: string;
   value: number | string;
+  debugData?: any; // Optional debug data
   suffix?: string;
   icon: IconType;
   change: number;
