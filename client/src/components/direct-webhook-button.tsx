@@ -31,21 +31,70 @@ export default function DirectWebhookButton() {
       let invitesSent, invitesAccepted;
       
       try {
-        // Try to parse the response as JSON
+        // The response is a text log, not JSON
         if (responseText && responseText.trim()) {
-          const webhookData = JSON.parse(responseText);
-          console.log("Parsed webhook data:", webhookData);
+          console.log("Processing text response");
           
-          // If the webhook returns the metrics data, use it
-          if (webhookData && typeof webhookData === 'object') {
-            invitesSent = webhookData.invitesSent || webhookData.invites_sent;
-            invitesAccepted = webhookData.invitesAccepted || webhookData.invites_accepted;
+          // Split the response into lines
+          const lines = responseText.split('\n');
+          
+          // Extract metrics from specific lines and store additional data
+          const metricsData: Record<string, string> = {};
+          
+          // Process the lines and extract information
+          for (const line of lines) {
+            // Line 14: Daily invitation limit
+            if (line.includes("Sending at most")) {
+              const match = line.match(/Sending at most (\d+) invitations per day/);
+              if (match && match[1]) {
+                metricsData.dailyLimit = match[1];
+                console.log("Found daily limit:", metricsData.dailyLimit);
+              }
+            }
             
-            console.log("Using webhook data:", { invitesSent, invitesAccepted });
+            // Line 15: Profiles processed today
+            if (line.includes("profiles processed today")) {
+              const match = line.match(/Already (\d+) profiles processed today/);
+              if (match && match[1]) {
+                metricsData.profilesProcessed = match[1];
+                console.log("Found profiles processed:", metricsData.profilesProcessed);
+              }
+            }
+            
+            // Line 19: Invitations sent
+            if (line.includes("invitations have been sent")) {
+              const match = line.match(/(\d+)\s+invitations have been sent/);
+              if (match && match[1]) {
+                invitesSent = parseInt(match[1], 10);
+                metricsData.invitesSent = match[1];
+                console.log("Found invites sent:", invitesSent);
+              }
+            }
+            
+            // Line 20: Profiles accepted
+            if (line.includes("has accepted your request") || line.includes("have accepted your request")) {
+              const matchSingular = line.match(/(\d+)\s+profile has accepted/);
+              const matchPlural = line.match(/(\d+)\s+profiles have accepted/);
+              const match = matchSingular || matchPlural;
+              
+              if (match && match[1]) {
+                invitesAccepted = parseInt(match[1], 10);
+                metricsData.invitesAccepted = match[1];
+                console.log("Found invites accepted:", invitesAccepted);
+              }
+            }
           }
+          
+          // Also store the complete log for reference
+          metricsData.rawLog = responseText;
+          
+          console.log("Extracted webhook metrics:", metricsData);
+          
+          // Store the additional data in local storage for debugging
+          localStorage.setItem('lastWebhookData', JSON.stringify(metricsData));
         }
       } catch (parseError) {
-        console.error("Error parsing webhook response:", parseError);
+        console.error("Error processing webhook response:", parseError);
       }
       
       // If no valid metrics data was found in the response, generate random data
