@@ -5,7 +5,9 @@ import { webhookPayloadSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 
-export async function registerRoutes(app: Express): Promise<Server> {
+export async function registerRoutes(app: Express, existingServer?: Server): Promise<Server> {
+  // Create a new HTTP server if one wasn't provided
+  const server = existingServer || new Server(app);
   // Trigger external webhook to get real agent data
   app.post("/api/trigger-agent-webhook", async (req: Request, res: Response) => {
     try {

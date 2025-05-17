@@ -2,15 +2,13 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import * as process from "process";
 import { createServer } from "http";
 
-// Create a new Express application
+// Create Express application
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
-// Create HTTP server explicitly
-const httpServer = createServer(app);
 
 // Middleware for logging API calls
 app.use((req, res, next) => {
@@ -43,6 +41,63 @@ app.use((req, res, next) => {
   next();
 });
 
+// Start the server directly without using workflows
+import http from 'http';
+import { storage } from "./storage";
+import { webhookPayloadSchema } from "@shared/schema";
+import { ZodError } from "zod";
+import { fromZodError } from "zod-validation-error";
+
+const PORT = 8888; // Try a completely different port
+
+// Create HTTP server
+const server = http.createServer(app);
+
+// API Routes
+app.get('/api/metrics', async (req, res) => {
+  try {
+    const metrics = await storage.getMetrics();
+    res.json(metrics);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get metrics' });
+  }
+});
+
+app.get('/api/activities', async (req, res) => {
+  try {
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 5;
+    const activities = await storage.getActivities(limit);
+    res.json(activities);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get activities' });
+  }
+});
+
+app.post('/api/linkedin-agent-leads', async (req, res) => {
+  try {
+    const data = await storage.createLinkedinAgentLeads({
+      timestamp: new Date(req.body.timestamp || new Date()),
+      dailySent: req.body.dailySent,
+      dailyAccepted: req.body.dailyAccepted,
+      totalSent: req.body.totalSent,
+      totalAccepted: req.body.totalAccepted,
+      processedProfiles: req.body.processedProfiles,
+      maxInvitations: req.body.maxInvitations,
+      status: req.body.status,
+      csvLink: req.body.csvLink,
+      jsonLink: req.body.jsonLink,
+      connectionStatus: req.body.connectionStatus,
+      rawLog: req.body.rawLog,
+      processData: req.body.processData
+    });
+    
+    res.status(201).json(data);
+  } catch (error) {
+    console.error("Error creating LinkedIn agent leads data:", error);
+    res.status(500).json({ message: "Failed to create LinkedIn agent leads data" });
+  }
+});
+
 // Error handling middleware
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   const status = err.status || err.statusCode || 500;
@@ -50,29 +105,18 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   res.status(status).json({ message });
 });
 
-// IIFE to start the server
-(async () => {
-  try {
-    // Register routes passing the HTTP server for websockets
-    await registerRoutes(app, httpServer);
-    
-    // Setup Vite or static files
-    if (app.get("env") === "development") {
-      await setupVite(app, httpServer);
-    } else {
-      serveStatic(app);
-    }
+// Setup Vite
+if (app.get("env") === "development") {
+  setupVite(app, server).then(() => {
+    console.log("Vite setup complete");
+  }).catch(err => {
+    console.error("Vite setup error:", err);
+  });
+} else {
+  serveStatic(app);
+}
 
-    // Try port 4444 instead of 5000/3333
-    const port = 4444;
-    
-    // Start the HTTP server
-    httpServer.listen(port, "0.0.0.0", () => {
-      log(`Server running on port ${port}`);
-    });
-    
-  } catch (error) {
-    console.error("Server initialization error:", error);
-    process.exit(1);
-  }
-})();
+// Start server on PORT
+server.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on port ${PORT}`);
+});
