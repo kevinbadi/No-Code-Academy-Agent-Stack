@@ -4,6 +4,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import * as process from "process";
 import { createServer } from "http";
+import { initializeScheduler } from "./scheduler";
 
 // Create Express application
 const app = express();
@@ -119,4 +120,8 @@ if (app.get("env") === "development") {
 // Start server on PORT
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
+  
+  // Initialize the scheduler to automatically trigger the LinkedIn agent webhook
+  initializeScheduler();
+  console.log("Webhook scheduler started - LinkedIn agent will be triggered automatically");
 });
