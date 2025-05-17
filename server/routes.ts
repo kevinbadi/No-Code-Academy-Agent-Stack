@@ -6,6 +6,48 @@ import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Trigger external webhook to get real agent data
+  app.post("/api/trigger-agent-webhook", async (req: Request, res: Response) => {
+    try {
+      const webhookUrl = "https://hook.us2.make.com/8j6hpulng3f8obvebciva6kzpg6kyydx";
+      
+      console.log("Triggering external webhook:", webhookUrl);
+      
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          source: "dashboard",
+          timestamp: new Date().toISOString()
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Webhook response error: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log("Webhook response:", data);
+      
+      // Create activity log for the webhook call
+      await storage.createActivity({
+        timestamp: new Date(),
+        type: "agent",
+        message: "External LinkedIn agent webhook triggered"
+      });
+      
+      res.json({ success: true, data });
+    } catch (error) {
+      console.error("Error triggering webhook:", error);
+      res.status(500).json({ 
+        message: "Failed to trigger webhook", 
+        error: error instanceof Error ? error.message : "Unknown error" 
+      });
+    }
+  });
+  
   // Route to get all metrics
   app.get("/api/metrics", async (req: Request, res: Response) => {
     try {

@@ -115,9 +115,13 @@ export class MemStorage implements IStorage {
     // Calculate acceptance ratio
     const acceptanceRatio = insertMetric.invitesAccepted / insertMetric.invitesSent * 100;
     
+    // Ensure date is set
+    const date = insertMetric.date || new Date();
+    
     const metric: Metric = { 
       ...insertMetric, 
       id,
+      date,
       acceptanceRatio
     };
     
@@ -134,7 +138,14 @@ export class MemStorage implements IStorage {
   
   async createActivity(insertActivity: InsertActivity): Promise<Activity> {
     const id = this.activityCurrentId++;
-    const activity: Activity = { ...insertActivity, id };
+    // Ensure timestamp is set
+    const timestamp = insertActivity.timestamp || new Date();
+    
+    const activity: Activity = { 
+      ...insertActivity, 
+      id,
+      timestamp 
+    };
     this.activities.set(id, activity);
     return activity;
   }

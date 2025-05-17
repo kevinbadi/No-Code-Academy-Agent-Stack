@@ -51,3 +51,29 @@ export function useRefreshData() {
     },
   });
 }
+
+// Hook to trigger the external agent webhook
+export function useTriggerAgentWebhook() {
+  return useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/trigger-agent-webhook", {});
+      return res.json();
+    },
+    onSuccess: (data) => {
+      // Invalidate all queries to refresh data with the real agent data
+      queryClient.invalidateQueries({ queryKey: ['/api/metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/metrics/latest'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/activities'] });
+      
+      // Invalidate all metrics range queries
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const queryKey = query.queryKey[0];
+          return typeof queryKey === 'string' && queryKey.startsWith('/api/metrics/range');
+        },
+      });
+      
+      return data;
+    },
+  });
+}
