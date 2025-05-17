@@ -56,19 +56,17 @@ export function useRefreshData() {
 export function useTriggerAgentWebhook() {
   return useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/trigger-agent-webhook", {});
-      return res.json();
+      // Using the correct apiRequest format
+      return await apiRequest('/api/trigger-agent-webhook', {
+        method: 'POST',
+      });
     },
     onSuccess: (data) => {
-      // Process webhook response data as needed
-      // Only create a new metric if the webhook provided valid data
-      if (data?.data?.invitesSent && data?.data?.invitesAccepted) {
-        // Create a new metric with the webhook data and display it
-        console.log("Successfully received webhook data:", data.data);
-      }
+      console.log("Webhook triggered successfully:", data);
       
-      // Invalidate queries to refresh data
+      // Invalidate all relevant queries to refresh the dashboard
       queryClient.invalidateQueries({ queryKey: ['/api/metrics/latest'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/metrics/range'] });
       queryClient.invalidateQueries({ queryKey: ['/api/activities'] });
       
       return data;
