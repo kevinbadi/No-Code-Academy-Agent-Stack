@@ -46,10 +46,13 @@ export const activities = pgTable("activities", {
   timestamp: timestamp("timestamp").notNull().defaultNow(),
   type: text("type").notNull(),
   message: text("message").notNull(),
+  metadata: json("metadata")
 });
 
 export const insertActivitySchema = createInsertSchema(activities).omit({
   id: true,
+}).extend({
+  metadata: z.record(z.unknown()).optional()
 });
 
 export type InsertActivity = z.infer<typeof insertActivitySchema>;
