@@ -56,10 +56,17 @@ export function useRefreshData() {
 export function useTriggerAgentWebhook() {
   return useMutation({
     mutationFn: async () => {
-      // Using the correct apiRequest format
-      return await apiRequest('/api/trigger-agent-webhook', {
-        method: 'POST',
+      const response = await fetch("/api/trigger-agent-webhook", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({})
       });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to trigger webhook: ${response.status}`);
+      }
+      
+      return await response.json();
     },
     onSuccess: (data) => {
       console.log("Webhook triggered successfully:", data);
@@ -68,8 +75,6 @@ export function useTriggerAgentWebhook() {
       queryClient.invalidateQueries({ queryKey: ['/api/metrics/latest'] });
       queryClient.invalidateQueries({ queryKey: ['/api/metrics/range'] });
       queryClient.invalidateQueries({ queryKey: ['/api/activities'] });
-      
-      return data;
     },
   });
 }
