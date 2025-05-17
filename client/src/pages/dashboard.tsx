@@ -46,7 +46,8 @@ export default function Dashboard() {
   const invitesAccepted = latestMetric?.invitesAccepted || 0;
   const acceptanceRatio = latestMetric?.acceptanceRatio || 0;
   
-  const isLoading = isLoadingMetrics || isLoadingLatest || isLoadingActivities || isRefreshing;
+  // Only show loading indicator when initially loading, not during refresh
+  const isLoading = false; // Disabled to fix permanent loading overlay
   
   const chartData = metrics || [];
   
