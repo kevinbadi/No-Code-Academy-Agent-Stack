@@ -59,12 +59,26 @@ export type Activity = typeof activities.$inferSelect;
 export const linkedinAgentLeads = pgTable("linkedin_agent_leads", {
   id: serial("id").primaryKey(),
   timestamp: timestamp("timestamp").notNull().defaultNow(),
-  invitesSent: integer("invites_sent").notNull(),
-  invitesAccepted: integer("invites_accepted").notNull(),
-  dailyLimit: integer("daily_limit"),
-  profilesProcessed: integer("profiles_processed"),
+  
+  // Day summary data
+  dailySent: integer("daily_sent").notNull(),
+  dailyAccepted: integer("daily_accepted").notNull(),
+  processedProfiles: integer("processed_profiles"),
+  maxInvitations: integer("max_invitations"),
+  
+  // Total summary data
+  totalSent: integer("total_sent").notNull(),
+  totalAccepted: integer("total_accepted").notNull(),
+  status: text("status"),
+  
+  // Links to data files
+  csvLink: text("csv_link"),
+  jsonLink: text("json_link"),
+  connectionStatus: text("connection_status"),
+  
+  // Raw data for reference
   rawLog: text("raw_log"),
-  additionalData: json("additional_data")
+  processData: json("process_data")
 });
 
 export const insertLinkedinAgentLeadsSchema = createInsertSchema(linkedinAgentLeads).omit({
