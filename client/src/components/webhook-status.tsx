@@ -10,7 +10,7 @@ export default function WebhookStatus() {
   const { data: latestMetric } = useLatestMetric();
   const { mutate: triggerWebhook, isPending: isTriggering } = useTriggerAgentWebhook();
   
-  const webhookUrl = "https://hook.us2.make.com/8j6hpulng3f8obvebciva6kzpg6kyydx";
+  const webhookUrl = "https://hook.us2.make.com/w2b6ubph0j3rxcfd1kj3c3twmamrqico";
   
   const copyWebhookUrl = () => {
     navigator.clipboard.writeText(webhookUrl);
