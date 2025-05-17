@@ -1,10 +1,10 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Copy, CheckCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLatestMetric, useLatestLinkedinAgentLeads } from "@/hooks/use-metrics";
 import { formatDateTime } from "@/lib/date-utils";
 import DirectWebhookButton from "./direct-webhook-button";
-import ServerAutomationButton from "./server-automation-button";
 
 export default function WebhookStatus() {
   const { toast } = useToast();
@@ -121,8 +121,37 @@ export default function WebhookStatus() {
               Direct webhook call to the Make.com automation
             </div>
             
-            {/* Add the new server-side automation button */}
-            <ServerAutomationButton />
+            {/* Add a server-side automation button */}
+            <button 
+              onClick={async () => {
+                try {
+                  const response = await fetch('/api/trigger-agent-webhook', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                  });
+                  
+                  const result = await response.json();
+                  
+                  toast({
+                    title: "Automation Triggered",
+                    description: "LinkedIn agent automation triggered successfully",
+                  });
+                  
+                  // Refresh the page to get updated data
+                  setTimeout(() => window.location.reload(), 1000);
+                } catch (error) {
+                  console.error("Error calling server automation:", error);
+                  toast({
+                    title: "Automation Error",
+                    description: "Failed to trigger LinkedIn agent automation",
+                    variant: "destructive",
+                  });
+                }
+              }}
+              className="w-full py-3 font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-md"
+            >
+              Run LinkedIn Agent (Server)
+            </button>
             <div className="text-xs text-gray-500 text-center">
               Server-side call to the automation with enhanced error handling
             </div>
