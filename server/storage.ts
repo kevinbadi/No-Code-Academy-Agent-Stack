@@ -2,7 +2,8 @@ import {
   User, InsertUser, 
   Metric, InsertMetric, 
   Activity, InsertActivity,
-  LinkedinAgentLeads, InsertLinkedinAgentLeads
+  LinkedinAgentLeads, InsertLinkedinAgentLeads,
+  users, metrics, activities, linkedinAgentLeads
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql } from "drizzle-orm";

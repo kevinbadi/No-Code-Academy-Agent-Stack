@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { webhookPayloadSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
+import { dbStorage } from "./db-storage";
 
 export async function registerRoutes(app: Express, existingServer?: Server): Promise<Server> {
   // Create a new HTTP server if one wasn't provided
@@ -172,40 +173,136 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
   // Webhook endpoint for LinkedIn agent to report KPI data
   app.post("/api/webhook/linkedin-agent/kpi", async (req: Request, res: Response) => {
     try {
-      // Validate the webhook payload
-      const result = webhookPayloadSchema.safeParse(req.body);
+      console.log("Received webhook payload:", JSON.stringify(req.body, null, 2));
       
-      if (!result.success) {
-        const validationError = fromZodError(result.error);
-        console.error("Invalid webhook payload:", validationError);
-        return res.status(400).json({ 
-          message: "Invalid webhook payload", 
-          errors: validationError.details 
+      // Check for the invite_summaryCollection structure
+      const inviteSummary = req.body.invite_summaryCollection;
+      
+      if (inviteSummary) {
+        console.log("Processing text response");
+        console.log("Webhook response parsed as JSON:", inviteSummary);
+        
+        // Extract day collection data
+        const dayCollection = inviteSummary.dayCollection || {};
+        console.log("Day collection data:", dayCollection);
+        
+        // Extract total collection data
+        const totalCollection = inviteSummary.totalCollection || {};
+        console.log("Total collection data:", totalCollection);
+        
+        // Extract links collection data
+        const linksCollection = inviteSummary.linksCollection || {};
+        console.log("Links collection data:", linksCollection);
+        
+        // Extract connection status
+        const connectionStatus = inviteSummary.connection || "";
+        
+        console.log("Successfully parsed webhook JSON data");
+        
+        // Create data object for database insertion
+        const extractedData = {
+          invitesSent: dayCollection.sent || 0,
+          invitesAccepted: dayCollection.accepted || 0,
+          dailySent: dayCollection.sent || 0,
+          dailyAccepted: dayCollection.accepted || 0,
+          totalSent: totalCollection.sent || 0,
+          totalAccepted: totalCollection.accepted || 0,
+          maxInvitations: dayCollection.max_invitations || 0,
+          processedProfiles: dayCollection.processed_profiles || 0,
+          status: totalCollection.status || "",
+          csvLink: linksCollection.csv || "",
+          jsonLink: linksCollection.json || "",
+          connectionStatus: connectionStatus,
+          rawLog: JSON.stringify(req.body, null, 2)
+        };
+        
+        console.log("Final extracted webhook data:", extractedData);
+        
+        try {
+          // 1. Create a new metric from the webhook data
+          const metric = await storage.createMetric({
+            date: new Date(),
+            invitesSent: extractedData.invitesSent,
+            invitesAccepted: extractedData.invitesAccepted
+          });
+          
+          // 2. Create activity log for the webhook
+          await storage.createActivity({
+            timestamp: new Date(),
+            type: "agent",
+            message: `LinkedIn agent reported ${extractedData.invitesSent} invites sent and ${extractedData.invitesAccepted} accepted`
+          });
+          
+          // 3. Store the LinkedIn agent leads data directly in the database using our specialized storage
+          const leadsData = await dbStorage.createLinkedinAgentLeads({
+            timestamp: new Date(),
+            dailySent: extractedData.dailySent,
+            dailyAccepted: extractedData.dailyAccepted,
+            totalSent: extractedData.totalSent,
+            totalAccepted: extractedData.totalAccepted,
+            maxInvitations: extractedData.maxInvitations,
+            processedProfiles: extractedData.processedProfiles,
+            status: extractedData.status,
+            csvLink: extractedData.csvLink,
+            jsonLink: extractedData.jsonLink,
+            connectionStatus: extractedData.connectionStatus,
+            rawLog: extractedData.rawLog,
+            processData: {}
+          });
+          
+          console.log("Successfully inserted LinkedIn agent leads data:", leadsData);
+          
+          return res.status(201).json({ 
+            success: true, 
+            message: "Webhook data processed successfully",
+            data: {
+              metric,
+              leads: leadsData
+            }
+          });
+        } catch (dbError) {
+          console.error("Database error storing webhook data:", dbError);
+          return res.status(500).json({ 
+            message: "Database error storing webhook data", 
+            error: dbError instanceof Error ? dbError.message : "Unknown database error" 
+          });
+        }
+      } else {
+        // Fall back to the standard webhook payload schema
+        const result = webhookPayloadSchema.safeParse(req.body);
+        
+        if (!result.success) {
+          const validationError = fromZodError(result.error);
+          console.error("Invalid webhook payload:", validationError);
+          return res.status(400).json({ 
+            message: "Invalid webhook payload format", 
+            errors: validationError.details 
+          });
+        }
+        
+        const payload = result.data;
+        
+        // Create a new metric from the webhook data
+        const metric = await storage.createMetric({
+          date: new Date(),
+          invitesSent: payload.invitesSent,
+          invitesAccepted: payload.invitesAccepted
         });
+        
+        // Create activity log for the webhook
+        await storage.createActivity({
+          timestamp: new Date(),
+          type: "agent",
+          message: `LinkedIn agent reported ${payload.invitesSent} invites sent and ${payload.invitesAccepted} accepted`
+        });
+        
+        console.log("Created metric from webhook:", metric);
+        
+        return res.status(201).json({ success: true, data: metric });
       }
-      
-      const payload = result.data;
-      
-      // Create a new metric from the webhook data
-      const metric = await storage.createMetric({
-        date: new Date(),
-        invitesSent: payload.invitesSent,
-        invitesAccepted: payload.invitesAccepted
-      });
-      
-      // Create activity log for the webhook
-      await storage.createActivity({
-        timestamp: new Date(),
-        type: "agent",
-        message: `LinkedIn agent reported ${payload.invitesSent} invites sent and ${payload.invitesAccepted} accepted`
-      });
-      
-      console.log("Created metric from webhook:", metric);
-      
-      res.status(201).json({ success: true, data: metric });
     } catch (error) {
       console.error("Error processing webhook:", error);
-      res.status(500).json({ 
+      return res.status(500).json({ 
         message: "Failed to process webhook", 
         error: error instanceof Error ? error.message : "Unknown error" 
       });
@@ -273,7 +370,10 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
     res.status(500).json({ message: "Internal server error", error: err.message });
   });
   
-  // Start the server
-  const server = app.listen(0);
-  return server;
+  // Start the server if it wasn't provided
+  if (!existingServer) {
+    return app.listen(0);
+  }
+  
+  return existingServer;
 }
