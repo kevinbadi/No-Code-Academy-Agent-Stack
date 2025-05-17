@@ -175,6 +175,57 @@ export default function Dashboard() {
           />
         </div>
         
+        {/* Today's Stats Section */}
+        <h3 className="text-xl font-semibold text-gray-800 mb-4">Today's Stats</h3>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <MetricCard 
+            title="Today's Invites Sent" 
+            value={linkedinLeads?.dailySent || 0} 
+            icon="paper-plane" 
+            change={0}
+            color="#0077B5"
+            progressValue={linkedinLeads?.dailySent && linkedinLeads?.maxInvitations ? 
+              (linkedinLeads.dailySent / linkedinLeads.maxInvitations) * 100 : 0}
+            isLoading={isLoadingLeads}
+          />
+          
+          <MetricCard 
+            title="Today's Accepted" 
+            value={linkedinLeads?.dailyAccepted || 0} 
+            icon="user-check" 
+            change={0}
+            color="#00A0DC"
+            progressValue={linkedinLeads?.dailyAccepted && linkedinLeads?.dailySent ? 
+              (linkedinLeads.dailyAccepted / linkedinLeads.dailySent) * 100 : 0}
+            isLoading={isLoadingLeads}
+          />
+          
+          <MetricCard 
+            title="Profiles Processed" 
+            value={linkedinLeads?.processedProfiles || 0} 
+            suffix={linkedinLeads?.maxInvitations ? `/${linkedinLeads.maxInvitations}` : ""} 
+            icon="paper-plane" 
+            change={0}
+            color="#0A66C2"
+            progressValue={linkedinLeads?.processedProfiles && linkedinLeads?.maxInvitations ? 
+              (linkedinLeads.processedProfiles / linkedinLeads.maxInvitations) * 100 : 0}
+            isLoading={isLoadingLeads}
+          />
+          
+          <MetricCard 
+            title="Daily Success Rate" 
+            value={linkedinLeads?.dailySent && linkedinLeads?.dailySent > 0 ? 
+              ((linkedinLeads.dailyAccepted / linkedinLeads.dailySent) * 100).toFixed(1) : "0.0"} 
+            suffix="%" 
+            icon="percentage" 
+            change={0}
+            color="#0A66C2"
+            progressValue={linkedinLeads?.dailyAccepted && linkedinLeads?.dailySent ? 
+              (linkedinLeads.dailyAccepted / linkedinLeads.dailySent) * 100 : 0}
+            isLoading={isLoadingLeads}
+          />
+        </div>
+        
         {/* Chart and Activity Feed */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <div className="lg:col-span-2">
