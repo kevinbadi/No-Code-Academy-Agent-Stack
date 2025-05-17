@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { useMetrics, useLatestMetric, useActivities, useRefreshData } from "@/hooks/use-metrics";
+import { useMetrics, useLatestMetric, useActivities, useRefreshData, useLatestLinkedinAgentLeads } from "@/hooks/use-metrics";
 import { DateRangeValue, DATE_RANGES, getDateRangeValues } from "@/lib/date-utils";
 import { useQuery } from "@tanstack/react-query";
-import { Metric, Activity } from "@shared/schema";
+import { Metric, Activity, LinkedinAgentLeads } from "@shared/schema";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -36,6 +36,9 @@ export default function Dashboard() {
     staleTime: 30000, // 30 seconds
   });
   
+  // Get the latest LinkedIn agent leads data from the PostgreSQL database
+  const { data: linkedinLeads, isLoading: isLoadingLeads } = useLatestLinkedinAgentLeads();
+  
   const { data: activities, isLoading: isLoadingActivities } = useQuery<Activity[]>({
     queryKey: ['/api/activities', 5],
     queryFn: () => fetch(`/api/activities?limit=5`).then(res => res.json()),
@@ -63,9 +66,15 @@ export default function Dashboard() {
   };
   
   // Extract the latest values for metric cards
-  const invitesSent = latestMetric?.invitesSent || 0;
-  const invitesAccepted = latestMetric?.invitesAccepted || 0;
-  const acceptanceRatio = latestMetric?.acceptanceRatio || 0;
+  // Use the data from PostgreSQL for LinkedIn agent leads if available
+  // Fall back to metrics data if LinkedIn leads data is not available
+  const invitesSent = linkedinLeads?.totalSent || latestMetric?.invitesSent || 0;
+  const invitesAccepted = linkedinLeads?.totalAccepted || latestMetric?.invitesAccepted || 0;
+  
+  // Calculate acceptance ratio (avoid division by zero)
+  const acceptanceRatio = invitesSent > 0 
+    ? (invitesAccepted / invitesSent * 100) 
+    : latestMetric?.acceptanceRatio || 0;
   
   // Only show loading indicator when initially loading, not during refresh
   const isLoading = false; // Disabled to fix permanent loading overlay
@@ -144,7 +153,7 @@ export default function Dashboard() {
             change={12.5} // Example value
             color="#0077B5"
             progressValue={85}
-            isLoading={isLoadingLatest}
+            isLoading={isLoadingLatest || isLoadingLeads}
           />
           
           <MetricCard
@@ -154,7 +163,7 @@ export default function Dashboard() {
             change={8.3} // Example value
             color="#00A0DC"
             progressValue={65}
-            isLoading={isLoadingLatest}
+            isLoading={isLoadingLatest || isLoadingLeads}
           />
           
           <MetricCard
@@ -164,8 +173,8 @@ export default function Dashboard() {
             icon="percentage"
             change={-2.1} // Example value
             color="#0A66C2"
-            progressValue={acceptanceRatio}
-            isLoading={isLoadingLatest}
+            progressValue={Math.min(100, acceptanceRatio)}
+            isLoading={isLoadingLatest || isLoadingLeads}
           />
         </div>
         

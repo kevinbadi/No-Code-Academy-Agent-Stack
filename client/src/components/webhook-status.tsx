@@ -1,13 +1,14 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Copy } from "lucide-react";
+import { Copy, CheckCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useLatestMetric } from "@/hooks/use-metrics";
+import { useLatestMetric, useLatestLinkedinAgentLeads } from "@/hooks/use-metrics";
 import { formatDateTime } from "@/lib/date-utils";
 import DirectWebhookButton from "./direct-webhook-button";
 
 export default function WebhookStatus() {
   const { toast } = useToast();
   const { data: latestMetric } = useLatestMetric();
+  const { data: latestLeads, isLoading: isLoadingLeads } = useLatestLinkedinAgentLeads();
   
   const webhookUrl = "https://hook.us2.make.com/w2b6ubph0j3rxcfd1kj3c3twmamrqico";
   
@@ -19,12 +20,26 @@ export default function WebhookStatus() {
     });
   };
   
-  // Get the last update time from the latest metric or fallback to current time
-  const lastUpdateTime = latestMetric ? new Date(latestMetric.date) : new Date();
+  // Get the last update time from the latest LinkedIn webhook data or fallback to metric time
+  const lastUpdateTime = latestLeads?.timestamp 
+    ? new Date(latestLeads.timestamp) 
+    : latestMetric 
+      ? new Date(latestMetric.date) 
+      : new Date();
   
   // Calculate next scheduled time (6 hours after the last update)
   const nextScheduledTime = new Date(lastUpdateTime);
   nextScheduledTime.setHours(nextScheduledTime.getHours() + 6);
+  
+  // Get additional data from the LinkedIn agent webhook response
+  const dailySent = latestLeads?.dailySent || 0;
+  const dailyAccepted = latestLeads?.dailyAccepted || 0;
+  const totalSent = latestLeads?.totalSent || 0;
+  const totalAccepted = latestLeads?.totalAccepted || 0;
+  const processedProfiles = latestLeads?.processedProfiles || 0;
+  const maxInvitations = latestLeads?.maxInvitations || 0;
+  const status = latestLeads?.status || "No status available";
+  const connectionStatus = latestLeads?.connectionStatus || "Not connected";
   
   return (
     <Card className="shadow-sm border border-gray-100">
