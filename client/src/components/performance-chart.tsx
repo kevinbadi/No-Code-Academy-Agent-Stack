@@ -29,12 +29,14 @@ export default function PerformanceChart({ data }: PerformanceChartProps) {
         acc[monthKey] = {
           month: new Date(date.getFullYear(), date.getMonth(), 1),
           invitesSent: 0,
+          invitesAccepted: 0,
           acceptanceRatio: 0,
           count: 0
         };
       }
 
       acc[monthKey].invitesSent += metric.invitesSent;
+      acc[monthKey].invitesAccepted += metric.invitesAccepted;
       acc[monthKey].acceptanceRatio += metric.acceptanceRatio;
       acc[monthKey].count += 1;
 
@@ -45,6 +47,7 @@ export default function PerformanceChart({ data }: PerformanceChartProps) {
     return Object.values(monthlyData).map((item: any) => ({
       month: formatDateForDisplay(item.month, { month: 'short', year: 'numeric' }),
       invitesSent: item.invitesSent,
+      invitesAccepted: item.invitesAccepted,
       acceptanceRatio: +(item.acceptanceRatio / item.count).toFixed(1)
     })).sort((a: any, b: any) => 
       new Date(a.month).getTime() - new Date(b.month).getTime()
@@ -99,6 +102,12 @@ export default function PerformanceChart({ data }: PerformanceChartProps) {
                   dataKey="invitesSent"
                   fill="#0077B5"
                   name="Invites Sent"
+                />
+                <Bar
+                  yAxisId="left"
+                  dataKey="invitesAccepted"
+                  fill="#2ca02c"
+                  name="Invites Accepted"
                 />
                 <Bar
                   yAxisId="right"
