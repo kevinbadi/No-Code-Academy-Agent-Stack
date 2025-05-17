@@ -118,6 +118,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Route to create LinkedIn agent leads data
+  app.post("/api/linkedin-agent-leads", async (req: Request, res: Response) => {
+    try {
+      const data = await storage.createLinkedinAgentLeads({
+        timestamp: new Date(req.body.timestamp || new Date()),
+        invitesSent: req.body.invitesSent,
+        invitesAccepted: req.body.invitesAccepted,
+        dailyLimit: req.body.dailyLimit,
+        profilesProcessed: req.body.profilesProcessed,
+        rawLog: req.body.rawLog,
+        additionalData: req.body.additionalData
+      });
+      
+      res.status(201).json(data);
+    } catch (error) {
+      console.error("Error creating LinkedIn agent leads data:", error);
+      res.status(500).json({ message: "Failed to create LinkedIn agent leads data" });
+    }
+  });
+  
+  // Route to get LinkedIn agent leads data
+  app.get("/api/linkedin-agent-leads", async (req: Request, res: Response) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      const data = await storage.getLinkedinAgentLeads(limit);
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching LinkedIn agent leads data:", error);
+      res.status(500).json({ message: "Failed to fetch LinkedIn agent leads data" });
+    }
+  });
+  
+  // Route to get the latest LinkedIn agent leads entry
+  app.get("/api/linkedin-agent-leads/latest", async (req: Request, res: Response) => {
+    try {
+      const data = await storage.getLatestLinkedinAgentLeads();
+      res.json(data || null);
+    } catch (error) {
+      console.error("Error fetching latest LinkedIn agent leads data:", error);
+      res.status(500).json({ message: "Failed to fetch latest LinkedIn agent leads data" });
+    }
+  });
+  
   // Webhook endpoint for LinkedIn agent to report KPI data
   app.post("/api/webhook/linkedin-agent/kpi", async (req: Request, res: Response) => {
     try {

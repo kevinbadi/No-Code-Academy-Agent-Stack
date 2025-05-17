@@ -115,6 +115,24 @@ export default function DirectWebhookButton() {
         })
       });
       
+      // Store the detailed webhook response in the LinkedIn agent leads table
+      const dailyLimit = parseInt(metricsData?.dailyLimit, 10) || null;
+      const profilesProcessed = parseInt(metricsData?.profilesProcessed, 10) || null;
+      
+      await fetch('/api/linkedin-agent-leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          timestamp: new Date(),
+          invitesSent,
+          invitesAccepted,
+          dailyLimit,
+          profilesProcessed,
+          rawLog: responseText,
+          additionalData: metricsData || {}
+        })
+      });
+      
       // Create activity log
       await fetch('/api/activities', {
         method: 'POST',
