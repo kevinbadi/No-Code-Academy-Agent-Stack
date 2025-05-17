@@ -14,7 +14,7 @@ import PerformanceChart from "@/components/performance-chart";
 import ActivityItem from "@/components/activity-item";
 import WebhookStatus from "@/components/webhook-status";
 import TargetAudience from "@/components/target-audience";
-import WebhookScheduler from "@/components/webhook-scheduler";
+import SimpleScheduler from "@/components/simple-scheduler";
 
 export default function Dashboard() {
   const [dateRange, setDateRange] = useState<DateRangeValue>("7days");
