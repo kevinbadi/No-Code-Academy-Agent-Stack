@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLatestMetric, useLatestLinkedinAgentLeads } from "@/hooks/use-metrics";
 import { formatDateTime } from "@/lib/date-utils";
 import DirectWebhookButton from "./direct-webhook-button";
+import ServerAutomationButton from "./server-automation-button";
 
 export default function WebhookStatus() {
   const { toast } = useToast();
@@ -116,8 +117,14 @@ export default function WebhookStatus() {
           
           <div className="mt-5 flex flex-col space-y-3">
             <DirectWebhookButton />
+            <div className="text-xs text-gray-500 text-center mb-3">
+              Direct webhook call to the Make.com automation
+            </div>
+            
+            {/* Add the new server-side automation button */}
+            <ServerAutomationButton />
             <div className="text-xs text-gray-500 text-center">
-              This will fetch real-time KPI data from your LinkedIn outreach agent
+              Server-side call to the automation with enhanced error handling
             </div>
           </div>
           
