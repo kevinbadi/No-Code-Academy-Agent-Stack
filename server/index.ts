@@ -2,11 +2,17 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { createServer } from "http";
 
+// Create a new Express application
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Create HTTP server explicitly
+const httpServer = createServer(app);
+
+// Middleware for logging API calls
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -37,42 +43,36 @@ app.use((req, res, next) => {
   next();
 });
 
+// Error handling middleware
+app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  const status = err.status || err.statusCode || 500;
+  const message = err.message || "Internal Server Error";
+  res.status(status).json({ message });
+});
+
+// IIFE to start the server
 (async () => {
-  let server;
-  
   try {
-    // Create server first
-    server = await registerRoutes(app);
-
-    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-      const status = err.status || err.statusCode || 500;
-      const message = err.message || "Internal Server Error";
-
-      res.status(status).json({ message });
-      throw err;
-    });
-
-    // Setup Vite or static serving
+    // Register routes passing the HTTP server for websockets
+    await registerRoutes(app, httpServer);
+    
+    // Setup Vite or static files
     if (app.get("env") === "development") {
-      await setupVite(app, server);
+      await setupVite(app, httpServer);
     } else {
       serveStatic(app);
     }
 
-    // Try an alternative port to avoid port conflicts
-    const port = 3333;
-    server.listen({
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    }, () => {
-      log(`serving on port ${port}`);
+    // Try port 4444 instead of 5000/3333
+    const port = 4444;
+    
+    // Start the HTTP server
+    httpServer.listen(port, "0.0.0.0", () => {
+      log(`Server running on port ${port}`);
     });
+    
   } catch (error) {
-    console.error("Server startup error:", error);
-    if (server) {
-      server.close();
-    }
+    console.error("Server initialization error:", error);
     process.exit(1);
   }
 })();
