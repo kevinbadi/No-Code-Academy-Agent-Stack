@@ -1,5 +1,5 @@
-import type { Express, Request, Response } from "express";
-import { createServer, type Server } from "http";
+import { Express, Request, Response, NextFunction } from "express";
+import { Server } from "http";
 import { storage } from "./storage";
 import { webhookPayloadSchema } from "@shared/schema";
 import { ZodError } from "zod";
@@ -13,30 +13,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Triggering Make.com webhook:", webhookUrl);
       
-      // Simplified webhook call with just the request_results parameter
+      // Simple webhook call
       fetch(webhookUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          request_results: true
-        })
-      }).then(response => {
-        console.log("Webhook response status:", response.status, response.statusText);
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ request_results: true })
       }).catch(err => {
-        console.log("Webhook error:", err.message);
-      });
-      
-      // Log activity
-      const now = new Date();
-      await storage.createActivity({
-        timestamp: now,
-        type: "agent",
-        message: "LinkedIn agent webhook triggered"
+        console.log("Note: webhook may time out - this is normal:", err.message);
       });
       
       // Generate metrics for the dashboard demo
+      const now = new Date();
       const invitesSent = Math.floor(Math.random() * 20) + 15; // Random number 15-35
       const invitesAccepted = Math.floor(Math.random() * invitesSent * 0.7); // Random acceptance rate up to 70%
       
@@ -49,14 +36,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create activity for metrics update
       await storage.createActivity({
-        timestamp: new Date(),
+        timestamp: now,
         type: "agent",
         message: `LinkedIn agent reported ${invitesSent} invites sent and ${invitesAccepted} accepted`
       });
       
       console.log("Created new metric from webhook:", metric);
       
-      // Respond with success and the new metric
+      // Respond with success
       res.json({ 
         success: true, 
         message: "Webhook triggered and metrics updated successfully", 
@@ -74,90 +61,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Route to get all metrics
   app.get("/api/metrics", async (req: Request, res: Response) => {
     try {
-      const metrics = await storage.getMetrics();
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      const metrics = await storage.getMetrics(limit);
       res.json(metrics);
     } catch (error) {
       console.error("Error fetching metrics:", error);
       res.status(500).json({ message: "Failed to fetch metrics" });
     }
   });
-
+  
   // Route to get metrics by date range
   app.get("/api/metrics/range", async (req: Request, res: Response) => {
     try {
       const { startDate, endDate } = req.query;
-
+      
       if (!startDate || !endDate) {
-        return res.status(400).json({ message: "Start date and end date are required" });
+        return res.status(400).json({ message: "startDate and endDate are required" });
       }
-
-      const start = new Date(startDate as string);
-      const end = new Date(endDate as string);
-
-      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-        return res.status(400).json({ message: "Invalid date format" });
-      }
-
-      const metrics = await storage.getMetricsByDateRange(start, end);
+      
+      const metrics = await storage.getMetricsByDateRange(
+        new Date(startDate as string),
+        new Date(endDate as string)
+      );
+      
       res.json(metrics);
     } catch (error) {
       console.error("Error fetching metrics by date range:", error);
       res.status(500).json({ message: "Failed to fetch metrics by date range" });
     }
   });
-
-  // Route to get latest metric
+  
+  // Route to get the latest metric
   app.get("/api/metrics/latest", async (req: Request, res: Response) => {
     try {
       const metric = await storage.getLatestMetric();
-      
-      if (!metric) {
-        return res.status(404).json({ message: "No metrics found" });
-      }
-      
-      res.json(metric);
+      res.json(metric || null);
     } catch (error) {
       console.error("Error fetching latest metric:", error);
       res.status(500).json({ message: "Failed to fetch latest metric" });
     }
   });
-
-  // Webhook endpoint to receive KPI data
+  
+  // Route to create a new metric
+  app.post("/api/metrics", async (req: Request, res: Response) => {
+    try {
+      const metric = await storage.createMetric({
+        date: new Date(req.body.date || new Date()),
+        invitesSent: req.body.invitesSent,
+        invitesAccepted: req.body.invitesAccepted
+      });
+      
+      res.status(201).json(metric);
+    } catch (error) {
+      console.error("Error creating metric:", error);
+      res.status(500).json({ message: "Failed to create metric" });
+    }
+  });
+  
+  // Webhook endpoint for LinkedIn agent to report KPI data
   app.post("/api/webhook/linkedin-agent/kpi", async (req: Request, res: Response) => {
     try {
-      // Validate the incoming webhook payload
-      const payload = webhookPayloadSchema.parse(req.body);
+      // Validate the webhook payload
+      const result = webhookPayloadSchema.safeParse(req.body);
       
-      // Create a new metric with the data from the webhook
+      if (!result.success) {
+        const validationError = fromZodError(result.error);
+        console.error("Invalid webhook payload:", validationError);
+        return res.status(400).json({ 
+          message: "Invalid webhook payload", 
+          errors: validationError.details 
+        });
+      }
+      
+      const payload = result.data;
+      
+      // Create a new metric from the webhook data
       const metric = await storage.createMetric({
         date: new Date(),
         invitesSent: payload.invitesSent,
         invitesAccepted: payload.invitesAccepted
       });
       
-      // Log the activity
+      // Create activity log for the webhook
       await storage.createActivity({
         timestamp: new Date(),
-        type: "refresh",
-        message: "Daily KPI data refreshed via webhook"
+        type: "agent",
+        message: `LinkedIn agent reported ${payload.invitesSent} invites sent and ${payload.invitesAccepted} accepted`
       });
       
-      res.status(201).json(metric);
+      console.log("Created metric from webhook:", metric);
+      
+      res.status(201).json({ success: true, data: metric });
     } catch (error) {
       console.error("Error processing webhook:", error);
-      
-      if (error instanceof ZodError) {
-        const validationError = fromZodError(error);
-        return res.status(400).json({ 
-          message: "Invalid webhook payload", 
-          details: validationError.message 
-        });
-      }
-      
-      res.status(500).json({ message: "Failed to process webhook data" });
+      res.status(500).json({ 
+        message: "Failed to process webhook", 
+        error: error instanceof Error ? error.message : "Unknown error" 
+      });
     }
   });
-
+  
   // Route to get activities
   app.get("/api/activities", async (req: Request, res: Response) => {
     try {
@@ -169,19 +172,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch activities" });
     }
   });
-
-  // Manually trigger a refresh (simulating webhook)
+  
+  // Route to create a new activity
+  app.post("/api/activities", async (req: Request, res: Response) => {
+    try {
+      const activity = await storage.createActivity({
+        timestamp: new Date(req.body.timestamp || new Date()),
+        type: req.body.type,
+        message: req.body.message
+      });
+      
+      res.status(201).json(activity);
+    } catch (error) {
+      console.error("Error creating activity:", error);
+      res.status(500).json({ message: "Failed to create activity" });
+    }
+  });
+  
+  // Route to manually refresh data (e.g., generate some test data)
   app.post("/api/refresh", async (req: Request, res: Response) => {
     try {
-      const lastMetric = await storage.getLatestMetric();
-      
-      if (!lastMetric) {
-        return res.status(404).json({ message: "No previous metrics found to base refresh on" });
-      }
-      
-      // Generate slightly different values based on the last metric
-      const invitesSent = Math.max(5, Math.floor(lastMetric.invitesSent * (0.8 + Math.random() * 0.4)));
-      const invitesAccepted = Math.max(0, Math.floor(invitesSent * (0.2 + Math.random() * 0.3)));
+      // Generate a new metric with random data
+      const invitesSent = Math.floor(Math.random() * 20) + 10;
+      const invitesAccepted = Math.floor(Math.random() * invitesSent * 0.8);
       
       const metric = await storage.createMetric({
         date: new Date(),
@@ -189,21 +202,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         invitesAccepted
       });
       
-      // Log the activity
+      // Create activity log for the refresh
       await storage.createActivity({
         timestamp: new Date(),
-        type: "refresh",
-        message: "Daily KPI data manually refreshed"
+        type: "system",
+        message: "Data refreshed manually"
       });
       
-      res.status(201).json(metric);
+      res.json({ success: true, message: "Data refreshed successfully", data: metric });
     } catch (error) {
       console.error("Error refreshing data:", error);
       res.status(500).json({ message: "Failed to refresh data" });
     }
   });
-
-  const httpServer = createServer(app);
-
-  return httpServer;
+  
+  // Error handler
+  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    console.error("Unhandled error:", err);
+    res.status(500).json({ message: "Internal server error", error: err.message });
+  });
+  
+  // Start the server
+  const server = app.listen(0);
+  return server;
 }
