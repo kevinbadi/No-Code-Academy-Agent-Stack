@@ -550,12 +550,37 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
   
   app.post("/api/schedules", async (req: Request, res: Response) => {
     try {
-      const scheduleData = req.body;
+      console.log("Received schedule creation request:", req.body);
+      
+      // Create a validated object with only the expected fields
+      const scheduleData = {
+        name: req.body.name || "Untitled Schedule",
+        description: req.body.description || null,
+        cronExpression: req.body.cronExpression,
+        webhookUrl: req.body.webhookUrl,
+        isActive: req.body.isActive !== undefined ? req.body.isActive : true
+      };
+      
+      // Validate required fields
+      if (!scheduleData.cronExpression) {
+        return res.status(400).json({ message: "Schedule frequency (cronExpression) is required" });
+      }
+      
+      if (!scheduleData.webhookUrl) {
+        return res.status(400).json({ message: "Webhook URL is required" });
+      }
+      
+      console.log("Creating schedule with data:", scheduleData);
       const newSchedule = await storage.createScheduleConfig(scheduleData);
+      
+      console.log("Schedule created successfully:", newSchedule);
       res.status(201).json(newSchedule);
     } catch (error) {
       console.error("Error creating schedule:", error);
-      res.status(500).json({ message: "Failed to create schedule" });
+      res.status(500).json({ 
+        message: "Failed to create schedule", 
+        error: error instanceof Error ? error.message : "Unknown error" 
+      });
     }
   });
   

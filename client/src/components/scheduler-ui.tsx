@@ -88,15 +88,38 @@ export default function SchedulerUI() {
   // Create a new schedule
   const createMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      const res = await fetch("/api/schedules", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
-      if (!res.ok) {
-        throw new Error(`Failed to create schedule: ${res.statusText}`);
+      try {
+        console.log("Sending schedule data:", data);
+        
+        const res = await fetch("/api/schedules", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+        
+        // Better error handling
+        if (!res.ok) {
+          // Try to get the error message from the response
+          const errorText = await res.text();
+          console.error("Error response:", errorText);
+          
+          try {
+            // Try to parse as JSON
+            const errorJson = JSON.parse(errorText);
+            throw new Error(errorJson.message || errorJson.error || `Failed with status: ${res.status}`);
+          } catch (e) {
+            // If not valid JSON, use the raw text
+            throw new Error(`Failed to create schedule: ${errorText.substring(0, 100)}`);
+          }
+        }
+        
+        const responseData = await res.json();
+        console.log("Created schedule:", responseData);
+        return responseData;
+      } catch (error) {
+        console.error("Error in schedule creation:", error);
+        throw error;
       }
-      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/schedules"] });
@@ -233,10 +256,21 @@ export default function SchedulerUI() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     
+    // Create a clean copy of the data to prevent any unexpected fields
+    const cleanData = {
+      name: formData.name,
+      description: formData.description,
+      cronExpression: formData.cronExpression,
+      webhookUrl: formData.webhookUrl,
+      isActive: formData.isActive
+    };
+    
+    console.log("Submitting form data:", cleanData);
+    
     if (isEditing && selectedSchedule) {
-      updateMutation.mutate({ id: selectedSchedule.id, data: formData });
+      updateMutation.mutate({ id: selectedSchedule.id, data: cleanData });
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate(cleanData);
     }
   }
   
