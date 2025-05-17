@@ -2,7 +2,8 @@ import {
   User, InsertUser, 
   Metric, InsertMetric, 
   Activity, InsertActivity,
-  LinkedinAgentLeads, InsertLinkedinAgentLeads
+  LinkedinAgentLeads, InsertLinkedinAgentLeads,
+  ScheduleConfig, InsertScheduleConfig
 } from "@shared/schema";
 
 // Interface for storage operations
@@ -25,6 +26,14 @@ export interface IStorage {
   getLinkedinAgentLeads(limit?: number): Promise<LinkedinAgentLeads[]>;
   getLatestLinkedinAgentLeads(): Promise<LinkedinAgentLeads | undefined>;
   createLinkedinAgentLeads(data: InsertLinkedinAgentLeads): Promise<LinkedinAgentLeads>;
+  
+  // Schedule Configurations
+  getScheduleConfigs(): Promise<ScheduleConfig[]>;
+  getScheduleConfig(id: number): Promise<ScheduleConfig | undefined>;
+  createScheduleConfig(config: InsertScheduleConfig): Promise<ScheduleConfig>;
+  updateScheduleConfig(id: number, config: Partial<InsertScheduleConfig>): Promise<ScheduleConfig | undefined>;
+  deleteScheduleConfig(id: number): Promise<boolean>;
+  updateScheduleLastRun(id: number, lastRun: Date): Promise<ScheduleConfig | undefined>;
 }
 
 // Memory storage implementation
@@ -33,11 +42,13 @@ export class MemStorage implements IStorage {
   private metrics: Map<number, Metric> = new Map();
   private activities: Map<number, Activity> = new Map();
   private linkedinAgentLeads: Map<number, LinkedinAgentLeads> = new Map();
+  private scheduleConfigs: Map<number, ScheduleConfig> = new Map();
   
   private userCurrentId = 1;
   private metricCurrentId = 1;
   private activityCurrentId = 1;
   private linkedinAgentLeadsCurrentId = 1;
+  private scheduleConfigCurrentId = 1;
 
   constructor() {
     // Initialize with some sample metrics
