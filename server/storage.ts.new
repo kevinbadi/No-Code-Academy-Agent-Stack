@@ -30,19 +30,28 @@ export interface IStorage {
   createLinkedinAgentLeads(data: InsertLinkedinAgentLeads): Promise<LinkedinAgentLeads>;
 }
 
-// Memory storage implementation
 export class MemStorage implements IStorage {
-  private users: Map<number, User> = new Map();
-  private metrics: Map<number, Metric> = new Map();
-  private activities: Map<number, Activity> = new Map();
-  private linkedinAgentLeads: Map<number, LinkedinAgentLeads> = new Map();
+  private users: Map<number, User>;
+  private metrics: Map<number, Metric>;
+  private activities: Map<number, Activity>;
+  private linkedinAgentLeads: Map<number, LinkedinAgentLeads>;
   
-  private userCurrentId = 1;
-  private metricCurrentId = 1;
-  private activityCurrentId = 1;
-  private linkedinAgentLeadsCurrentId = 1;
+  userCurrentId: number;
+  metricCurrentId: number;
+  activityCurrentId: number;
+  linkedinAgentLeadsCurrentId: number;
 
   constructor() {
+    this.users = new Map();
+    this.metrics = new Map();
+    this.activities = new Map();
+    this.linkedinAgentLeads = new Map();
+    
+    this.userCurrentId = 1;
+    this.metricCurrentId = 1;
+    this.activityCurrentId = 1;
+    this.linkedinAgentLeadsCurrentId = 1;
+    
     // Initialize with some sample metrics
     const today = new Date();
     const yesterday = new Date(today);
@@ -98,10 +107,10 @@ export class MemStorage implements IStorage {
   }
   
   async getMetrics(limit?: number): Promise<Metric[]> {
-    const metricsList = Array.from(this.metrics.values())
+    const metrics = Array.from(this.metrics.values())
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     
-    return limit ? metricsList.slice(0, limit) : metricsList;
+    return limit ? metrics.slice(0, limit) : metrics;
   }
   
   async getMetricsByDateRange(startDate: Date, endDate: Date): Promise<Metric[]> {
@@ -138,10 +147,10 @@ export class MemStorage implements IStorage {
   }
   
   async getActivities(limit?: number): Promise<Activity[]> {
-    const activitiesList = Array.from(this.activities.values())
+    const activities = Array.from(this.activities.values())
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     
-    return limit ? activitiesList.slice(0, limit) : activitiesList;
+    return limit ? activities.slice(0, limit) : activities;
   }
   
   async createActivity(insertActivity: InsertActivity): Promise<Activity> {
@@ -158,10 +167,10 @@ export class MemStorage implements IStorage {
     return activity;
   }
   
-  // LinkedIn Agent Leads methods - try database first, fall back to memory
+  // LinkedIn Agent Leads methods - uses the database when possible
   async getLinkedinAgentLeads(limit?: number): Promise<LinkedinAgentLeads[]> {
     try {
-      // Try to get from database
+      // Try database first
       const result = await db.select().from(linkedinAgentLeads)
         .orderBy(sql`${linkedinAgentLeads.timestamp} DESC`)
         .limit(limit || 100);
@@ -169,20 +178,27 @@ export class MemStorage implements IStorage {
       if (result && result.length > 0) {
         return result;
       }
+      
+      // Fallback to in-memory
+      console.log("Database query returned no results, falling back to in-memory storage");
+      const leads = Array.from(this.linkedinAgentLeads.values())
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      
+      return limit ? leads.slice(0, limit) : leads;
     } catch (error) {
-      console.error("Database error fetching LinkedIn agent leads:", error);
+      console.error("Error getting LinkedIn agent leads from database:", error);
+      
+      // Fallback to in-memory on database error
+      const leads = Array.from(this.linkedinAgentLeads.values())
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      
+      return limit ? leads.slice(0, limit) : leads;
     }
-    
-    // Fall back to memory
-    const leads = Array.from(this.linkedinAgentLeads.values())
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-    
-    return limit ? leads.slice(0, limit) : leads;
   }
   
   async getLatestLinkedinAgentLeads(): Promise<LinkedinAgentLeads | undefined> {
     try {
-      // Try to get from database
+      // Try database first
       const [result] = await db.select().from(linkedinAgentLeads)
         .orderBy(sql`${linkedinAgentLeads.timestamp} DESC`)
         .limit(1);
@@ -190,20 +206,25 @@ export class MemStorage implements IStorage {
       if (result) {
         return result;
       }
+      
+      // Fallback to in-memory
+      console.log("Database query returned no results, falling back to in-memory storage");
+      const leads = await this.getLinkedinAgentLeads(1);
+      return leads.length > 0 ? leads[0] : undefined;
     } catch (error) {
-      console.error("Database error fetching latest LinkedIn agent lead:", error);
+      console.error("Error getting latest LinkedIn agent leads from database:", error);
+      
+      // Fallback to in-memory on database error
+      const leads = await this.getLinkedinAgentLeads(1);
+      return leads.length > 0 ? leads[0] : undefined;
     }
-    
-    // Fall back to memory
-    const leads = await this.getLinkedinAgentLeads(1);
-    return leads.length > 0 ? leads[0] : undefined;
   }
   
   async createLinkedinAgentLeads(data: InsertLinkedinAgentLeads): Promise<LinkedinAgentLeads> {
     try {
-      console.log("Inserting LinkedIn agent leads into database", data);
+      console.log("Inserting LinkedIn agent leads into PostgreSQL database");
       
-      // Try to insert into database
+      // Insert the data into the database using Drizzle
       const [result] = await db.insert(linkedinAgentLeads).values({
         timestamp: data.timestamp || new Date(),
         dailySent: data.dailySent,
@@ -223,9 +244,9 @@ export class MemStorage implements IStorage {
       console.log("Successfully inserted LinkedIn agent leads data:", result);
       return result;
     } catch (error) {
-      console.error("Database error inserting LinkedIn agent leads:", error);
+      console.error("Error inserting LinkedIn agent leads into database:", error);
       
-      // Fall back to memory
+      // Fallback to in-memory storage if database insert fails
       const id = this.linkedinAgentLeadsCurrentId++;
       const leads: LinkedinAgentLeads = {
         id,
@@ -250,5 +271,4 @@ export class MemStorage implements IStorage {
   }
 }
 
-// Use memory storage as the default implementation
 export const storage = new MemStorage();

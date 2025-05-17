@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { webhookPayloadSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
-import { dbStorage } from "./db-storage";
+import { storeWebhookData, getLatestWebhookData } from "./webhook-db";
 
 export async function registerRoutes(app: Express, existingServer?: Server): Promise<Server> {
   // Create a new HTTP server if one wasn't provided
