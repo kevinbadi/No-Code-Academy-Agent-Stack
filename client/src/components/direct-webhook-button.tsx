@@ -51,128 +51,120 @@ export default function DirectWebhookButton() {
         if (responseText && responseText.trim()) {
           console.log("Processing text response");
           
-          // First, check if the response is the formatted log data we showed as an example
-          if (responseText.includes("invitations have been sent")) {
-            // Split the response into lines
-            const lines = responseText.split('\n');
+          // Priority: Try to parse as JSON first because that's our preferred format now
+          try {
+            // Try to parse the response as JSON
+            const webhookData = JSON.parse(responseText);
+            console.log("Webhook response parsed as JSON:", webhookData);
             
-            // Extract metrics from specific lines
-            for (const line of lines) {
-              // Daily invitation limit
-              if (line.includes("Sending at most")) {
-                const match = line.match(/Sending at most (\d+) invitations per day/);
-                if (match && match[1]) {
-                  metricsData.maxInvitations = parseInt(match[1], 10);
-                  console.log("Found max invitations:", metricsData.maxInvitations);
-                }
+            if (webhookData.invite_summaryCollection) {
+              const summary = webhookData.invite_summaryCollection;
+              
+              // Extract day stats
+              if (summary.dayCollection) {
+                const day = summary.dayCollection;
+                metricsData.dailySent = day.sent || 0;
+                metricsData.dailyAccepted = day.accepted || 0;
+                metricsData.processedProfiles = day.processed_profiles || 0;
+                metricsData.maxInvitations = day.max_invitations || 0;
+                console.log("Day collection data:", day);
               }
               
-              // Profiles processed today
-              if (line.includes("profiles processed today")) {
-                const match = line.match(/Already (\d+) profiles processed today/);
-                if (match && match[1]) {
-                  metricsData.processedProfiles = parseInt(match[1], 10);
-                  console.log("Found profiles processed:", metricsData.processedProfiles);
-                }
+              // Extract total stats
+              if (summary.totalCollection) {
+                const total = summary.totalCollection;
+                metricsData.totalSent = total.sent || 0;
+                metricsData.totalAccepted = total.accepted || 0;
+                metricsData.status = total.status || "";
+                console.log("Total collection data:", total);
               }
               
-              // Status line
-              if (line.includes("No more profiles to process") || line.includes("profiles to process")) {
-                metricsData.status = line.trim();
-                console.log("Found status:", metricsData.status);
+              // Extract links
+              if (summary.linksCollection) {
+                const links = summary.linksCollection;
+                metricsData.csvLink = links.csv || "";
+                metricsData.jsonLink = links.json || "";
+                console.log("Links collection data:", links);
               }
               
-              // Total invitations sent
-              if (line.includes("invitations have been sent")) {
-                const match = line.match(/(\d+)\s+invitations have been sent/);
-                if (match && match[1]) {
-                  metricsData.totalSent = parseInt(match[1], 10);
-                  metricsData.dailySent = metricsData.totalSent; // Assuming same if not specified
-                  metricsData.invitesSent = metricsData.totalSent; // For metrics table
-                  console.log("Found invites sent:", metricsData.totalSent);
-                }
-              }
+              // Get connection status
+              metricsData.connectionStatus = summary.connection || "";
               
-              // Total/daily profiles accepted
-              if (line.includes("has accepted your request") || line.includes("have accepted your request")) {
-                const matchSingular = line.match(/(\d+)\s+profile has accepted/);
-                const matchPlural = line.match(/(\d+)\s+profiles have accepted/);
-                const match = matchSingular || matchPlural;
-                
-                if (match && match[1]) {
-                  metricsData.totalAccepted = parseInt(match[1], 10);
-                  metricsData.dailyAccepted = metricsData.totalAccepted; // Assuming same if not specified
-                  metricsData.invitesAccepted = metricsData.totalAccepted; // For metrics table
-                  console.log("Found invites accepted:", metricsData.totalAccepted);
-                }
-              }
+              // For the metrics table (backward compatibility)
+              metricsData.invitesSent = metricsData.totalSent;
+              metricsData.invitesAccepted = metricsData.totalAccepted;
               
-              // CSV Link
-              if (line.includes("CSV:")) {
-                const match = line.match(/CSV: \[([^\]]+)\]/);
-                if (match && match[1]) {
-                  metricsData.csvLink = match[1];
-                  console.log("Found CSV link:", metricsData.csvLink);
-                }
-              }
+              // Store the complete process collection data
+              metricsData.processData = webhookData;
               
-              // JSON Link
-              if (line.includes("JSON:")) {
-                const match = line.match(/JSON: \[([^\]]+)\]/);
-                if (match && match[1]) {
-                  metricsData.jsonLink = match[1];
-                  console.log("Found JSON link:", metricsData.jsonLink);
-                }
-              }
-              
-              // Connection status
-              if (line.includes("Successfully connected to LinkedIn as")) {
-                metricsData.connectionStatus = line.trim();
-                console.log("Found connection status:", metricsData.connectionStatus);
-              }
+              console.log("Successfully parsed webhook JSON data");
             }
-          } else if (responseText.includes("invite_summary")) {
-            // Try to parse structured data that might be in JSON format
-            try {
-              const data = JSON.parse(responseText);
+          } catch (jsonError) {
+            console.log("Response is not JSON, trying text parsing:", jsonError);
+            
+            // Fallback to text parsing for backward compatibility
+            if (responseText.includes("invitations have been sent")) {
+              // Split the response into lines
+              const lines = responseText.split('\n');
               
-              if (data.invite_summaryCollection) {
-                if (data.invite_summaryCollection.dayCollection) {
-                  const day = data.invite_summaryCollection.dayCollection;
-                  metricsData.dailySent = day.sent || 0;
-                  metricsData.dailyAccepted = day.accepted || 0;
-                  metricsData.processedProfiles = day.processed_profiles || 0;
-                  metricsData.maxInvitations = day.max_invitations || 0;
+              // Extract metrics from specific lines
+              for (const line of lines) {
+                // Daily invitation limit
+                if (line.includes("Sending at most")) {
+                  const match = line.match(/Sending at most (\d+) invitations per day/);
+                  if (match && match[1]) {
+                    metricsData.maxInvitations = parseInt(match[1], 10);
+                    console.log("Found max invitations:", metricsData.maxInvitations);
+                  }
                 }
                 
-                if (data.invite_summaryCollection.totalCollection) {
-                  const total = data.invite_summaryCollection.totalCollection;
-                  metricsData.totalSent = total.sent || 0;
-                  metricsData.totalAccepted = total.accepted || 0;
-                  metricsData.status = total.status || "";
+                // Profiles processed today
+                if (line.includes("profiles processed today")) {
+                  const match = line.match(/Already (\d+) profiles processed today/);
+                  if (match && match[1]) {
+                    metricsData.processedProfiles = parseInt(match[1], 10);
+                    console.log("Found profiles processed:", metricsData.processedProfiles);
+                  }
                 }
                 
-                if (data.invite_summaryCollection.linksCollection) {
-                  const links = data.invite_summaryCollection.linksCollection;
-                  metricsData.csvLink = links.csv || "";
-                  metricsData.jsonLink = links.json || "";
-                  metricsData.connectionStatus = links.connection || "";
+                // Status line
+                if (line.includes("No more profiles to process") || line.includes("profiles to process")) {
+                  metricsData.status = line.trim();
+                  console.log("Found status:", metricsData.status);
                 }
                 
-                // For metrics table
-                metricsData.invitesSent = metricsData.totalSent;
-                metricsData.invitesAccepted = metricsData.totalAccepted;
+                // Total invitations sent
+                if (line.includes("invitations have been sent")) {
+                  const match = line.match(/(\d+)\s+invitations have been sent/);
+                  if (match && match[1]) {
+                    metricsData.totalSent = parseInt(match[1], 10);
+                    metricsData.dailySent = metricsData.totalSent;
+                    metricsData.invitesSent = metricsData.totalSent;
+                    console.log("Found invites sent:", metricsData.totalSent);
+                  }
+                }
+                
+                // Total/daily profiles accepted
+                if (line.includes("has accepted your request") || line.includes("have accepted your request")) {
+                  const matchSingular = line.match(/(\d+)\s+profile has accepted/);
+                  const matchPlural = line.match(/(\d+)\s+profiles have accepted/);
+                  const match = matchSingular || matchPlural;
+                  
+                  if (match && match[1]) {
+                    metricsData.totalAccepted = parseInt(match[1], 10);
+                    metricsData.dailyAccepted = metricsData.totalAccepted;
+                    metricsData.invitesAccepted = metricsData.totalAccepted;
+                    console.log("Found invites accepted:", metricsData.totalAccepted);
+                  }
+                }
               }
-            } catch (e) {
-              console.log("Couldn't parse as JSON, using text parsing instead");
             }
           }
           
-          // Store the captured data as process data
-          metricsData.processData = { ...metricsData };
+          // Always store the raw log
           metricsData.rawLog = responseText;
           
-          console.log("Extracted webhook data:", metricsData);
+          console.log("Final extracted webhook data:", metricsData);
           
           // Store the additional data in local storage for debugging
           localStorage.setItem('lastWebhookData', JSON.stringify(metricsData));
