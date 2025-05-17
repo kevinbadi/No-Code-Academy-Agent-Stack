@@ -65,10 +65,39 @@ export default function WebhookStatus() {
               {formatDateTime(nextScheduledTime)}
             </span>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Webhook Health</span>
-            <span className="text-sm font-medium text-green-500">98.5%</span>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-600">LinkedIn Status</span>
+            <span className="text-sm font-medium flex items-center">
+              {connectionStatus.includes("Successfully") ? (
+                <>
+                  <CheckCircle className="h-3 w-3 text-green-500 mr-1" />
+                  <span className="text-green-600">Connected</span>
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="h-3 w-3 text-amber-500 mr-1" />
+                  <span className="text-amber-600">Not Connected</span>
+                </>
+              )}
+            </span>
           </div>
+          
+          {latestLeads && (
+            <>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-gray-600">Today's Progress</span>
+                <span className="text-sm font-medium text-gray-700">
+                  {processedProfiles} / {maxInvitations} profiles
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Agent Status</span>
+                <span className="text-sm font-medium text-blue-500">
+                  {status}
+                </span>
+              </div>
+            </>
+          )}
         </div>
         
         <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
