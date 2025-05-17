@@ -14,6 +14,7 @@ import PerformanceChart from "@/components/performance-chart";
 import ActivityItem from "@/components/activity-item";
 import WebhookStatus from "@/components/webhook-status";
 import TargetAudience from "@/components/target-audience";
+import SchedulerUI from "@/components/scheduler-ui";
 
 export default function Dashboard() {
   const [dateRange, setDateRange] = useState<DateRangeValue>("7days");
@@ -288,6 +289,11 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <TargetAudience />
           <WebhookStatus />
+        </div>
+        
+        {/* Webhook Scheduler */}
+        <div className="mb-8">
+          <SchedulerUI />
         </div>
         
         {/* Attribution */}

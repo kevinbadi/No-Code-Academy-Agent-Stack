@@ -1,120 +1,155 @@
 import cron from 'node-cron';
-import { pool } from './db';
+import fetch from 'node-fetch';
 import { storage } from './storage';
 
-// URL of the Make.com webhook
-const WEBHOOK_URL = "https://hook.us2.make.com/w2b6ubph0j3rxcfd1kj3c3twmamrqico";
+const activeJobs = new Map<number, cron.ScheduledTask>();
 
 /**
- * Sends request to the LinkedIn agent webhook
+ * Sends request to configured webhook URL
  */
-async function triggerLinkedInAgentWebhook() {
-  console.log(`[${new Date().toISOString()}] Scheduled LinkedIn agent webhook trigger started`);
+async function executeWebhook(scheduleId: number, webhookUrl: string) {
+  console.log(`Executing webhook for schedule #${scheduleId} - ${webhookUrl}`);
   
   try {
-    // Call the webhook directly
-    const response = await fetch(WEBHOOK_URL, {
+    const response = await fetch(webhookUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ request_results: true })
+      headers: { 'Content-Type': 'application/json' }
     });
     
-    if (response.ok) {
-      const responseText = await response.text();
-      console.log("Scheduled webhook trigger success, processing response");
-      
-      try {
-        // Process the webhook response (if it's valid JSON)
-        const webhookData = JSON.parse(responseText);
-        console.log("Webhook data received:", JSON.stringify(webhookData).slice(0, 200) + "...");
-        
-        // Extract relevant information from the webhook response
-        if (webhookData.invite_summaryCollection) {
-          const summary = webhookData.invite_summaryCollection;
-          
-          // Get day and total collections
-          const dayCollection = summary.dayCollection || {};
-          const totalCollection = summary.totalCollection || {};
-          
-          // Create metric record
-          await storage.createMetric({
-            date: new Date(),
-            invitesSent: totalCollection.sent || 35,  // Default to known values if missing
-            invitesAccepted: totalCollection.accepted || 1  // Default to known values if missing
-          });
-          
-          // Create LinkedIn agent leads record
-          await storage.createLinkedinAgentLeads({
-            timestamp: new Date(),
-            dailySent: dayCollection.sent || 35,
-            dailyAccepted: dayCollection.accepted || 1,
-            totalSent: totalCollection.sent || 35,
-            totalAccepted: totalCollection.accepted || 1,
-            processedProfiles: dayCollection.processed_profiles || 20,
-            maxInvitations: dayCollection.max_invitations || 20,
-            status: totalCollection.status || "No more profiles to process today.",
-            csvLink: summary.linksCollection?.csv || "",
-            jsonLink: summary.linksCollection?.json || "",
-            connectionStatus: summary.connection || "Successfully connected to LinkedIn",
-            rawLog: responseText,
-            processData: webhookData
-          });
-          
-          // Create activity record
-          await storage.createActivity({
-            timestamp: new Date(),
-            type: "scheduler",
-            message: `Scheduled LinkedIn agent update: ${totalCollection.sent || 35} invites sent and ${totalCollection.accepted || 1} accepted`
-          });
-          
-          console.log("Scheduled webhook data saved successfully");
-        }
-      } catch (parseError) {
-        console.error("Error parsing webhook response:", parseError);
-        await logSchedulerError("Failed to parse webhook response", parseError);
-      }
-    } else {
-      console.error("Webhook returned non-200 status:", response.status);
-      await logSchedulerError(`Webhook returned status ${response.status}`, null);
+    // Update the last run time
+    await storage.updateScheduleLastRun(scheduleId, new Date());
+    
+    if (!response.ok) {
+      throw new Error(`Webhook returned status ${response.status}: ${response.statusText}`);
     }
-  } catch (error) {
-    console.error("Error triggering scheduled webhook:", error);
-    await logSchedulerError("Failed to trigger webhook", error);
-  }
-}
-
-/**
- * Log errors that happen during scheduled tasks
- */
-async function logSchedulerError(message: string, error: any) {
-  try {
+    
+    // Create an activity log for successful execution
     await storage.createActivity({
-      timestamp: new Date(),
-      type: "error",
-      message: `Scheduler error: ${message} - ${error?.message || 'Unknown error'}`
+      type: 'webhook_success',
+      message: `Webhook executed successfully (schedule #${scheduleId})`,
+      metadata: { scheduleId }
     });
-  } catch (logError) {
-    console.error("Failed to log scheduler error:", logError);
+    
+    console.log(`Webhook execution successful for schedule #${scheduleId}`);
+    return true;
+  } catch (error) {
+    console.error(`Error executing webhook for schedule #${scheduleId}:`, error);
+    
+    // Create an activity log for failed execution
+    await storage.createActivity({
+      type: 'webhook_error',
+      message: `Webhook execution failed (schedule #${scheduleId}): ${error instanceof Error ? error.message : 'Unknown error'}`,
+      metadata: { scheduleId }
+    });
+    
+    return false;
   }
 }
 
 /**
- * Initialize all scheduled tasks
+ * Schedule a cron job for webhook execution
  */
-export function initializeScheduler() {
-  // Schedule the LinkedIn agent webhook trigger to run daily at 9 AM
-  // Cron format: second(optional) minute hour day-of-month month day-of-week
-  // * * * * * * = runs every second
-  // 0 0 9 * * * = runs at 9:00 AM every day
+function scheduleJob(config: { id: number, cronExpression: string, webhookUrl: string }) {
+  // Validate cron expression
+  if (!cron.validate(config.cronExpression)) {
+    console.error(`Invalid cron expression for schedule #${config.id}: ${config.cronExpression}`);
+    return false;
+  }
   
-  // For testing: Run every 5 minutes (0 */5 * * * *)
-  // For production: Run daily at 9 AM (0 0 9 * * *)
-  cron.schedule('0 0 9 * * *', async () => {
-    await triggerLinkedInAgentWebhook();
-  });
-  
-  console.log("LinkedIn agent webhook scheduler initialized - will run daily at 9:00 AM");
-  
-  // Optional: Trigger once on server startup for testing
-  // triggerLinkedInAgentWebhook();
+  try {
+    // Stop any existing job for this schedule
+    if (activeJobs.has(config.id)) {
+      activeJobs.get(config.id)?.stop();
+      activeJobs.delete(config.id);
+    }
+    
+    // Schedule new job
+    const job = cron.schedule(config.cronExpression, () => {
+      executeWebhook(config.id, config.webhookUrl);
+    });
+    
+    // Store the job reference
+    activeJobs.set(config.id, job);
+    
+    console.log(`Scheduled job for ID #${config.id} with cron: ${config.cronExpression}`);
+    return true;
+  } catch (error) {
+    console.error(`Error scheduling job for #${config.id}:`, error);
+    return false;
+  }
 }
+
+/**
+ * Stops a scheduled job if it exists
+ */
+function stopJob(scheduleId: number) {
+  if (activeJobs.has(scheduleId)) {
+    activeJobs.get(scheduleId)?.stop();
+    activeJobs.delete(scheduleId);
+    console.log(`Stopped scheduled job for ID #${scheduleId}`);
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Initialize all active schedules
+ */
+export async function initializeScheduler() {
+  console.log("Initializing webhook scheduler...");
+  
+  try {
+    // Get all active schedules
+    const schedules = await storage.getScheduleConfigs();
+    const activeSchedules = schedules.filter(s => s.isActive);
+    
+    console.log(`Found ${activeSchedules.length} active schedules to initialize`);
+    
+    // Schedule each active job
+    for (const schedule of activeSchedules) {
+      scheduleJob({
+        id: schedule.id,
+        cronExpression: schedule.cronExpression,
+        webhookUrl: schedule.webhookUrl
+      });
+    }
+    
+    // Create an activity log for scheduler initialization
+    await storage.createActivity({
+      type: 'system',
+      message: `Webhook scheduler initialized with ${activeSchedules.length} active schedules`,
+      metadata: { 
+        activeScheduleIds: activeSchedules.map(s => s.id)
+      }
+    });
+    
+    console.log("Webhook scheduler initialization complete");
+    return true;
+  } catch (error) {
+    console.error("Error initializing scheduler:", error);
+    return false;
+  }
+}
+
+/**
+ * Refreshes all schedules (stops and restarts active ones)
+ */
+export async function refreshSchedules() {
+  console.log("Refreshing webhook schedules...");
+  
+  // Stop all current jobs
+  for (const scheduleId of activeJobs.keys()) {
+    stopJob(scheduleId);
+  }
+  
+  // Initialize again
+  return await initializeScheduler();
+}
+
+// Export these functions for use in API routes
+export const scheduler = {
+  scheduleJob,
+  stopJob,
+  executeWebhook,
+  refreshSchedules
+};
