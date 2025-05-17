@@ -2,11 +2,8 @@ import {
   User, InsertUser, 
   Metric, InsertMetric, 
   Activity, InsertActivity,
-  LinkedinAgentLeads, InsertLinkedinAgentLeads,
-  users, metrics, activities, linkedinAgentLeads
+  LinkedinAgentLeads, InsertLinkedinAgentLeads
 } from "@shared/schema";
-import { db } from "./db";
-import { eq, sql } from "drizzle-orm";
 
 // Interface for storage operations
 export interface IStorage {
@@ -158,22 +155,7 @@ export class MemStorage implements IStorage {
     return activity;
   }
   
-  // LinkedIn Agent Leads methods - try database first, fall back to memory
   async getLinkedinAgentLeads(limit?: number): Promise<LinkedinAgentLeads[]> {
-    try {
-      // Try to get from database
-      const result = await db.select().from(linkedinAgentLeads)
-        .orderBy(sql`${linkedinAgentLeads.timestamp} DESC`)
-        .limit(limit || 100);
-      
-      if (result && result.length > 0) {
-        return result;
-      }
-    } catch (error) {
-      console.error("Database error fetching LinkedIn agent leads:", error);
-    }
-    
-    // Fall back to memory
     const leads = Array.from(this.linkedinAgentLeads.values())
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     
@@ -181,72 +163,32 @@ export class MemStorage implements IStorage {
   }
   
   async getLatestLinkedinAgentLeads(): Promise<LinkedinAgentLeads | undefined> {
-    try {
-      // Try to get from database
-      const [result] = await db.select().from(linkedinAgentLeads)
-        .orderBy(sql`${linkedinAgentLeads.timestamp} DESC`)
-        .limit(1);
-      
-      if (result) {
-        return result;
-      }
-    } catch (error) {
-      console.error("Database error fetching latest LinkedIn agent lead:", error);
-    }
-    
-    // Fall back to memory
     const leads = await this.getLinkedinAgentLeads(1);
     return leads.length > 0 ? leads[0] : undefined;
   }
   
   async createLinkedinAgentLeads(data: InsertLinkedinAgentLeads): Promise<LinkedinAgentLeads> {
-    try {
-      console.log("Inserting LinkedIn agent leads into database", data);
-      
-      // Try to insert into database
-      const [result] = await db.insert(linkedinAgentLeads).values({
-        timestamp: data.timestamp || new Date(),
-        dailySent: data.dailySent,
-        dailyAccepted: data.dailyAccepted,
-        totalSent: data.totalSent,
-        totalAccepted: data.totalAccepted,
-        maxInvitations: data.maxInvitations,
-        processedProfiles: data.processedProfiles,
-        status: data.status,
-        csvLink: data.csvLink,
-        jsonLink: data.jsonLink,
-        connectionStatus: data.connectionStatus,
-        rawLog: data.rawLog,
-        processData: data.processData || {}
-      }).returning();
-      
-      console.log("Successfully inserted LinkedIn agent leads data:", result);
-      return result;
-    } catch (error) {
-      console.error("Database error inserting LinkedIn agent leads:", error);
-      
-      // Fall back to memory
-      const id = this.linkedinAgentLeadsCurrentId++;
-      const leads: LinkedinAgentLeads = {
-        id,
-        timestamp: data.timestamp || new Date(),
-        dailySent: data.dailySent,
-        dailyAccepted: data.dailyAccepted,
-        totalSent: data.totalSent,
-        totalAccepted: data.totalAccepted,
-        maxInvitations: data.maxInvitations || null,
-        processedProfiles: data.processedProfiles || null,
-        status: data.status || null,
-        csvLink: data.csvLink || null,
-        jsonLink: data.jsonLink || null,
-        connectionStatus: data.connectionStatus || null,
-        rawLog: data.rawLog || null,
-        processData: data.processData || {}
-      };
-      
-      this.linkedinAgentLeads.set(id, leads);
-      return leads;
-    }
+    const id = this.linkedinAgentLeadsCurrentId++;
+    
+    const leads: LinkedinAgentLeads = {
+      id,
+      timestamp: data.timestamp || new Date(),
+      dailySent: data.dailySent,
+      dailyAccepted: data.dailyAccepted,
+      totalSent: data.totalSent,
+      totalAccepted: data.totalAccepted,
+      maxInvitations: data.maxInvitations || null,
+      processedProfiles: data.processedProfiles || null,
+      status: data.status || null,
+      csvLink: data.csvLink || null,
+      jsonLink: data.jsonLink || null,
+      connectionStatus: data.connectionStatus || null,
+      rawLog: data.rawLog || null,
+      processData: data.processData || {}
+    };
+    
+    this.linkedinAgentLeads.set(id, leads);
+    return leads;
   }
 }
 

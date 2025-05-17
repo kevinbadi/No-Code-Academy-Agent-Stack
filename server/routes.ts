@@ -124,23 +124,50 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
   // Route to create LinkedIn agent leads data
   app.post("/api/linkedin-agent-leads", async (req: Request, res: Response) => {
     try {
-      const data = await dbStorage.createLinkedinAgentLeads({
-        timestamp: new Date(req.body.timestamp || new Date()),
-        dailySent: req.body.dailySent,
-        dailyAccepted: req.body.dailyAccepted,
-        totalSent: req.body.totalSent,
-        totalAccepted: req.body.totalAccepted,
-        processedProfiles: req.body.processedProfiles,
-        maxInvitations: req.body.maxInvitations,
-        status: req.body.status,
-        csvLink: req.body.csvLink,
-        jsonLink: req.body.jsonLink,
-        connectionStatus: req.body.connectionStatus,
-        rawLog: req.body.rawLog,
-        processData: req.body.processData
-      });
+      console.log("Received webhook data for storage:", req.body);
       
-      res.status(201).json(data);
+      // Try to store the data directly in the PostgreSQL database
+      try {
+        const data = await storeWebhookData({
+          timestamp: new Date(req.body.timestamp || new Date()),
+          dailySent: req.body.dailySent,
+          dailyAccepted: req.body.dailyAccepted,
+          totalSent: req.body.totalSent,
+          totalAccepted: req.body.totalAccepted,
+          processedProfiles: req.body.processedProfiles,
+          maxInvitations: req.body.maxInvitations,
+          status: req.body.status,
+          csvLink: req.body.csvLink,
+          jsonLink: req.body.jsonLink,
+          connectionStatus: req.body.connectionStatus,
+          rawLog: req.body.rawLog,
+          processData: req.body.processData
+        });
+        
+        console.log("Successfully stored webhook data in PostgreSQL");
+        return res.status(201).json(data);
+      } catch (dbError) {
+        console.error("Failed to store data in PostgreSQL, falling back to memory storage:", dbError);
+        
+        // Fall back to memory storage
+        const memData = await storage.createLinkedinAgentLeads({
+          timestamp: new Date(req.body.timestamp || new Date()),
+          dailySent: req.body.dailySent,
+          dailyAccepted: req.body.dailyAccepted,
+          totalSent: req.body.totalSent,
+          totalAccepted: req.body.totalAccepted,
+          processedProfiles: req.body.processedProfiles,
+          maxInvitations: req.body.maxInvitations,
+          status: req.body.status,
+          csvLink: req.body.csvLink,
+          jsonLink: req.body.jsonLink,
+          connectionStatus: req.body.connectionStatus,
+          rawLog: req.body.rawLog,
+          processData: req.body.processData
+        });
+        
+        return res.status(201).json(memData);
+      }
     } catch (error) {
       console.error("Error creating LinkedIn agent leads data:", error);
       res.status(500).json({ message: "Failed to create LinkedIn agent leads data" });
@@ -151,9 +178,17 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
   app.get("/api/linkedin-agent-leads", async (req: Request, res: Response) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
-      // Use the database storage for LinkedIn agent leads
-      const data = await dbStorage.getLinkedinAgentLeads(limit);
-      res.json(data);
+      
+      try {
+        // Try to get the data from PostgreSQL first
+        const data = await storage.getLinkedinAgentLeads(limit);
+        return res.json(data);
+      } catch (dbError) {
+        console.error("Database error fetching LinkedIn agent leads:", dbError);
+        // Fall back to memory storage
+        const data = await storage.getLinkedinAgentLeads(limit);
+        return res.json(data);
+      }
     } catch (error) {
       console.error("Error fetching LinkedIn agent leads data:", error);
       res.status(500).json({ message: "Failed to fetch LinkedIn agent leads data" });
@@ -163,9 +198,19 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
   // Route to get the latest LinkedIn agent leads entry
   app.get("/api/linkedin-agent-leads/latest", async (req: Request, res: Response) => {
     try {
-      // Use the database storage for LinkedIn agent leads
-      const data = await dbStorage.getLatestLinkedinAgentLeads();
-      res.json(data || null);
+      try {
+        // Try to get the data from PostgreSQL
+        const latestData = await getLatestWebhookData();
+        if (latestData) {
+          return res.json(latestData);
+        }
+      } catch (dbError) {
+        console.error("Database error fetching latest LinkedIn agent leads:", dbError);
+      }
+      
+      // Fall back to memory storage if no data in database
+      const data = await storage.getLatestLinkedinAgentLeads();
+      return res.json(data || null);
     } catch (error) {
       console.error("Error fetching latest LinkedIn agent leads data:", error);
       res.status(500).json({ message: "Failed to fetch latest LinkedIn agent leads data" });
