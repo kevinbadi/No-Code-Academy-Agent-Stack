@@ -198,11 +198,39 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
   // Route to get the latest LinkedIn agent leads entry
   app.get("/api/linkedin-agent-leads/latest", async (req: Request, res: Response) => {
     try {
+      // First try to get data directly from the database
       try {
-        // Try to get the data from PostgreSQL
-        const latestData = await getLatestWebhookData();
-        if (latestData) {
-          return res.json(latestData);
+        // Check the database for the most recent entry
+        const result = await pool.query(`
+          SELECT * FROM linkedin_agent_leads 
+          ORDER BY timestamp DESC 
+          LIMIT 1
+        `);
+        
+        if (result.rows && result.rows.length > 0) {
+          const data = result.rows[0];
+          console.log("Retrieved LinkedIn agent leads from database:", data);
+          
+          // Convert snake_case columns to camelCase for frontend
+          const response = {
+            id: data.id,
+            timestamp: data.timestamp,
+            dailySent: data.daily_sent,
+            dailyAccepted: data.daily_accepted,
+            totalSent: data.total_sent,
+            totalAccepted: data.total_accepted,
+            processedProfiles: data.processed_profiles,
+            maxInvitations: data.max_invitations,
+            status: data.status,
+            csvLink: data.csv_link,
+            jsonLink: data.json_link,
+            connectionStatus: data.connection_status,
+            rawLog: data.raw_log,
+            processData: data.process_data
+          };
+          
+          console.log("Sending LinkedIn data to frontend:", response);
+          return res.json(response);
         }
       } catch (dbError) {
         console.error("Database error fetching latest LinkedIn agent leads:", dbError);

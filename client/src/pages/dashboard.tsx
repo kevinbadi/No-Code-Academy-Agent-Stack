@@ -39,6 +39,9 @@ export default function Dashboard() {
   // Get the latest LinkedIn agent leads data from the PostgreSQL database
   const { data: linkedinLeads, isLoading: isLoadingLeads } = useLatestLinkedinAgentLeads();
   
+  // Log the data to debug
+  console.log("LinkedIn Agent Data from DB:", linkedinLeads);
+  
   const { data: activities, isLoading: isLoadingActivities } = useQuery<Activity[]>({
     queryKey: ['/api/activities', 5],
     queryFn: () => fetch(`/api/activities?limit=5`).then(res => res.json()),
