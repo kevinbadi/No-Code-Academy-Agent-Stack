@@ -201,6 +201,105 @@ export class MemStorage implements IStorage {
     this.linkedinAgentLeads.set(id, leads);
     return leads;
   }
+  
+  // Schedule Configuration Methods
+  async getScheduleConfigs(): Promise<ScheduleConfig[]> {
+    return Array.from(this.scheduleConfigs.values())
+      .sort((a, b) => Number(b.createdAt) - Number(a.createdAt));
+  }
+  
+  async getScheduleConfig(id: number): Promise<ScheduleConfig | undefined> {
+    return this.scheduleConfigs.get(id);
+  }
+  
+  async createScheduleConfig(config: InsertScheduleConfig): Promise<ScheduleConfig> {
+    const id = this.scheduleConfigCurrentId++;
+    const now = new Date();
+    
+    const scheduleConfig: ScheduleConfig = {
+      ...config,
+      id,
+      createdAt: now,
+      updatedAt: now,
+      lastRun: null,
+      nextRun: null,
+      runCount: 0
+    };
+    
+    this.scheduleConfigs.set(id, scheduleConfig);
+    
+    // Add an activity for the new schedule
+    this.createActivity({
+      type: "schedule_created",
+      message: `New schedule created: ${config.name}`,
+      metadata: { scheduleId: id }
+    });
+    
+    return scheduleConfig;
+  }
+  
+  async updateScheduleConfig(id: number, config: Partial<InsertScheduleConfig>): Promise<ScheduleConfig | undefined> {
+    const existingConfig = this.scheduleConfigs.get(id);
+    if (!existingConfig) return undefined;
+    
+    const updatedConfig: ScheduleConfig = {
+      ...existingConfig,
+      ...config,
+      updatedAt: new Date()
+    };
+    
+    this.scheduleConfigs.set(id, updatedConfig);
+    
+    // Add an activity for the updated schedule
+    this.createActivity({
+      type: "schedule_updated",
+      message: `Schedule updated: ${updatedConfig.name}`,
+      metadata: { scheduleId: id }
+    });
+    
+    return updatedConfig;
+  }
+  
+  async deleteScheduleConfig(id: number): Promise<boolean> {
+    const config = this.scheduleConfigs.get(id);
+    if (!config) return false;
+    
+    const success = this.scheduleConfigs.delete(id);
+    
+    if (success) {
+      // Add an activity for the deleted schedule
+      this.createActivity({
+        type: "schedule_deleted",
+        message: `Schedule deleted: ${config.name}`,
+        metadata: { scheduleId: id }
+      });
+    }
+    
+    return success;
+  }
+  
+  async updateScheduleLastRun(id: number, lastRun: Date): Promise<ScheduleConfig | undefined> {
+    const config = this.scheduleConfigs.get(id);
+    if (!config) return undefined;
+    
+    const updatedConfig: ScheduleConfig = {
+      ...config,
+      lastRun,
+      updatedAt: new Date(),
+      runCount: config.runCount + 1
+    };
+    
+    this.scheduleConfigs.set(id, updatedConfig);
+    
+    // Add an activity for the schedule run
+    this.createActivity({
+      type: "schedule_run",
+      message: `Schedule executed: ${config.name}`,
+      metadata: { scheduleId: id, runCount: updatedConfig.runCount }
+    });
+    
+    return updatedConfig;
+  }
 }
 
 // Use memory storage as the default implementation

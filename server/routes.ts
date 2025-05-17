@@ -521,6 +521,111 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
     }
   });
   
+  // Schedule configuration routes
+  app.get("/api/schedules", async (req: Request, res: Response) => {
+    try {
+      const schedules = await storage.getScheduleConfigs();
+      res.json(schedules);
+    } catch (error) {
+      console.error("Error fetching schedules:", error);
+      res.status(500).json({ message: "Failed to fetch schedules" });
+    }
+  });
+  
+  app.get("/api/schedules/:id", async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const schedule = await storage.getScheduleConfig(Number(id));
+      
+      if (!schedule) {
+        return res.status(404).json({ message: "Schedule not found" });
+      }
+      
+      res.json(schedule);
+    } catch (error) {
+      console.error("Error fetching schedule:", error);
+      res.status(500).json({ message: "Failed to fetch schedule" });
+    }
+  });
+  
+  app.post("/api/schedules", async (req: Request, res: Response) => {
+    try {
+      const scheduleData = req.body;
+      const newSchedule = await storage.createScheduleConfig(scheduleData);
+      res.status(201).json(newSchedule);
+    } catch (error) {
+      console.error("Error creating schedule:", error);
+      res.status(500).json({ message: "Failed to create schedule" });
+    }
+  });
+  
+  app.put("/api/schedules/:id", async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const scheduleData = req.body;
+      const updatedSchedule = await storage.updateScheduleConfig(Number(id), scheduleData);
+      
+      if (!updatedSchedule) {
+        return res.status(404).json({ message: "Schedule not found" });
+      }
+      
+      res.json(updatedSchedule);
+    } catch (error) {
+      console.error("Error updating schedule:", error);
+      res.status(500).json({ message: "Failed to update schedule" });
+    }
+  });
+  
+  app.delete("/api/schedules/:id", async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const success = await storage.deleteScheduleConfig(Number(id));
+      
+      if (!success) {
+        return res.status(404).json({ message: "Schedule not found" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting schedule:", error);
+      res.status(500).json({ message: "Failed to delete schedule" });
+    }
+  });
+  
+  // Manual run of a scheduled webhook
+  app.post("/api/schedules/:id/run", async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const schedule = await storage.getScheduleConfig(Number(id));
+      
+      if (!schedule) {
+        return res.status(404).json({ message: "Schedule not found" });
+      }
+      
+      // Execute the webhook
+      const webhookRes = await fetch(schedule.webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+      
+      if (!webhookRes.ok) {
+        throw new Error(`Webhook execution failed: ${webhookRes.statusText}`);
+      }
+      
+      // Update the last run time and count
+      const updatedSchedule = await storage.updateScheduleLastRun(Number(id), new Date());
+      
+      res.json({ 
+        success: true, 
+        message: "Webhook executed successfully",
+        schedule: updatedSchedule
+      });
+    } catch (error) {
+      console.error("Error executing webhook:", error);
+      res.status(500).json({ message: "Failed to execute webhook" });
+    }
+  });
+  
   // Error handler
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     console.error("Unhandled error:", err);
