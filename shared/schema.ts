@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, timestamp, real, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, real, json, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -87,3 +87,30 @@ export const insertLinkedinAgentLeadsSchema = createInsertSchema(linkedinAgentLe
 
 export type InsertLinkedinAgentLeads = z.infer<typeof insertLinkedinAgentLeadsSchema>;
 export type LinkedinAgentLeads = typeof linkedinAgentLeads.$inferSelect;
+
+// Webhook Schedule Configuration Schema
+export const scheduleConfigs = pgTable("schedule_configs", {
+  id: serial("id").primaryKey(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  cronExpression: text("cron_expression").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  lastRun: timestamp("last_run"),
+  nextRun: timestamp("next_run"),
+  webhookUrl: text("webhook_url").notNull(),
+  runCount: integer("run_count").default(0).notNull()
+});
+
+export const insertScheduleConfigSchema = createInsertSchema(scheduleConfigs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  lastRun: true,
+  nextRun: true,
+  runCount: true
+});
+
+export type InsertScheduleConfig = z.infer<typeof insertScheduleConfigSchema>;
+export type ScheduleConfig = typeof scheduleConfigs.$inferSelect;
