@@ -28,20 +28,23 @@ export default function DirectWebhookButton() {
       const responseText = await response.text();
       console.log("Webhook response body:", responseText);
       
-      // Declare all variables up front
-      let invitesSent = 0;
-      let invitesAccepted = 0;
-      let dailySent = 0;
-      let dailyAccepted = 0;
-      let totalSent = 0;
-      let totalAccepted = 0;
-      let maxInvitations = 0;
-      let processedProfiles = 0;
-      let status = "";
-      let csvLink = "";
-      let jsonLink = "";
-      let connectionStatus = "";
-      let extractedData = {};
+      // Default values
+      let metricsData = {
+        invitesSent: 0,
+        invitesAccepted: 0,
+        dailySent: 0,
+        dailyAccepted: 0,
+        totalSent: 0,
+        totalAccepted: 0,
+        maxInvitations: 0,
+        processedProfiles: 0,
+        status: "",
+        csvLink: "",
+        jsonLink: "",
+        connectionStatus: "",
+        rawLog: responseText,
+        processData: {}
+      };
       
       try {
         // Process the text response if available
@@ -59,8 +62,8 @@ export default function DirectWebhookButton() {
               if (line.includes("Sending at most")) {
                 const match = line.match(/Sending at most (\d+) invitations per day/);
                 if (match && match[1]) {
-                  maxInvitations = parseInt(match[1], 10);
-                  console.log("Found max invitations:", maxInvitations);
+                  metricsData.maxInvitations = parseInt(match[1], 10);
+                  console.log("Found max invitations:", metricsData.maxInvitations);
                 }
               }
               
@@ -68,25 +71,25 @@ export default function DirectWebhookButton() {
               if (line.includes("profiles processed today")) {
                 const match = line.match(/Already (\d+) profiles processed today/);
                 if (match && match[1]) {
-                  processedProfiles = parseInt(match[1], 10);
-                  console.log("Found profiles processed:", processedProfiles);
+                  metricsData.processedProfiles = parseInt(match[1], 10);
+                  console.log("Found profiles processed:", metricsData.processedProfiles);
                 }
               }
               
               // Status line
               if (line.includes("No more profiles to process") || line.includes("profiles to process")) {
-                status = line.trim();
-                console.log("Found status:", status);
+                metricsData.status = line.trim();
+                console.log("Found status:", metricsData.status);
               }
               
               // Total invitations sent
               if (line.includes("invitations have been sent")) {
                 const match = line.match(/(\d+)\s+invitations have been sent/);
                 if (match && match[1]) {
-                  totalSent = parseInt(match[1], 10);
-                  dailySent = totalSent; // Assuming same if not specified
-                  invitesSent = totalSent; // For backward compatibility
-                  console.log("Found invites sent:", totalSent);
+                  metricsData.totalSent = parseInt(match[1], 10);
+                  metricsData.dailySent = metricsData.totalSent; // Assuming same if not specified
+                  metricsData.invitesSent = metricsData.totalSent; // For metrics table
+                  console.log("Found invites sent:", metricsData.totalSent);
                 }
               }
               
@@ -97,10 +100,10 @@ export default function DirectWebhookButton() {
                 const match = matchSingular || matchPlural;
                 
                 if (match && match[1]) {
-                  totalAccepted = parseInt(match[1], 10);
-                  dailyAccepted = totalAccepted; // Assuming same if not specified
-                  invitesAccepted = totalAccepted; // For backward compatibility
-                  console.log("Found invites accepted:", totalAccepted);
+                  metricsData.totalAccepted = parseInt(match[1], 10);
+                  metricsData.dailyAccepted = metricsData.totalAccepted; // Assuming same if not specified
+                  metricsData.invitesAccepted = metricsData.totalAccepted; // For metrics table
+                  console.log("Found invites accepted:", metricsData.totalAccepted);
                 }
               }
               
@@ -108,8 +111,8 @@ export default function DirectWebhookButton() {
               if (line.includes("CSV:")) {
                 const match = line.match(/CSV: \[([^\]]+)\]/);
                 if (match && match[1]) {
-                  csvLink = match[1];
-                  console.log("Found CSV link:", csvLink);
+                  metricsData.csvLink = match[1];
+                  console.log("Found CSV link:", metricsData.csvLink);
                 }
               }
               
@@ -117,15 +120,15 @@ export default function DirectWebhookButton() {
               if (line.includes("JSON:")) {
                 const match = line.match(/JSON: \[([^\]]+)\]/);
                 if (match && match[1]) {
-                  jsonLink = match[1];
-                  console.log("Found JSON link:", jsonLink);
+                  metricsData.jsonLink = match[1];
+                  console.log("Found JSON link:", metricsData.jsonLink);
                 }
               }
               
               // Connection status
               if (line.includes("Successfully connected to LinkedIn as")) {
-                connectionStatus = line.trim();
-                console.log("Found connection status:", connectionStatus);
+                metricsData.connectionStatus = line.trim();
+                console.log("Found connection status:", metricsData.connectionStatus);
               }
             }
           } else if (responseText.includes("invite_summary")) {
@@ -136,64 +139,60 @@ export default function DirectWebhookButton() {
               if (data.invite_summaryCollection) {
                 if (data.invite_summaryCollection.dayCollection) {
                   const day = data.invite_summaryCollection.dayCollection;
-                  dailySent = day.sent || 0;
-                  dailyAccepted = day.accepted || 0;
-                  processedProfiles = day.processed_profiles || 0;
-                  maxInvitations = day.max_invitations || 0;
+                  metricsData.dailySent = day.sent || 0;
+                  metricsData.dailyAccepted = day.accepted || 0;
+                  metricsData.processedProfiles = day.processed_profiles || 0;
+                  metricsData.maxInvitations = day.max_invitations || 0;
                 }
                 
                 if (data.invite_summaryCollection.totalCollection) {
                   const total = data.invite_summaryCollection.totalCollection;
-                  totalSent = total.sent || 0;
-                  totalAccepted = total.accepted || 0;
-                  status = total.status || "";
+                  metricsData.totalSent = total.sent || 0;
+                  metricsData.totalAccepted = total.accepted || 0;
+                  metricsData.status = total.status || "";
                 }
                 
                 if (data.invite_summaryCollection.linksCollection) {
                   const links = data.invite_summaryCollection.linksCollection;
-                  csvLink = links.csv || "";
-                  jsonLink = links.json || "";
-                  connectionStatus = links.connection || "";
+                  metricsData.csvLink = links.csv || "";
+                  metricsData.jsonLink = links.json || "";
+                  metricsData.connectionStatus = links.connection || "";
                 }
                 
-                // For backward compatibility
-                invitesSent = totalSent;
-                invitesAccepted = totalAccepted;
+                // For metrics table
+                metricsData.invitesSent = metricsData.totalSent;
+                metricsData.invitesAccepted = metricsData.totalAccepted;
               }
             } catch (e) {
               console.log("Couldn't parse as JSON, using text parsing instead");
             }
           }
           
-          // Create structured data object for storage
-          extractedData = {
-            dailySent,
-            dailyAccepted,
-            totalSent,
-            totalAccepted,
-            maxInvitations,
-            processedProfiles,
-            status,
-            csvLink,
-            jsonLink,
-            connectionStatus,
-            rawLog: responseText
-          };
+          // Store the captured data as process data
+          metricsData.processData = { ...metricsData };
+          metricsData.rawLog = responseText;
           
-          console.log("Extracted webhook data:", extractedData);
+          console.log("Extracted webhook data:", metricsData);
           
           // Store the additional data in local storage for debugging
-          localStorage.setItem('lastWebhookData', JSON.stringify(extractedData));
+          localStorage.setItem('lastWebhookData', JSON.stringify(metricsData));
         }
       } catch (parseError) {
         console.error("Error processing webhook response:", parseError);
       }
       
       // If no valid metrics data was found in the response, generate random data
-      if (!invitesSent || !invitesAccepted) {
+      if (!metricsData.invitesSent || !metricsData.invitesAccepted) {
         console.log("Using generated data instead of webhook response");
-        invitesSent = Math.floor(Math.random() * 20) + 15;
-        invitesAccepted = Math.floor(Math.random() * invitesSent * 0.7);
+        const randomSent = Math.floor(Math.random() * 20) + 15;
+        const randomAccepted = Math.floor(Math.random() * randomSent * 0.7);
+        
+        metricsData.invitesSent = randomSent;
+        metricsData.invitesAccepted = randomAccepted;
+        metricsData.dailySent = randomSent;
+        metricsData.dailyAccepted = randomAccepted;
+        metricsData.totalSent = randomSent;
+        metricsData.totalAccepted = randomAccepted;
       }
       
       // Create a new metric
@@ -201,8 +200,8 @@ export default function DirectWebhookButton() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          invitesSent,
-          invitesAccepted,
+          invitesSent: metricsData.invitesSent,
+          invitesAccepted: metricsData.invitesAccepted,
           date: new Date()
         })
       });
@@ -213,18 +212,18 @@ export default function DirectWebhookButton() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           timestamp: new Date(),
-          dailySent: dailySent || invitesSent,
-          dailyAccepted: dailyAccepted || invitesAccepted,
-          totalSent: totalSent || invitesSent,
-          totalAccepted: totalAccepted || invitesAccepted,
-          maxInvitations: maxInvitations || null,
-          processedProfiles: processedProfiles || null,
-          status: status || null,
-          csvLink: csvLink || null,
-          jsonLink: jsonLink || null,
-          connectionStatus: connectionStatus || null,
-          rawLog: responseText,
-          processData: extractedData || {}
+          dailySent: metricsData.dailySent,
+          dailyAccepted: metricsData.dailyAccepted,
+          totalSent: metricsData.totalSent,
+          totalAccepted: metricsData.totalAccepted,
+          maxInvitations: metricsData.maxInvitations || null,
+          processedProfiles: metricsData.processedProfiles || null,
+          status: metricsData.status || null,
+          csvLink: metricsData.csvLink || null,
+          jsonLink: metricsData.jsonLink || null,
+          connectionStatus: metricsData.connectionStatus || null,
+          rawLog: metricsData.rawLog,
+          processData: metricsData.processData
         })
       });
       
@@ -235,13 +234,13 @@ export default function DirectWebhookButton() {
         body: JSON.stringify({
           timestamp: new Date(),
           type: "agent",
-          message: `LinkedIn agent reported ${invitesSent} invites sent and ${invitesAccepted} accepted`
+          message: `LinkedIn agent reported ${metricsData.invitesSent} invites sent and ${metricsData.invitesAccepted} accepted`
         })
       });
       
       toast({
         title: "Webhook Triggered",
-        description: "LinkedIN agent webhook triggered successfully. Refreshing page...",
+        description: "LinkedIn agent webhook triggered successfully. Refreshing page...",
       });
       
       // Force refresh the page

@@ -183,9 +183,20 @@ export class MemStorage implements IStorage {
     const timestamp = data.timestamp || new Date();
     
     const leads: LinkedinAgentLeads = {
-      ...data,
       id,
-      timestamp
+      timestamp,
+      dailySent: data.dailySent,
+      dailyAccepted: data.dailyAccepted,
+      totalSent: data.totalSent,
+      totalAccepted: data.totalAccepted,
+      maxInvitations: data.maxInvitations || null,
+      processedProfiles: data.processedProfiles || null,
+      status: data.status || null,
+      csvLink: data.csvLink || null,
+      jsonLink: data.jsonLink || null,
+      connectionStatus: data.connectionStatus || null,
+      rawLog: data.rawLog || null,
+      processData: data.processData || {}
     };
     
     this.linkedinAgentLeads.set(id, leads);
