@@ -15,16 +15,63 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
     try {
       const webhookUrl = "https://hook.us2.make.com/w2b6ubph0j3rxcfd1kj3c3twmamrqico";
       
-      console.log("Triggering Make.com webhook:", webhookUrl);
+      console.log("Triggering Make.com webhook from server:", webhookUrl);
       
-      // Simple webhook call
-      fetch(webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ request_results: true })
-      }).catch(err => {
-        console.log("Note: webhook may time out - this is normal:", err.message);
-      });
+      // Improved webhook call with proper response handling
+      try {
+        // Set a reasonable timeout for the webhook request
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds timeout
+        
+        const response = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ request_results: true }),
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+          const responseText = await response.text();
+          console.log("Webhook response received successfully");
+          
+          try {
+            // Try to parse as JSON
+            const webhookData = JSON.parse(responseText);
+            // Process webhook response here...
+            
+            return res.status(200).json({ 
+              success: true, 
+              message: "Webhook triggered successfully",
+              data: webhookData
+            });
+          } catch (parseError) {
+            console.log("Webhook response is not valid JSON:", parseError);
+            return res.status(200).json({ 
+              success: true, 
+              message: "Webhook triggered with text response",
+              text: responseText
+            });
+          }
+        } else {
+          console.error("Webhook returned non-200 status:", response.status);
+          return res.status(response.status).json({ 
+            success: false, 
+            message: "Webhook returned an error",
+            status: response.status
+          });
+        }
+      } catch (fetchError) {
+        console.error("Error during webhook call:", fetchError.message);
+        
+        // Still return success to client as webhook might be processing asynchronously
+        return res.status(202).json({ 
+          success: true, 
+          message: "Webhook triggered but response not available",
+          error: fetchError.message
+        });
+      }
       
       // Generate metrics for the dashboard demo
       const now = new Date();
