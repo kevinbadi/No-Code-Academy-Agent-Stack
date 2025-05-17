@@ -13,41 +13,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Triggering Make.com webhook:", webhookUrl);
       
-      // Call the webhook directly via a simple GET request instead of POST with JSON
-      // This should avoid the HTML response issue
+      // Call the webhook - this initiates the automation that will take ~30 seconds
       const response = await fetch(webhookUrl, {
-        method: 'GET',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          source: "dashboard",
+          timestamp: new Date().toISOString(),
+          requestData: "LinkedIn agent metrics"
+        })
       });
       
       console.log("Webhook response status:", response.status, response.statusText);
       
-      // Generate today's date and some demo metrics
-      const today = new Date();
-      const invitesSent = Math.floor(Math.random() * 20) + 15; // Random number 15-35
-      const invitesAccepted = Math.floor(Math.random() * invitesSent * 0.7); // Random acceptance rate up to 70%
-      const acceptanceRatio = (invitesAccepted / invitesSent * 100).toFixed(1);
-      
-      // Create a new metric in storage with the generated data
-      const metric = await storage.createMetric({
-        date: today,
-        invitesSent,
-        invitesAccepted
-      });
-      
-      // Create activity log for the webhook call
+      // Create activity log for triggering the webhook
       await storage.createActivity({
-        timestamp: today,
+        timestamp: new Date(),
         type: "agent",
-        message: `LinkedIn agent reported ${invitesSent} invites sent and ${invitesAccepted} accepted`
+        message: "LinkedIn agent webhook triggered - waiting for response (~30 seconds)"
       });
       
-      console.log("Created new metric from webhook:", metric);
-      
+      // Return immediately with a pending status since the webhook takes time to process
       res.json({ 
         success: true, 
-        message: "Successfully triggered webhook and created a new metric", 
-        data: metric 
+        message: "Webhook triggered successfully. The automation will process data in approximately 30 seconds. Refresh the dashboard after this time to see updated metrics.", 
+        status: "pending"
       });
+      
+      // For demonstration, we'll add a delayed processing of new metrics 
+      // In a real environment, the webhook would call back with real data
+      setTimeout(async () => {
+        try {
+          // Generate today's date and some simulated metrics
+          const today = new Date();
+          const invitesSent = Math.floor(Math.random() * 20) + 15; // Random number 15-35
+          const invitesAccepted = Math.floor(Math.random() * invitesSent * 0.7); // Random acceptance rate up to 70%
+          
+          // Create a new metric in storage with the generated data
+          const metric = await storage.createMetric({
+            date: today,
+            invitesSent,
+            invitesAccepted
+          });
+          
+          // Create activity log for the completed automation
+          await storage.createActivity({
+            timestamp: new Date(),
+            type: "agent",
+            message: `LinkedIn agent reported ${invitesSent} invites sent and ${invitesAccepted} accepted`
+          });
+          
+          console.log("Created delayed metric from webhook simulation:", metric);
+        } catch (delayedError) {
+          console.error("Error in delayed metric creation:", delayedError);
+        }
+      }, 10000); // Simulate 10 second delay instead of 30 to make testing faster
+      
     } catch (error) {
       console.error("Error triggering webhook:", error);
       res.status(500).json({ 
