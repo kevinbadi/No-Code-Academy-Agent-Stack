@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 import { COMMON_CRON_EXPRESSIONS } from "@shared/scheduler-schema";
 import { 
   Card, 
@@ -19,7 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, Calendar, Clock } from "lucide-react";
 
 /**
  * A simplified scheduler component that allows triggering the LinkedIn webhook
@@ -30,6 +31,8 @@ export default function SimpleScheduler() {
   const [isLoading, setIsLoading] = useState(false);
   const [schedule, setSchedule] = useState("");
   const [webhookUrl, setWebhookUrl] = useState("https://hook.make.com/yourwebhookid");
+  
+  const queryClient = useQueryClient();
   
   // Handle manual webhook trigger
   const handleManualTrigger = async () => {
@@ -44,9 +47,31 @@ export default function SimpleScheduler() {
         throw new Error(`Failed to trigger webhook: ${response.status}`);
       }
       
+      // Invalidate queries to refresh the data
+      queryClient.invalidateQueries({ queryKey: ['/api/metrics/latest'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/metrics/range'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/linkedin-agent-leads/latest'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/activities'] });
+      
+      // Add a new activity for the manually triggered webhook
+      await fetch('/api/activities', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: 'manual',
+          message: 'Manually triggered LinkedIn agent webhook',
+          metadata: {
+            trigger: 'manual',
+            timestamp: new Date().toISOString()
+          }
+        })
+      });
+      
       toast({
         title: "Webhook Triggered",
-        description: "The LinkedIn agent webhook was successfully triggered."
+        description: "The LinkedIn agent webhook was successfully triggered and metrics will update shortly."
       });
     } catch (error) {
       console.error("Error triggering webhook:", error);

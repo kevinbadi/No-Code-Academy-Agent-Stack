@@ -293,7 +293,7 @@ export default function Dashboard() {
         
         {/* Webhook Scheduler */}
         <div className="mb-8">
-          <WebhookScheduler />
+          <SimpleScheduler />
         </div>
         
         {/* Attribution */}
