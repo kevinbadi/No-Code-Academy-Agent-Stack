@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import { ScheduleConfig } from "@shared/schema";
 import { COMMON_CRON_EXPRESSIONS } from "@shared/scheduler-schema";
 import { useToast } from "@/hooks/use-toast";
@@ -25,7 +24,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -53,11 +51,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Calendar, Clock, Trash2, Play, Edit, Plus } from "lucide-react";
-
-// Custom success variant for badge
-const badgeVariants = {
-  success: "bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-700 dark:text-green-100 dark:hover:bg-green-600"
-};
 import { formatDateTime } from "@/lib/date-utils";
 
 export default function ScheduleManager() {
@@ -84,7 +77,7 @@ export default function ScheduleManager() {
   } = useQuery({
     queryKey: ["/api/schedules"],
     queryFn: async () => {
-      const res = await apiRequest("/api/schedules", {});
+      const res = await fetch("/api/schedules");
       return res.json() as Promise<ScheduleConfig[]>;
     }
   });
@@ -120,7 +113,7 @@ export default function ScheduleManager() {
   // Update an existing schedule
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: typeof formData }) => {
-      const res = await apiRequest(`/api/schedules/${id}`, {
+      const res = await fetch(`/api/schedules/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
@@ -149,7 +142,7 @@ export default function ScheduleManager() {
   // Delete a schedule
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      const res = await apiRequest(`/api/schedules/${id}`, {
+      const res = await fetch(`/api/schedules/${id}`, {
         method: "DELETE"
       });
       return res.json();
@@ -173,7 +166,7 @@ export default function ScheduleManager() {
   // Run a schedule manually
   const runMutation = useMutation({
     mutationFn: async (id: number) => {
-      const res = await apiRequest(`/api/schedules/${id}/run`, {
+      const res = await fetch(`/api/schedules/${id}/run`, {
         method: "POST"
       });
       return res.json();
@@ -398,7 +391,10 @@ export default function ScheduleManager() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={schedule.isActive ? "success" : "secondary"}>
+                    <Badge className={schedule.isActive ? 
+                      "bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-700 dark:text-green-100" : 
+                      ""} 
+                      variant={schedule.isActive ? undefined : "secondary"}>
                       {schedule.isActive ? "Active" : "Inactive"}
                     </Badge>
                   </TableCell>
