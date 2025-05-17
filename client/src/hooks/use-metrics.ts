@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Metric, Activity } from "@shared/schema";
+import { Metric, Activity, LinkedinAgentLeads } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { DateRangeValue, getDateRangeValues } from "@/lib/date-utils";
@@ -19,6 +19,14 @@ export function useMetrics(dateRange: DateRangeValue) {
 export function useLatestMetric() {
   return useQuery<Metric>({
     queryKey: ['/api/metrics/latest'],
+  });
+}
+
+// Hook to get the latest LinkedIn agent leads data
+export function useLatestLinkedinAgentLeads() {
+  return useQuery<LinkedinAgentLeads>({
+    queryKey: ['/api/linkedin-agent-leads/latest'],
+    queryFn: () => fetch('/api/linkedin-agent-leads/latest').then(res => res.json()),
   });
 }
 
