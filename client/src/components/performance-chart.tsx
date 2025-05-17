@@ -3,8 +3,8 @@ import { Metric } from "@shared/schema";
 import { formatDateForDisplay } from "@/lib/date-utils";
 import { useState } from "react";
 import {
-  LineChart,
-  Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -14,61 +14,52 @@ import {
 } from "recharts";
 import { Button } from "@/components/ui/button";
 
-interface ChartPeriod {
-  label: string;
-  value: "daily" | "weekly" | "monthly";
-}
-
-const CHART_PERIODS: ChartPeriod[] = [
-  { label: "Daily", value: "daily" },
-  { label: "Weekly", value: "weekly" },
-  { label: "Monthly", value: "monthly" }
-];
-
 interface PerformanceChartProps {
   data: Metric[];
 }
 
 export default function PerformanceChart({ data }: PerformanceChartProps) {
-  const [period, setPeriod] = useState<ChartPeriod["value"]>("daily");
-  
-  // Sort data by date (oldest to newest)
-  const sortedData = [...data].sort((a, b) => 
-    new Date(a.date).getTime() - new Date(b.date).getTime()
-  );
-  
-  // Format the chart data
-  const chartData = sortedData.map(metric => ({
-    date: formatDateForDisplay(new Date(metric.date)),
-    invitesSent: metric.invitesSent,
-    invitesAccepted: metric.invitesAccepted,
-    acceptanceRatio: metric.acceptanceRatio
-  }));
-  
+  // Process data to group by months
+  const processDataByMonth = (metrics: Metric[]) => {
+    const monthlyData = metrics.reduce((acc: any, metric) => {
+      const date = new Date(metric.date);
+      const monthKey = `${date.getFullYear()}-${date.getMonth() + 1}`;
+
+      if (!acc[monthKey]) {
+        acc[monthKey] = {
+          month: new Date(date.getFullYear(), date.getMonth(), 1),
+          invitesSent: 0,
+          acceptanceRatio: 0,
+          count: 0
+        };
+      }
+
+      acc[monthKey].invitesSent += metric.invitesSent;
+      acc[monthKey].acceptanceRatio += metric.acceptanceRatio;
+      acc[monthKey].count += 1;
+
+      return acc;
+    }, {});
+
+    // Calculate averages and format data
+    return Object.values(monthlyData).map((item: any) => ({
+      month: formatDateForDisplay(item.month, { month: 'short', year: 'numeric' }),
+      invitesSent: item.invitesSent,
+      acceptanceRatio: +(item.acceptanceRatio / item.count).toFixed(1)
+    })).sort((a: any, b: any) => 
+      new Date(a.month).getTime() - new Date(b.month).getTime()
+    );
+  };
+
+  const chartData = processDataByMonth(data);
+
   return (
     <Card className="shadow-sm border border-gray-100">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-medium text-gray-700">Performance Over Time</h3>
-          <div className="flex space-x-2">
-            {CHART_PERIODS.map((chartPeriod) => (
-              <Button
-                key={chartPeriod.value}
-                onClick={() => setPeriod(chartPeriod.value)}
-                variant={period === chartPeriod.value ? "default" : "outline"}
-                size="sm"
-                className={
-                  period === chartPeriod.value 
-                    ? "bg-[#0077B5] hover:bg-[#005e8b] text-white" 
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200 border-none"
-                }
-              >
-                {chartPeriod.label}
-              </Button>
-            ))}
-          </div>
+          <h3 className="text-lg font-medium text-gray-700">Performance Over Time (Yearly View)</h3>
         </div>
-        
+
         <div className="h-80">
           {data.length === 0 ? (
             <div className="h-full flex items-center justify-center flex-col">
@@ -77,60 +68,45 @@ export default function PerformanceChart({ data }: PerformanceChartProps) {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart
+              <BarChart
                 data={chartData}
-                margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+                margin={{ top: 5, right: 30, left: 20, bottom: 25 }}
               >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis 
-                  dataKey="date" 
+                  dataKey="month" 
                   tick={{ fontSize: 12 }}
-                  tickMargin={10}
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
                 />
                 <YAxis 
-                  tick={{ fontSize: 12 }} 
-                  tickMargin={10}
                   yAxisId="left"
+                  tick={{ fontSize: 12 }}
+                  label={{ value: 'Invites Sent', angle: -90, position: 'insideLeft' }}
                 />
                 <YAxis 
-                  tick={{ fontSize: 12 }} 
-                  tickMargin={10}
-                  orientation="right"
                   yAxisId="right"
+                  orientation="right"
                   domain={[0, 100]}
-                  unit="%"
+                  tick={{ fontSize: 12 }}
+                  label={{ value: 'Acceptance Ratio (%)', angle: 90, position: 'insideRight' }}
                 />
                 <Tooltip />
                 <Legend />
-                <Line
+                <Bar
                   yAxisId="left"
-                  type="monotone"
                   dataKey="invitesSent"
-                  stroke="#0077B5"
-                  strokeWidth={2}
-                  activeDot={{ r: 8 }}
+                  fill="#0077B5"
                   name="Invites Sent"
-                  dot={{ strokeWidth: 2 }}
                 />
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="invitesAccepted"
-                  stroke="#00A0DC"
-                  strokeWidth={2}
-                  name="Invites Accepted"
-                  dot={{ strokeWidth: 2 }}
-                />
-                <Line
+                <Bar
                   yAxisId="right"
-                  type="monotone"
                   dataKey="acceptanceRatio"
-                  stroke="#0A66C2"
-                  strokeWidth={2}
+                  fill="#00A0DC"
                   name="Acceptance Ratio (%)"
-                  dot={{ strokeWidth: 2 }}
                 />
-              </LineChart>
+              </BarChart>
             </ResponsiveContainer>
           )}
         </div>
