@@ -24,9 +24,36 @@ export default function DirectWebhookButton() {
       
       console.log("Webhook response status:", response.status);
       
-      // Generate random metrics
-      const invitesSent = Math.floor(Math.random() * 20) + 15;
-      const invitesAccepted = Math.floor(Math.random() * invitesSent * 0.7);
+      // Get the response body
+      const responseText = await response.text();
+      console.log("Webhook response body:", responseText);
+      
+      let invitesSent, invitesAccepted;
+      
+      try {
+        // Try to parse the response as JSON
+        if (responseText && responseText.trim()) {
+          const webhookData = JSON.parse(responseText);
+          console.log("Parsed webhook data:", webhookData);
+          
+          // If the webhook returns the metrics data, use it
+          if (webhookData && typeof webhookData === 'object') {
+            invitesSent = webhookData.invitesSent || webhookData.invites_sent;
+            invitesAccepted = webhookData.invitesAccepted || webhookData.invites_accepted;
+            
+            console.log("Using webhook data:", { invitesSent, invitesAccepted });
+          }
+        }
+      } catch (parseError) {
+        console.error("Error parsing webhook response:", parseError);
+      }
+      
+      // If no valid metrics data was found in the response, generate random data
+      if (!invitesSent || !invitesAccepted) {
+        console.log("Using generated data instead of webhook response");
+        invitesSent = Math.floor(Math.random() * 20) + 15;
+        invitesAccepted = Math.floor(Math.random() * invitesSent * 0.7);
+      }
       
       // Create a new metric
       await fetch('/api/metrics', {
