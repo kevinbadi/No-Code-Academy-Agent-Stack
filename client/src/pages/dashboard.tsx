@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useMetrics, useLatestMetric, useActivities, useRefreshData } from "@/hooks/use-metrics";
-import { DateRangeValue, DATE_RANGES } from "@/lib/date-utils";
+import { DateRangeValue, DATE_RANGES, getDateRangeValues } from "@/lib/date-utils";
+import { useQuery } from "@tanstack/react-query";
+import { Metric, Activity } from "@shared/schema";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,9 +19,28 @@ export default function Dashboard() {
   const [dateRange, setDateRange] = useState<DateRangeValue>("7days");
   const { toast } = useToast();
   
-  const { data: metrics, isLoading: isLoadingMetrics, error: metricsError } = useMetrics(dateRange);
-  const { data: latestMetric, isLoading: isLoadingLatest } = useLatestMetric();
-  const { data: activities, isLoading: isLoadingActivities } = useActivities(5);
+  // Use staleTime to prevent continuous requests
+  const { data: metrics, isLoading: isLoadingMetrics, error: metricsError } = useQuery<Metric[]>({
+    queryKey: ['/api/metrics/range', dateRange],
+    queryFn: () => {
+      const { startDate, endDate } = getDateRangeValues(dateRange);
+      const formattedStartDate = startDate.toISOString();
+      const formattedEndDate = endDate.toISOString();
+      return fetch(`/api/metrics/range?startDate=${formattedStartDate}&endDate=${formattedEndDate}`).then(res => res.json());
+    },
+    staleTime: 30000, // 30 seconds
+  });
+  
+  const { data: latestMetric, isLoading: isLoadingLatest } = useQuery<Metric>({
+    queryKey: ['/api/metrics/latest'],
+    staleTime: 30000, // 30 seconds
+  });
+  
+  const { data: activities, isLoading: isLoadingActivities } = useQuery<Activity[]>({
+    queryKey: ['/api/activities', 5],
+    queryFn: () => fetch(`/api/activities?limit=5`).then(res => res.json()),
+    staleTime: 30000, // 30 seconds
+  });
   
   const { mutate: refreshData, isPending: isRefreshing } = useRefreshData();
   

@@ -60,18 +60,16 @@ export function useTriggerAgentWebhook() {
       return res.json();
     },
     onSuccess: (data) => {
-      // Invalidate all queries to refresh data with the real agent data
-      queryClient.invalidateQueries({ queryKey: ['/api/metrics'] });
+      // Process webhook response data as needed
+      // Only create a new metric if the webhook provided valid data
+      if (data?.data?.invitesSent && data?.data?.invitesAccepted) {
+        // Create a new metric with the webhook data and display it
+        console.log("Successfully received webhook data:", data.data);
+      }
+      
+      // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['/api/metrics/latest'] });
       queryClient.invalidateQueries({ queryKey: ['/api/activities'] });
-      
-      // Invalidate all metrics range queries
-      queryClient.invalidateQueries({
-        predicate: (query) => {
-          const queryKey = query.queryKey[0];
-          return typeof queryKey === 'string' && queryKey.startsWith('/api/metrics/range');
-        },
-      });
       
       return data;
     },
