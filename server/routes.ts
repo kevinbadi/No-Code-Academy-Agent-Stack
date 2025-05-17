@@ -5,6 +5,7 @@ import { webhookPayloadSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { storeWebhookData, getLatestWebhookData } from "./webhook-db";
+import { db, pool } from "./db";
 
 export async function registerRoutes(app: Express, existingServer?: Server): Promise<Server> {
   // Create a new HTTP server if one wasn't provided
@@ -308,8 +309,9 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
             message: `LinkedIn agent reported ${extractedData.invitesSent} invites sent and ${extractedData.invitesAccepted} accepted`
           });
           
-          // 3. Store the LinkedIn agent leads data directly in the database using our specialized storage
-          const leadsData = await dbStorage.createLinkedinAgentLeads({
+          // 3. Store the LinkedIn agent leads data directly in the database
+          // First add to our storage interface
+          const leadsData = await storage.createLinkedinAgentLeads({
             timestamp: new Date(),
             dailySent: extractedData.dailySent,
             dailyAccepted: extractedData.dailyAccepted,
