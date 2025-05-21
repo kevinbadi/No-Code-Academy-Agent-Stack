@@ -14,6 +14,7 @@ import ActivityItem from "@/components/activity-item";
 import WebhookStatus from "@/components/webhook-status";
 import TargetAudience from "@/components/target-audience";
 import SimpleScheduler from "@/components/simple-scheduler";
+import InstagramWarmLeadAgent from "@/components/instagram-agent";
 
 // Import recharts components for the LinkedIn performance chart
 import {
@@ -404,6 +405,11 @@ export default function Dashboard() {
               </div>
             </CardContent>
           </Card>
+        </div>
+        
+        {/* Instagram Warm Lead Agent */}
+        <div className="mb-8">
+          <InstagramWarmLeadAgent />
         </div>
         
         {/* Attribution */}
