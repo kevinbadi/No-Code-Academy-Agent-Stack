@@ -39,11 +39,56 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
           try {
             // Try to parse as JSON
             const webhookData = JSON.parse(responseText);
-            // Process webhook response here...
+            console.log("Webhook data received:", webhookData);
+            
+            // Process the webhook response and store it in the database
+            // Find the data structure - it could be in invite_summaryCollection or invite_summary
+            const summary = webhookData.invite_summaryCollection || webhookData.invite_summary;
+            
+            if (summary) {
+              console.log("Found summary data structure:", summary);
+              
+              // Create LinkedIn agent leads data
+              const leadsData = await storage.createLinkedinAgentLeads({
+                timestamp: new Date(),
+                dailySent: summary.dayCollection?.sent || 0,
+                dailyAccepted: summary.dayCollection?.accepted || 0,
+                totalSent: summary.totalCollection?.sent || 0,
+                totalAccepted: summary.totalCollection?.accepted || 0,
+                processedProfiles: summary.dayCollection?.processed_profiles || 0,
+                maxInvitations: summary.dayCollection?.max_invitations || 0,
+                status: summary.totalCollection?.status || "No status available",
+                csvLink: summary.linksCollection?.csv || "",
+                jsonLink: summary.linksCollection?.json || "",
+                connectionStatus: summary.connection || "Not connected",
+                rawLog: responseText,
+                processData: summary.processCollection || {}
+              });
+              
+              console.log("Successfully stored webhook data in database:", leadsData);
+              
+              // Also create a metric entry
+              await storage.createMetric({
+                date: new Date(),
+                invitesSent: summary.dayCollection?.sent || 0,
+                invitesAccepted: summary.dayCollection?.accepted || 0
+              });
+              
+              // Add an activity log
+              await storage.createActivity({
+                timestamp: new Date(),
+                type: "webhook",
+                message: `LinkedIn agent webhook processed: ${summary.dayCollection?.sent || 0} sent, ${summary.dayCollection?.accepted || 0} accepted`,
+                metadata: {
+                  source: "trigger-agent-webhook",
+                  timestamp: new Date().toISOString()
+                }
+              });
+            }
             
             return res.status(200).json({ 
               success: true, 
-              message: "Webhook triggered successfully",
+              message: "Webhook triggered and data stored successfully",
               data: webhookData
             });
           } catch (parseError) {

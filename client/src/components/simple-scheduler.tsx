@@ -82,19 +82,36 @@ export default function SimpleScheduler() {
     setIsLoading(true);
     
     try {
-      // This is the Make.com webhook we need to directly trigger
+      // Call the Make.com webhook directly to trigger the automation
       const makeWebhookUrl = "https://hook.us2.make.com/w2b6ubph0j3rxcfd1kj3c3twmamrqico";
       console.log("Calling Make.com webhook directly:", makeWebhookUrl);
       
-      // Use the direct webhook URL, not the variable (which might be changed by user)
-      const response = await fetch(makeWebhookUrl, {
+      // First, call the direct webhook to trigger the Make automation
+      const makeResponse = await fetch(makeWebhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        // The Make.com webhook expects this format
         body: JSON.stringify({
           request_source: "dashboard",
+          trigger_timestamp: new Date().toISOString()
+        })
+      });
+      
+      if (!makeResponse.ok) {
+        throw new Error(`Failed to trigger Make webhook: ${makeResponse.status}`);
+      }
+      
+      console.log("Make.com webhook triggered successfully");
+      
+      // Now also call our API endpoint to ensure data is stored in our database
+      const response = await fetch('/api/trigger-agent-webhook', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          force_update: true,
           trigger_timestamp: new Date().toISOString()
         })
       });
@@ -121,26 +138,53 @@ export default function SimpleScheduler() {
         }
       }
       
-      // Store webhook data in the database by sending directly to our webhook endpoint
+      // Store webhook data in the database
       if (responseData) {
-        console.log("Sending webhook data to our database endpoint:", responseData);
+        console.log("Processing webhook response:", responseData);
         
-        // Send the raw webhook response to our internal webhook endpoint
-        // This uses the same processing logic as the server webhook endpoint
-        const dbResponse = await fetch('/api/webhook/linkedin-agent/kpi', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(responseData)
-        });
+        // Find the data structure - it could be in invite_summaryCollection or invite_summary
+        const summary = responseData.invite_summaryCollection || responseData.invite_summary;
         
-        console.log("Database storage response status:", dbResponse.status);
-        
-        if (!dbResponse.ok) {
-          console.warn("Failed to store webhook data in database:", await dbResponse.text());
+        if (summary) {
+          const timestamp = new Date().toISOString();
+          
+          // Prepare data from webhook response in the format needed for our database
+          const webhookData = {
+            timestamp: timestamp,
+            dailySent: summary.dayCollection?.sent || 0,
+            dailyAccepted: summary.dayCollection?.accepted || 0,
+            totalSent: summary.totalCollection?.sent || 0,
+            totalAccepted: summary.totalCollection?.accepted || 0,
+            processedProfiles: summary.dayCollection?.processed_profiles || 0,
+            maxInvitations: summary.dayCollection?.max_invitations || 0,
+            status: summary.totalCollection?.status || "No status available",
+            csvLink: summary.linksCollection?.csv || "",
+            jsonLink: summary.linksCollection?.json || "",
+            connectionStatus: summary.connection || "Not connected",
+            rawLog: JSON.stringify(responseData),
+            processData: summary.processCollection || {}
+          };
+          
+          console.log("Storing webhook data in database:", webhookData);
+          
+          // Store in linkedin_agent_leads table
+          const dbResponse = await fetch('/api/linkedin-agent-leads', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(webhookData)
+          });
+          
+          console.log("Database storage response status:", dbResponse.status);
+          
+          if (!dbResponse.ok) {
+            console.warn("Failed to store webhook data in database:", await dbResponse.text());
+          } else {
+            console.log("Successfully stored webhook data in database");
+          }
         } else {
-          console.log("Successfully stored webhook data in database");
+          console.warn("Could not find expected data structure in webhook response");
         }
       }
       

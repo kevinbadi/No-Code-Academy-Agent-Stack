@@ -40,24 +40,39 @@ export default function Dashboard() {
   // Get the latest LinkedIn agent leads data from the PostgreSQL database
   const { data: linkedinLeadsFromAPI, isLoading: isLoadingLeads } = useLatestLinkedinAgentLeads();
   
-  // Create a hardcoded object based on actual database values we know exist
-  // This ensures the dashboard displays the correct values regardless of API issues
-  const linkedinLeads = {
-    id: 1,
+  // Get the actual data from the database instead of using hardcoded values
+  // This ensures we're always showing the most recent data from the LinkedIn leads table
+  const linkedinLeads = linkedinLeadsFromAPI || {
+    id: 0,
     timestamp: new Date().toISOString(),
-    dailySent: 35, // Database value
-    dailyAccepted: 1, // Database value
-    totalSent: 35, // Database value
-    totalAccepted: 1, // Database value
-    processedProfiles: 20, // Database value
-    maxInvitations: 20, // Database value
-    status: "No more profiles to process today.",
-    csvLink: "https://phantombuster.s3.amazonaws.com/example.csv",
-    jsonLink: "https://phantombuster.s3.amazonaws.com/example.json",
-    connectionStatus: "Successfully connected to LinkedIn as Kevin Badi",
+    dailySent: 0,
+    dailyAccepted: 0,
+    totalSent: 0,
+    totalAccepted: 0,
+    processedProfiles: 0,
+    maxInvitations: 0,
+    status: "No data available",
+    csvLink: "",
+    jsonLink: "",
+    connectionStatus: "Not connected",
     rawLog: "",
     processData: {}
   };
+  
+  // Extract metrics from the most recent row in LinkedIn leads table
+  const totalInvitesSent = linkedinLeads.totalSent || 0;
+  const totalInvitesAccepted = linkedinLeads.totalAccepted || 0;
+  const totalAcceptanceRatio = totalInvitesSent > 0 ? (totalInvitesAccepted / totalInvitesSent) * 100 : 0;
+  
+  // Daily metrics
+  const dailyInvitesSent = linkedinLeads.dailySent || 0;
+  const dailyInvitesAccepted = linkedinLeads.dailyAccepted || 0;
+  const dailyAcceptanceRatio = dailyInvitesSent > 0 ? (dailyInvitesAccepted / dailyInvitesSent) * 100 : 0;
+  
+  // Profile metrics
+  const profilesProcessed = linkedinLeads.processedProfiles || 0;
+  const maxInvitesAllowed = linkedinLeads.maxInvitations || 0;
+  const profileProgress = maxInvitesAllowed > 0 ? (profilesProcessed / maxInvitesAllowed) * 100 : 0;
   
   // Log the data to debug
   console.log("LinkedIn Agent Data from API:", linkedinLeadsFromAPI);
