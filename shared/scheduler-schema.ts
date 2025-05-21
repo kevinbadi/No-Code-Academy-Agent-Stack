@@ -32,6 +32,7 @@ export type ScheduleConfig = typeof scheduleConfigs.$inferSelect;
 
 // Common cron expressions for the UI to use
 export const COMMON_CRON_EXPRESSIONS = [
+  { label: "Every 1 minute (for testing)", value: "* * * * *" },
   { label: "Every 5 minutes", value: "*/5 * * * *" },
   { label: "Every hour", value: "0 * * * *" },
   { label: "Every 12 hours", value: "0 */12 * * *" },

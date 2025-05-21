@@ -285,13 +285,12 @@ export default function Dashboard() {
           </Card>
         </div>
         
-        {/* Target Audience and Webhook Status */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Target Audience */}
+        <div className="mb-8">
           <TargetAudience />
-          <WebhookStatus />
         </div>
         
-        {/* Webhook Scheduler */}
+        {/* LinkedIn Agent Webhook */}
         <div className="mb-8">
           <SimpleScheduler />
         </div>
