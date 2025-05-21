@@ -10,7 +10,8 @@ import {
   Twitter,
   Mail,
   Menu,
-  X
+  X,
+  Instagram
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -84,13 +85,16 @@ export default function Sidebar() {
             Active Agents
           </h3>
           <div className="mt-2 space-y-1">
-            <NavItem href="/agent/linkedin" icon={<Linkedin size={18} />} active={true}>
+            <NavItem href="/agent/linkedin" icon={<Linkedin size={18} />} active={location.includes("linkedin")}>
               LinkedIn Outreach
             </NavItem>
-            <NavItem href="/agent/twitter" icon={<Twitter size={18} />}>
+            <NavItem href="/agent/instagram" icon={<Instagram size={18} />} active={location.includes("instagram")}>
+              Instagram Warm Leads
+            </NavItem>
+            <NavItem href="/agent/twitter" icon={<Twitter size={18} />} active={location.includes("twitter")}>
               Twitter Engagement
             </NavItem>
-            <NavItem href="/agent/email" icon={<Mail size={18} />}>
+            <NavItem href="/agent/email" icon={<Mail size={18} />} active={location.includes("email")}>
               Email Campaign
             </NavItem>
           </div>
