@@ -121,38 +121,27 @@ export default function SimpleScheduler() {
         }
       }
       
-      // Store webhook data in the database
-      if (responseData && responseData.invite_summaryCollection) {
-        const summary = responseData.invite_summaryCollection;
-        const timestamp = new Date().toISOString();
+      // Store webhook data in the database by sending directly to our webhook endpoint
+      if (responseData) {
+        console.log("Sending webhook data to our database endpoint:", responseData);
         
-        // Prepare data from webhook response in the format needed for our database
-        const webhookData = {
-          timestamp: timestamp,
-          dailySent: summary.dayCollection?.sent || 0,
-          dailyAccepted: summary.dayCollection?.accepted || 0,
-          totalSent: summary.totalCollection?.sent || 0,
-          totalAccepted: summary.totalCollection?.accepted || 0,
-          processedProfiles: summary.dayCollection?.processed_profiles || 0,
-          maxInvitations: summary.dayCollection?.max_invitations || 0,
-          status: summary.totalCollection?.status || "No status available",
-          csvLink: summary.linksCollection?.csv || "",
-          jsonLink: summary.linksCollection?.json || "",
-          connectionStatus: summary.connection || "Not connected",
-          rawLog: "",
-          processData: summary.processCollection || {}
-        };
-        
-        console.log("Storing webhook data in database:", webhookData);
-        
-        // Store in linkedin_agent_leads table
-        await fetch('/api/linkedin-agent-leads', {
+        // Send the raw webhook response to our internal webhook endpoint
+        // This uses the same processing logic as the server webhook endpoint
+        const dbResponse = await fetch('/api/webhook/linkedin-agent/kpi', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(webhookData)
+          body: JSON.stringify(responseData)
         });
+        
+        console.log("Database storage response status:", dbResponse.status);
+        
+        if (!dbResponse.ok) {
+          console.warn("Failed to store webhook data in database:", await dbResponse.text());
+        } else {
+          console.log("Successfully stored webhook data in database");
+        }
       }
       
       // Add a new activity to record the webhook was triggered
