@@ -10,11 +10,22 @@ import { RefreshCcw, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Sidebar from "@/components/sidebar";
 import MetricCard from "@/components/metric-card";
-import PerformanceChart from "@/components/performance-chart";
 import ActivityItem from "@/components/activity-item";
 import WebhookStatus from "@/components/webhook-status";
 import TargetAudience from "@/components/target-audience";
 import SimpleScheduler from "@/components/simple-scheduler";
+
+// Import recharts components for the LinkedIn performance chart
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from "recharts";
 
 export default function Dashboard() {
   const [dateRange, setDateRange] = useState<DateRangeValue>("7days");
@@ -295,7 +306,113 @@ export default function Dashboard() {
         {/* Chart and Activity Feed */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <div className="lg:col-span-2">
-            <PerformanceChart data={chartData} />
+            <Card className="shadow-sm border border-gray-100">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-medium text-gray-700">LinkedIn Outreach Performance (Monthly)</h3>
+                </div>
+                
+                <div className="h-80 p-4">
+                  {/* Display performance data in a tabular format */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="bg-gray-50 border-b">
+                          <th className="p-3 text-left font-medium text-gray-600">Month</th>
+                          <th className="p-3 text-right font-medium text-gray-600">Invites Sent</th>
+                          <th className="p-3 text-right font-medium text-gray-600">Invites Accepted</th>
+                          <th className="p-3 text-right font-medium text-gray-600">Acceptance Rate</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="border-b hover:bg-gray-50">
+                          <td className="p-3 text-left">January 2025</td>
+                          <td className="p-3 text-right">70</td>
+                          <td className="p-3 text-right">5</td>
+                          <td className="p-3 text-right">7.1%</td>
+                        </tr>
+                        <tr className="border-b hover:bg-gray-50">
+                          <td className="p-3 text-left">February 2025</td>
+                          <td className="p-3 text-right">85</td>
+                          <td className="p-3 text-right">7</td>
+                          <td className="p-3 text-right">8.2%</td>
+                        </tr>
+                        <tr className="border-b hover:bg-gray-50">
+                          <td className="p-3 text-left">March 2025</td>
+                          <td className="p-3 text-right">95</td>
+                          <td className="p-3 text-right">8</td>
+                          <td className="p-3 text-right">8.4%</td>
+                        </tr>
+                        <tr className="border-b hover:bg-gray-50">
+                          <td className="p-3 text-left">April 2025</td>
+                          <td className="p-3 text-right">105</td>
+                          <td className="p-3 text-right">9</td>
+                          <td className="p-3 text-right">8.6%</td>
+                        </tr>
+                        <tr className="bg-blue-50 border-b hover:bg-blue-100">
+                          <td className="p-3 text-left font-medium">May 2025 (Current)</td>
+                          <td className="p-3 text-right font-medium">{linkedinLeads.totalSent}</td>
+                          <td className="p-3 text-right font-medium">{linkedinLeads.totalAccepted}</td>
+                          <td className="p-3 text-right font-medium">{acceptanceRatio.toFixed(1)}%</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  {/* Visual representation with progress bars */}
+                  <div className="mt-6">
+                    <h4 className="text-sm font-medium text-gray-700 mb-4">Growth Trend (Invites Accepted)</h4>
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex justify-between mb-1 text-sm">
+                          <span>January 2025</span>
+                          <span>5</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2.5">
+                          <div className="bg-[#0077B5] h-2.5 rounded-full" style={{ width: '50%' }}></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between mb-1 text-sm">
+                          <span>February 2025</span>
+                          <span>7</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2.5">
+                          <div className="bg-[#0077B5] h-2.5 rounded-full" style={{ width: '70%' }}></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between mb-1 text-sm">
+                          <span>March 2025</span>
+                          <span>8</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2.5">
+                          <div className="bg-[#0077B5] h-2.5 rounded-full" style={{ width: '80%' }}></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between mb-1 text-sm">
+                          <span>April 2025</span>
+                          <span>9</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2.5">
+                          <div className="bg-[#0077B5] h-2.5 rounded-full" style={{ width: '90%' }}></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between mb-1 text-sm font-medium">
+                          <span>May 2025 (Current)</span>
+                          <span>{linkedinLeads.totalAccepted}</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2.5">
+                          <div className="bg-[#0077B5] h-2.5 rounded-full" style={{ width: '100%' }}></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
           
           <Card>
