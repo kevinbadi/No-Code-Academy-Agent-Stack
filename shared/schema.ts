@@ -117,3 +117,42 @@ export const insertScheduleConfigSchema = createInsertSchema(scheduleConfigs).om
 
 export type InsertScheduleConfig = z.infer<typeof insertScheduleConfigSchema>;
 export type ScheduleConfig = typeof scheduleConfigs.$inferSelect;
+
+// Instagram Agent Data Schema - stores Instagram warm lead data
+export const instagramAgentLeads = pgTable("instagram_agent_leads", {
+  id: serial("id").primaryKey(),
+  timestamp: timestamp("timestamp").notNull().defaultNow(),
+  
+  // Daily stats
+  dailyProfilesScanned: integer("daily_profiles_scanned").notNull(),
+  dailyLeadsFound: integer("daily_leads_found").notNull(),
+  dailyMessagesInitiated: integer("daily_messages_initiated").notNull(),
+  dailyResponsesReceived: integer("daily_responses_received").notNull(),
+  
+  // Cumulative stats
+  totalProfilesScanned: integer("total_profiles_scanned").notNull(),
+  totalLeadsFound: integer("total_leads_found").notNull(),
+  totalMessagesInitiated: integer("total_messages_initiated").notNull(),
+  totalResponsesReceived: integer("total_responses_received").notNull(),
+  
+  // Status and diagnostics
+  status: text("status"),
+  targetAudience: text("target_audience"),
+  conversionRate: real("conversion_rate"),
+  responseRate: real("response_rate"),
+  
+  // Data links
+  dataExportLink: text("data_export_link"),
+  connectionStatus: text("connection_status"),
+  
+  // Raw data
+  rawLog: text("raw_log"),
+  processData: json("process_data")
+});
+
+export const insertInstagramAgentLeadsSchema = createInsertSchema(instagramAgentLeads).omit({
+  id: true
+});
+
+export type InsertInstagramAgentLeads = z.infer<typeof insertInstagramAgentLeadsSchema>;
+export type InstagramAgentLeads = typeof instagramAgentLeads.$inferSelect;
