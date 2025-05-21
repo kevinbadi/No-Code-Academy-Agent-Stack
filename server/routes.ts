@@ -703,7 +703,7 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
       const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
       
       // Query for Instagram agent leads data
-      const results = await db.query(`
+      const results = await pool.query(`
         SELECT * FROM instagram_agent_leads 
         ORDER BY timestamp DESC
         ${limit ? `LIMIT ${limit}` : ''}
@@ -719,7 +719,7 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
   app.get("/api/instagram-agent-leads/latest", async (req: Request, res: Response) => {
     try {
       // Get the latest Instagram agent data
-      const result = await db.query(`
+      const result = await pool.query(`
         SELECT * FROM instagram_agent_leads 
         ORDER BY timestamp DESC 
         LIMIT 1
@@ -732,24 +732,41 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
         const response = {
           id: data.id,
           timestamp: data.timestamp,
+          
+          // User identification fields
+          username: data.username,
+          fullName: data.full_name,
+          profileUrl: data.profile_url,
+          profilePictureUrl: data.profile_picture_url,
+          instagramID: data.instagram_id,
+          isVerified: data.is_verified,
+          followedByViewer: data.followed_by_viewer,
+          requestedByViewer: data.requested_by_viewer,
+          photoUrl: data.photo_url,
+          
+          // Daily metrics
           dailyProfilesScanned: data.daily_profiles_scanned || 0,
           dailyLeadsFound: data.daily_leads_found || 0,
           dailyMessagesInitiated: data.daily_messages_initiated || 0,
           dailyResponsesReceived: data.daily_responses_received || 0,
           
+          // Total metrics
           totalProfilesScanned: data.total_profiles_scanned || 0,
           totalLeadsFound: data.total_leads_found || 0,
           totalMessagesInitiated: data.total_messages_initiated || 0,
           totalResponsesReceived: data.total_responses_received || 0,
           
-          status: data.status || "",
+          // Status information
+          status: data.status || "Ready",
           targetAudience: data.target_audience || "",
           conversionRate: data.conversion_rate || 0,
           responseRate: data.response_rate || 0,
           
+          // Data links
           dataExportLink: data.data_export_link || "",
           connectionStatus: data.connection_status || "",
           
+          // Raw data
           rawLog: data.raw_log || "",
           processData: data.process_data || {}
         };
