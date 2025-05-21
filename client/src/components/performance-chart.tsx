@@ -94,7 +94,7 @@ export default function PerformanceChart({ data }: PerformanceChartProps) {
 
     // Calculate averages and format data
     return Object.values(monthlyData).map((item: any) => ({
-      month: formatDateForDisplay(item.month, { month: 'short', year: 'numeric' }),
+      month: formatDateForDisplay(item.month),
       invitesSent: item.invitesSent,
       invitesAccepted: item.invitesAccepted,
       acceptanceRatio: +(item.acceptanceRatio / item.count).toFixed(1)
