@@ -697,6 +697,217 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
   });
   
   // Error handler
+  // Instagram Agent Leads API Endpoints
+  app.get("/api/instagram-agent-leads", async (req: Request, res: Response) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      
+      // Query for Instagram agent leads data
+      const results = await db.query(`
+        SELECT * FROM instagram_agent_leads 
+        ORDER BY timestamp DESC
+        ${limit ? `LIMIT ${limit}` : ''}
+      `);
+      
+      res.json(results.rows || []);
+    } catch (error) {
+      console.error("Error fetching Instagram agent leads:", error);
+      res.status(500).json({ error: "Failed to fetch Instagram agent leads" });
+    }
+  });
+
+  app.get("/api/instagram-agent-leads/latest", async (req: Request, res: Response) => {
+    try {
+      // Get the latest Instagram agent data
+      const result = await db.query(`
+        SELECT * FROM instagram_agent_leads 
+        ORDER BY timestamp DESC 
+        LIMIT 1
+      `);
+      
+      // Return null if no data is found
+      if (result.rows && result.rows.length > 0) {
+        // Convert snake_case to camelCase for frontend
+        const data = result.rows[0];
+        const response = {
+          id: data.id,
+          timestamp: data.timestamp,
+          dailyProfilesScanned: data.daily_profiles_scanned || 0,
+          dailyLeadsFound: data.daily_leads_found || 0,
+          dailyMessagesInitiated: data.daily_messages_initiated || 0,
+          dailyResponsesReceived: data.daily_responses_received || 0,
+          
+          totalProfilesScanned: data.total_profiles_scanned || 0,
+          totalLeadsFound: data.total_leads_found || 0,
+          totalMessagesInitiated: data.total_messages_initiated || 0,
+          totalResponsesReceived: data.total_responses_received || 0,
+          
+          status: data.status || "",
+          targetAudience: data.target_audience || "",
+          conversionRate: data.conversion_rate || 0,
+          responseRate: data.response_rate || 0,
+          
+          dataExportLink: data.data_export_link || "",
+          connectionStatus: data.connection_status || "",
+          
+          rawLog: data.raw_log || "",
+          processData: data.process_data || {}
+        };
+        
+        res.json(response);
+      } else {
+        res.json(null);
+      }
+    } catch (error) {
+      console.error("Error fetching latest Instagram agent lead:", error);
+      res.status(500).json({ error: "Failed to fetch latest Instagram agent lead" });
+    }
+  });
+
+  // Instagram Agent Webhook endpoint
+  app.post("/api/webhook/instagram-agent", async (req: Request, res: Response) => {
+    try {
+      const data = req.body;
+      
+      // Insert the webhook data into the database
+      const result = await db.query(`
+        INSERT INTO instagram_agent_leads (
+          daily_profiles_scanned, daily_leads_found, daily_messages_initiated, daily_responses_received,
+          total_profiles_scanned, total_leads_found, total_messages_initiated, total_responses_received,
+          status, target_audience, conversion_rate, response_rate,
+          data_export_link, connection_status,
+          raw_log, process_data
+        ) VALUES (
+          $1, $2, $3, $4,
+          $5, $6, $7, $8,
+          $9, $10, $11, $12,
+          $13, $14,
+          $15, $16
+        ) RETURNING *
+      `, [
+        data.dailyProfilesScanned || 0,
+        data.dailyLeadsFound || 0,
+        data.dailyMessagesInitiated || 0,
+        data.dailyResponsesReceived || 0,
+        
+        data.totalProfilesScanned || 0,
+        data.totalLeadsFound || 0,
+        data.totalMessagesInitiated || 0,
+        data.totalResponsesReceived || 0,
+        
+        data.status || "Webhook received",
+        data.targetAudience || "Not specified",
+        data.conversionRate || 0,
+        data.responseRate || 0,
+        
+        data.dataExportLink || "",
+        data.connectionStatus || "Connected via webhook",
+        
+        data.rawLog || "",
+        data.processData || {}
+      ]);
+      
+      // Create activity log for the webhook
+      await storage.createActivity({
+        timestamp: new Date(),
+        type: "agent",
+        message: `Instagram agent reported ${data.dailyLeadsFound} leads found from ${data.dailyProfilesScanned} profiles scanned`
+      });
+      
+      res.status(201).json({ 
+        success: true, 
+        message: "Instagram webhook data processed successfully",
+        data: result.rows[0]
+      });
+    } catch (error) {
+      console.error("Error processing Instagram webhook:", error);
+      res.status(500).json({ error: "Failed to process Instagram webhook" });
+    }
+  });
+  
+  // Sample data endpoint - for demonstration purposes
+  app.post("/api/instagram-agent-leads/sample", async (req: Request, res: Response) => {
+    try {
+      // Create a sample Instagram agent lead entry
+      const sampleData = {
+        daily_profiles_scanned: 120,
+        daily_leads_found: 15,
+        daily_messages_initiated: 12,
+        daily_responses_received: 5,
+        
+        total_profiles_scanned: 500,
+        total_leads_found: 65,
+        total_messages_initiated: 50,
+        total_responses_received: 22,
+        
+        status: "Active",
+        target_audience: "Business owners, entrepreneurs, startup founders",
+        conversion_rate: 13.0,
+        response_rate: 44.0,
+        
+        data_export_link: "https://example.com/export.csv",
+        connection_status: "Connected to Instagram",
+        
+        raw_log: "",
+        process_data: {}
+      };
+      
+      // Insert the sample data into the database
+      const result = await db.query(`
+        INSERT INTO instagram_agent_leads (
+          daily_profiles_scanned, daily_leads_found, daily_messages_initiated, daily_responses_received,
+          total_profiles_scanned, total_leads_found, total_messages_initiated, total_responses_received,
+          status, target_audience, conversion_rate, response_rate,
+          data_export_link, connection_status,
+          raw_log, process_data
+        ) VALUES (
+          $1, $2, $3, $4,
+          $5, $6, $7, $8,
+          $9, $10, $11, $12,
+          $13, $14,
+          $15, $16
+        ) RETURNING *
+      `, [
+        sampleData.daily_profiles_scanned,
+        sampleData.daily_leads_found,
+        sampleData.daily_messages_initiated,
+        sampleData.daily_responses_received,
+        
+        sampleData.total_profiles_scanned,
+        sampleData.total_leads_found,
+        sampleData.total_messages_initiated,
+        sampleData.total_responses_received,
+        
+        sampleData.status,
+        sampleData.target_audience,
+        sampleData.conversion_rate,
+        sampleData.response_rate,
+        
+        sampleData.data_export_link,
+        sampleData.connection_status,
+        
+        sampleData.raw_log,
+        sampleData.process_data
+      ]);
+      
+      // Create activity log for the sample data
+      await storage.createActivity({
+        timestamp: new Date(),
+        type: "system",
+        message: `Created sample Instagram agent data`
+      });
+      
+      res.status(201).json({ 
+        success: true, 
+        message: "Sample Instagram agent data created",
+        data: result.rows[0]
+      });
+    } catch (error) {
+      console.error("Error creating sample Instagram agent data:", error);
+      res.status(500).json({ error: "Failed to create sample Instagram agent data" });
+    }
+  });
+
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     console.error("Unhandled error:", err);
     res.status(500).json({ message: "Internal server error", error: err.message });
