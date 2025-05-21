@@ -123,17 +123,28 @@ export const instagramAgentLeads = pgTable("instagram_agent_leads", {
   id: serial("id").primaryKey(),
   timestamp: timestamp("timestamp").notNull().defaultNow(),
   
+  // User identification fields
+  username: text("username").notNull(),
+  fullName: text("full_name"),
+  profileUrl: text("profile_url"),
+  profilePictureUrl: text("profile_picture_url"),
+  instagramID: text("instagram_id"),
+  isVerified: boolean("is_verified").default(false),
+  followedByViewer: boolean("followed_by_viewer").default(false),
+  requestedByViewer: boolean("requested_by_viewer").default(false),
+  photoUrl: text("photo_url"),
+  
   // Daily stats
-  dailyProfilesScanned: integer("daily_profiles_scanned").notNull(),
-  dailyLeadsFound: integer("daily_leads_found").notNull(),
-  dailyMessagesInitiated: integer("daily_messages_initiated").notNull(),
-  dailyResponsesReceived: integer("daily_responses_received").notNull(),
+  dailyProfilesScanned: integer("daily_profiles_scanned").notNull().default(0),
+  dailyLeadsFound: integer("daily_leads_found").notNull().default(0),
+  dailyMessagesInitiated: integer("daily_messages_initiated").notNull().default(0),
+  dailyResponsesReceived: integer("daily_responses_received").notNull().default(0),
   
   // Cumulative stats
-  totalProfilesScanned: integer("total_profiles_scanned").notNull(),
-  totalLeadsFound: integer("total_leads_found").notNull(),
-  totalMessagesInitiated: integer("total_messages_initiated").notNull(),
-  totalResponsesReceived: integer("total_responses_received").notNull(),
+  totalProfilesScanned: integer("total_profiles_scanned").notNull().default(0),
+  totalLeadsFound: integer("total_leads_found").notNull().default(0),
+  totalMessagesInitiated: integer("total_messages_initiated").notNull().default(0),
+  totalResponsesReceived: integer("total_responses_received").notNull().default(0),
   
   // Status and diagnostics
   status: text("status"),

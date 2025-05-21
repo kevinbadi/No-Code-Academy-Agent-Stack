@@ -1,12 +1,25 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Instagram, RefreshCw, Users, MessageSquare, CheckCircle, Search } from "lucide-react";
-import { useState } from "react";
+import { Instagram, RefreshCw, Users, MessageSquare, CheckCircle, Search, User, ExternalLink } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 export default function InstagramWarmLeadAgent() {
-  // Sample data for the Instagram agent UI
+  // Instagram agent data with profile information
   const [instagramData, setInstagramData] = useState({
+    // User profile
+    username: "tonda.thr",
+    fullName: "𝓐𝓷𝓽𝓸𝓲𝓷𝓮",
+    profileUrl: "https://instagram.com/tonda.thr",
+    profilePictureUrl: "https://scontent-cdg4-3.cdninstagram.com/v/t51.2885-19/475231190_1110025517526822_5889129386798833630_n.jpg",
+    instagramID: "48999683829",
+    isVerified: false,
+    followedByViewer: false,
+    requestedByViewer: false,
+    photoUrl: "https://www.instagram.com/p/CqgeV-3MYIr/",
+    
     // Daily metrics
     dailyProfilesScanned: 120,
     dailyLeadsFound: 15,
@@ -28,6 +41,23 @@ export default function InstagramWarmLeadAgent() {
     // Connection info
     connectionStatus: "Connected to Instagram"
   });
+  
+  // Function to fetch Instagram data from API
+  const fetchInstagramData = async () => {
+    try {
+      const response = await fetch('/api/instagram-agent-leads/latest');
+      const data = await response.json();
+      
+      if (data) {
+        setInstagramData(prev => ({
+          ...prev,
+          ...data
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching Instagram agent data:", error);
+    }
+  };
 
   // Calculate percentages for progress bars
   const leadConversionRate = instagramData.totalProfilesScanned > 0 
@@ -38,6 +68,16 @@ export default function InstagramWarmLeadAgent() {
     ? (instagramData.totalResponsesReceived / instagramData.totalMessagesInitiated) * 100 
     : 0;
 
+  // Add useEffect to fetch data when component mounts
+  useEffect(() => {
+    fetchInstagramData();
+  }, []);
+  
+  // Handle refresh button click
+  const handleRefresh = () => {
+    fetchInstagramData();
+  };
+  
   return (
     <Card className="shadow-sm border border-gray-100">
       <CardContent className="p-6">
@@ -51,10 +91,71 @@ export default function InstagramWarmLeadAgent() {
               <span className="h-2 w-2 rounded-full bg-green-400 mr-1"></span>
               {instagramData.status}
             </span>
-            <Button variant="outline" size="sm" className="flex items-center">
+            <Button variant="outline" size="sm" className="flex items-center" onClick={handleRefresh}>
               <RefreshCw className="h-4 w-4 mr-1" />
               Refresh
             </Button>
+          </div>
+        </div>
+        
+        {/* Latest Lead Profile */}
+        <div className="mb-6 bg-gradient-to-r from-purple-50 via-pink-50 to-pink-100 p-5 rounded-lg border border-pink-100">
+          <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+            <User className="h-4 w-4 mr-1 text-[#E1306C]" />
+            Latest Instagram Lead
+          </h4>
+          
+          <div className="flex flex-col md:flex-row gap-4 items-start">
+            <div className="flex-shrink-0">
+              <Avatar className="h-16 w-16 border-2 border-white shadow-md">
+                <AvatarImage src={instagramData.profilePictureUrl} alt={instagramData.username} />
+                <AvatarFallback className="bg-gradient-to-br from-pink-400 to-[#E1306C] text-white">
+                  {instagramData.username.substring(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+            
+            <div className="flex-grow space-y-2">
+              <div className="flex items-center">
+                <span className="font-bold text-gray-800">{instagramData.fullName}</span>
+                {instagramData.isVerified && (
+                  <Badge variant="outline" className="ml-2 text-[#E1306C] border-[#E1306C]">Verified</Badge>
+                )}
+              </div>
+              
+              <div className="flex items-center text-gray-500 text-sm">
+                <span>@{instagramData.username}</span>
+                <a 
+                  href={instagramData.profileUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="ml-2 text-[#E1306C] hover:text-pink-700 inline-flex items-center"
+                >
+                  <ExternalLink className="h-3 w-3 mr-1" />
+                  View Profile
+                </a>
+              </div>
+              
+              <div className="flex gap-4 text-sm">
+                <div>
+                  <span className="text-gray-500">ID: </span>
+                  <span className="text-gray-700">{instagramData.instagramID}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Status: </span>
+                  <span className="text-gray-700">
+                    {instagramData.followedByViewer ? "Following" : 
+                     instagramData.requestedByViewer ? "Requested" : "Not Following"}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="md:ml-auto mt-2 md:mt-0">
+              <Button size="sm" className="bg-gradient-to-r from-[#FCAF45] to-[#E1306C] hover:opacity-90 text-white">
+                Message Lead
+              </Button>
+            </div>
           </div>
         </div>
         
