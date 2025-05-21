@@ -313,99 +313,91 @@ export default function Dashboard() {
                 </div>
                 
                 <div className="h-80 p-4">
-                  {/* Display performance data in a tabular format */}
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr className="bg-gray-50 border-b">
-                          <th className="p-3 text-left font-medium text-gray-600">Month</th>
-                          <th className="p-3 text-right font-medium text-gray-600">Invites Sent</th>
-                          <th className="p-3 text-right font-medium text-gray-600">Invites Accepted</th>
-                          <th className="p-3 text-right font-medium text-gray-600">Acceptance Rate</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr className="border-b hover:bg-gray-50">
-                          <td className="p-3 text-left">January 2025</td>
-                          <td className="p-3 text-right">70</td>
-                          <td className="p-3 text-right">5</td>
-                          <td className="p-3 text-right">7.1%</td>
-                        </tr>
-                        <tr className="border-b hover:bg-gray-50">
-                          <td className="p-3 text-left">February 2025</td>
-                          <td className="p-3 text-right">85</td>
-                          <td className="p-3 text-right">7</td>
-                          <td className="p-3 text-right">8.2%</td>
-                        </tr>
-                        <tr className="border-b hover:bg-gray-50">
-                          <td className="p-3 text-left">March 2025</td>
-                          <td className="p-3 text-right">95</td>
-                          <td className="p-3 text-right">8</td>
-                          <td className="p-3 text-right">8.4%</td>
-                        </tr>
-                        <tr className="border-b hover:bg-gray-50">
-                          <td className="p-3 text-left">April 2025</td>
-                          <td className="p-3 text-right">105</td>
-                          <td className="p-3 text-right">9</td>
-                          <td className="p-3 text-right">8.6%</td>
-                        </tr>
-                        <tr className="bg-blue-50 border-b hover:bg-blue-100">
-                          <td className="p-3 text-left font-medium">May 2025 (Current)</td>
-                          <td className="p-3 text-right font-medium">{linkedinLeads.totalSent}</td>
-                          <td className="p-3 text-right font-medium">{linkedinLeads.totalAccepted}</td>
-                          <td className="p-3 text-right font-medium">{acceptanceRatio.toFixed(1)}%</td>
-                        </tr>
-                      </tbody>
-                    </table>
+                  {/* Current LinkedIn Outreach Performance Stats */}
+                  <div className="mb-8 bg-blue-50 p-6 rounded-lg border border-blue-100">
+                    <h4 className="text-base font-medium text-gray-700 mb-4">Current Performance (May 2025)</h4>
+                    
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <div className="flex flex-col">
+                          <span className="text-sm text-gray-500 mb-1">Total Invites Sent</span>
+                          <span className="text-3xl font-bold text-[#0077B5]">{linkedinLeads.totalSent}</span>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <div className="flex flex-col">
+                          <span className="text-sm text-gray-500 mb-1">Total Invites Accepted</span>
+                          <span className="text-3xl font-bold text-[#0077B5]">{linkedinLeads.totalAccepted}</span>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <div className="flex flex-col">
+                          <span className="text-sm text-gray-500 mb-1">Daily Invites Sent</span>
+                          <span className="text-3xl font-bold text-[#0077B5]">{linkedinLeads.dailySent}</span>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <div className="flex flex-col">
+                          <span className="text-sm text-gray-500 mb-1">Acceptance Rate</span>
+                          <span className="text-3xl font-bold text-[#0077B5]">{acceptanceRatio.toFixed(1)}%</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   
-                  {/* Visual representation with progress bars */}
-                  <div className="mt-6">
-                    <h4 className="text-sm font-medium text-gray-700 mb-4">Growth Trend (Invites Accepted)</h4>
-                    <div className="space-y-4">
+                  {/* Visual representation of current stats */}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-4">LinkedIn Outreach Analytics</h4>
+                    
+                    <div className="space-y-6 mt-4">
                       <div>
-                        <div className="flex justify-between mb-1 text-sm">
-                          <span>January 2025</span>
-                          <span>5</span>
+                        <div className="flex justify-between mb-2 text-sm">
+                          <span className="font-medium">Invites Sent vs Target</span>
+                          <span className="font-medium">{linkedinLeads.totalSent} / 150</span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2.5">
-                          <div className="bg-[#0077B5] h-2.5 rounded-full" style={{ width: '50%' }}></div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div 
+                            className="bg-[#0077B5] h-3 rounded-full" 
+                            style={{ width: `${Math.min(100, (linkedinLeads.totalSent / 150) * 100)}%` }}
+                          ></div>
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1 text-right">
+                          {Math.round((linkedinLeads.totalSent / 150) * 100)}% of monthly target
                         </div>
                       </div>
+                      
                       <div>
-                        <div className="flex justify-between mb-1 text-sm">
-                          <span>February 2025</span>
-                          <span>7</span>
+                        <div className="flex justify-between mb-2 text-sm">
+                          <span className="font-medium">Acceptance Rate vs Target</span>
+                          <span className="font-medium">{acceptanceRatio.toFixed(1)}% / 10%</span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2.5">
-                          <div className="bg-[#0077B5] h-2.5 rounded-full" style={{ width: '70%' }}></div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div 
+                            className={`${acceptanceRatio >= 10 ? 'bg-green-500' : 'bg-yellow-500'} h-3 rounded-full`}
+                            style={{ width: `${Math.min(100, (acceptanceRatio / 10) * 100)}%` }}
+                          ></div>
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1 text-right">
+                          {acceptanceRatio >= 10 ? 'Meeting target 🎯' : 'Building toward target'}
                         </div>
                       </div>
+                      
                       <div>
-                        <div className="flex justify-between mb-1 text-sm">
-                          <span>March 2025</span>
-                          <span>8</span>
+                        <div className="flex justify-between mb-2 text-sm">
+                          <span className="font-medium">Daily Invites</span>
+                          <span className="font-medium">{linkedinLeads.dailySent} today</span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2.5">
-                          <div className="bg-[#0077B5] h-2.5 rounded-full" style={{ width: '80%' }}></div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div 
+                            className="bg-[#0077B5] h-3 rounded-full" 
+                            style={{ width: `${Math.min(100, (linkedinLeads.dailySent / 30) * 100)}%` }}
+                          ></div>
                         </div>
-                      </div>
-                      <div>
-                        <div className="flex justify-between mb-1 text-sm">
-                          <span>April 2025</span>
-                          <span>9</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2.5">
-                          <div className="bg-[#0077B5] h-2.5 rounded-full" style={{ width: '90%' }}></div>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex justify-between mb-1 text-sm font-medium">
-                          <span>May 2025 (Current)</span>
-                          <span>{linkedinLeads.totalAccepted}</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2.5">
-                          <div className="bg-[#0077B5] h-2.5 rounded-full" style={{ width: '100%' }}></div>
+                        <div className="text-xs text-gray-500 mt-1 text-right">
+                          {Math.round((linkedinLeads.dailySent / 30) * 100)}% of daily capacity
                         </div>
                       </div>
                     </div>
