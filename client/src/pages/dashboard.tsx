@@ -181,33 +181,33 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <MetricCard
             title="Total Invites Sent"
-            value={invitesSent}
+            value={totalInvitesSent}
             icon="paper-plane"
             change={12.5} // Example value
             color="#0077B5"
             progressValue={85}
-            isLoading={isLoadingLatest || isLoadingLeads}
+            isLoading={isLoadingLeads}
           />
           
           <MetricCard
             title="Total Invites Accepted"
-            value={invitesAccepted}
+            value={totalInvitesAccepted}
             icon="user-check"
             change={8.3} // Example value
             color="#00A0DC"
             progressValue={65}
-            isLoading={isLoadingLatest || isLoadingLeads}
+            isLoading={isLoadingLeads}
           />
           
           <MetricCard
             title="Acceptance Ratio"
-            value={acceptanceRatio.toFixed(1)}
+            value={totalAcceptanceRatio.toFixed(1)}
             suffix="%"
             icon="percentage"
             change={-2.1} // Example value
             color="#0A66C2"
-            progressValue={Math.min(100, acceptanceRatio)}
-            isLoading={isLoadingLatest || isLoadingLeads}
+            progressValue={Math.min(100, totalAcceptanceRatio)}
+            isLoading={isLoadingLeads}
           />
         </div>
         
