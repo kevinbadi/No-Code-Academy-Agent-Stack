@@ -303,150 +303,107 @@ export default function Dashboard() {
           />
         </div>
         
-        {/* Chart and Activity Feed */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="lg:col-span-2">
-            <Card className="shadow-sm border border-gray-100">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-medium text-gray-700">LinkedIn Outreach Performance (Monthly)</h3>
-                </div>
-                
-                <div className="h-80 p-4">
-                  {/* Current LinkedIn Outreach Performance Stats */}
-                  <div className="mb-8 bg-blue-50 p-6 rounded-lg border border-blue-100">
-                    <h4 className="text-base font-medium text-gray-700 mb-4">Current Performance (May 2025)</h4>
-                    
-                    <div className="grid grid-cols-2 gap-6">
-                      <div>
-                        <div className="flex flex-col">
-                          <span className="text-sm text-gray-500 mb-1">Total Invites Sent</span>
-                          <span className="text-3xl font-bold text-[#0077B5]">{linkedinLeads.totalSent}</span>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <div className="flex flex-col">
-                          <span className="text-sm text-gray-500 mb-1">Total Invites Accepted</span>
-                          <span className="text-3xl font-bold text-[#0077B5]">{linkedinLeads.totalAccepted}</span>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <div className="flex flex-col">
-                          <span className="text-sm text-gray-500 mb-1">Daily Invites Sent</span>
-                          <span className="text-3xl font-bold text-[#0077B5]">{linkedinLeads.dailySent}</span>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <div className="flex flex-col">
-                          <span className="text-sm text-gray-500 mb-1">Acceptance Rate</span>
-                          <span className="text-3xl font-bold text-[#0077B5]">{acceptanceRatio.toFixed(1)}%</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Visual representation of current stats */}
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-4">LinkedIn Outreach Analytics</h4>
-                    
-                    <div className="space-y-6 mt-4">
-                      <div>
-                        <div className="flex justify-between mb-2 text-sm">
-                          <span className="font-medium">Invites Sent vs Target</span>
-                          <span className="font-medium">{linkedinLeads.totalSent} / 150</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-3">
-                          <div 
-                            className="bg-[#0077B5] h-3 rounded-full" 
-                            style={{ width: `${Math.min(100, (linkedinLeads.totalSent / 150) * 100)}%` }}
-                          ></div>
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1 text-right">
-                          {Math.round((linkedinLeads.totalSent / 150) * 100)}% of monthly target
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <div className="flex justify-between mb-2 text-sm">
-                          <span className="font-medium">Acceptance Rate vs Target</span>
-                          <span className="font-medium">{acceptanceRatio.toFixed(1)}% / 10%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-3">
-                          <div 
-                            className={`${acceptanceRatio >= 10 ? 'bg-green-500' : 'bg-yellow-500'} h-3 rounded-full`}
-                            style={{ width: `${Math.min(100, (acceptanceRatio / 10) * 100)}%` }}
-                          ></div>
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1 text-right">
-                          {acceptanceRatio >= 10 ? 'Meeting target 🎯' : 'Building toward target'}
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <div className="flex justify-between mb-2 text-sm">
-                          <span className="font-medium">Daily Invites</span>
-                          <span className="font-medium">{linkedinLeads.dailySent} today</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-3">
-                          <div 
-                            className="bg-[#0077B5] h-3 rounded-full" 
-                            style={{ width: `${Math.min(100, (linkedinLeads.dailySent / 30) * 100)}%` }}
-                          ></div>
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1 text-right">
-                          {Math.round((linkedinLeads.dailySent / 30) * 100)}% of daily capacity
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          
-          <Card>
+        {/* LinkedIn Outreach Performance */}
+        <div className="mb-8">
+          <Card className="shadow-sm border border-gray-100">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-medium text-gray-700">Recent Activity</h3>
-                <button className="text-[#0077B5] hover:text-[#005e8b] text-sm font-medium">
-                  View All
-                </button>
+                <h3 className="text-lg font-medium text-gray-700">LinkedIn Outreach Performance (Monthly)</h3>
               </div>
               
-              <div className="space-y-4">
-                {isLoadingActivities ? (
-                  Array(5).fill(0).map((_, i) => (
-                    <div key={i} className="flex items-start">
-                      <div className="w-8 h-8 bg-gray-100 rounded-full mr-3 animate-pulse"></div>
-                      <div className="flex-1">
-                        <div className="h-4 bg-gray-100 rounded w-3/4 mb-2 animate-pulse"></div>
-                        <div className="h-3 bg-gray-100 rounded w-1/4 animate-pulse"></div>
+              <div className="h-80 p-4">
+                {/* Current LinkedIn Outreach Performance Stats */}
+                <div className="mb-8 bg-blue-50 p-6 rounded-lg border border-blue-100">
+                  <h4 className="text-base font-medium text-gray-700 mb-4">Current Performance (May 2025)</h4>
+                  
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-500 mb-1">Total Invites Sent</span>
+                        <span className="text-3xl font-bold text-[#0077B5]">{linkedinLeads.totalSent}</span>
                       </div>
                     </div>
-                  ))
-                ) : activities?.length ? (
-                  activities.map((activity) => (
-                    <ActivityItem key={activity.id} activity={activity} />
-                  ))
-                ) : (
-                  <p className="text-gray-500 text-center py-4">No recent activities</p>
-                )}
+                    
+                    <div>
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-500 mb-1">Total Invites Accepted</span>
+                        <span className="text-3xl font-bold text-[#0077B5]">{linkedinLeads.totalAccepted}</span>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-500 mb-1">Daily Invites Sent</span>
+                        <span className="text-3xl font-bold text-[#0077B5]">{linkedinLeads.dailySent}</span>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-500 mb-1">Acceptance Rate</span>
+                        <span className="text-3xl font-bold text-[#0077B5]">{acceptanceRatio.toFixed(1)}%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Visual representation of current stats */}
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-4">LinkedIn Outreach Analytics</h4>
+                  
+                  <div className="space-y-6 mt-4">
+                    <div>
+                      <div className="flex justify-between mb-2 text-sm">
+                        <span className="font-medium">Invites Sent vs Target</span>
+                        <span className="font-medium">{linkedinLeads.totalSent} / 150</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div 
+                          className="bg-[#0077B5] h-3 rounded-full" 
+                          style={{ width: `${Math.min(100, (linkedinLeads.totalSent / 150) * 100)}%` }}
+                        ></div>
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1 text-right">
+                        {Math.round((linkedinLeads.totalSent / 150) * 100)}% of monthly target
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="flex justify-between mb-2 text-sm">
+                        <span className="font-medium">Acceptance Rate vs Target</span>
+                        <span className="font-medium">{acceptanceRatio.toFixed(1)}% / 10%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div 
+                          className={`${acceptanceRatio >= 10 ? 'bg-green-500' : 'bg-yellow-500'} h-3 rounded-full`}
+                          style={{ width: `${Math.min(100, (acceptanceRatio / 10) * 100)}%` }}
+                        ></div>
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1 text-right">
+                        {acceptanceRatio >= 10 ? 'Meeting target 🎯' : 'Building toward target'}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="flex justify-between mb-2 text-sm">
+                        <span className="font-medium">Daily Invites</span>
+                        <span className="font-medium">{linkedinLeads.dailySent} today</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div 
+                          className="bg-[#0077B5] h-3 rounded-full" 
+                          style={{ width: `${Math.min(100, (linkedinLeads.dailySent / 30) * 100)}%` }}
+                        ></div>
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1 text-right">
+                        {Math.round((linkedinLeads.dailySent / 30) * 100)}% of daily capacity
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
-        </div>
-        
-        {/* Target Audience */}
-        <div className="mb-8">
-          <TargetAudience />
-        </div>
-        
-        {/* LinkedIn Agent Webhook */}
-        <div className="mb-8">
-          <SimpleScheduler />
         </div>
         
         {/* Attribution */}
