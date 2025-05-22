@@ -11,7 +11,10 @@ import {
   Mail,
   Menu,
   X,
-  Instagram
+  Instagram,
+  BarChartHorizontal,
+  FileText,
+  LineChart
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -90,6 +93,9 @@ export default function Sidebar() {
             </NavItem>
             <NavItem href="/agent/instagram" icon={<Instagram size={18} />} active={location.includes("instagram")}>
               Instagram Warm Leads
+            </NavItem>
+            <NavItem href="/agent/newsletter" icon={<FileText size={18} />} active={location.includes("newsletter")}>
+              Newsletter Analytics
             </NavItem>
             <NavItem href="/agent/twitter" icon={<Twitter size={18} />} active={location.includes("twitter")}>
               Twitter Engagement
