@@ -60,8 +60,6 @@ export default function MetricCard({
           )}
         </div>
         
-        <p className="mt-1 text-sm text-gray-500">Compared to last period</p>
-        
         {isLoading ? (
           <Skeleton className="h-1.5 w-full mt-4" />
         ) : (
