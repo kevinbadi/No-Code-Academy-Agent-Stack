@@ -94,7 +94,7 @@ export default function Sidebar() {
             <NavItem href="/agent/instagram" icon={<Instagram size={18} />} active={location.includes("instagram")}>
               Instagram Warm Leads
             </NavItem>
-            <NavItem href="/agent/newsletter" icon={<FileText size={18} />} active={location.includes("newsletter")}>
+            <NavItem href="/agent/newsletter-analytics" icon={<FileText size={18} />} active={location.includes("newsletter")}>
               Newsletter Analytics
             </NavItem>
             <NavItem href="/agent/twitter" icon={<Twitter size={18} />} active={location.includes("twitter")}>
