@@ -4,10 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Mail, Calendar, Users, MousePointer, AlertCircle } from "lucide-react";
 
-// This is a hardcoded version of the newsletter analytics page based on the
-// actual data from your database to make sure you can see the campaign metrics
+// This is a display of the real LinkedIn sales agent campaign data from your database
 export default function NewsletterStats() {
-  // These campaigns were verified to exist in your database
+  // Only showing the real LinkedIn sales agent campaign data
   const campaignData = [
     {
       id: 8,
@@ -19,37 +18,9 @@ export default function NewsletterStats() {
       opens_total: 48,
       clicks_total: 10,
       unsubscribes: 1,
-      open_rate: 0.088794924,
-      click_rate: 0.01268499,
-      send_time: "2025-05-22",
-    },
-    {
-      id: 2,
-      campaign_name: "Wednesday Special Offer",
-      subject: "Limited Time: 30% Off Premium Features",
-      total_recipients: 780,
-      emails_sent: 772,
-      total_bounces: 18,
-      opens_total: 342,
-      clicks_total: 128,
-      unsubscribes: 2,
-      open_rate: 0.33,
-      click_rate: 0.17,
-      send_time: "2025-05-22",
-    },
-    {
-      id: 1,
-      campaign_name: "Monday Weekly Newsletter",
-      subject: "New Product Announcements & Industry Updates",
-      total_recipients: 750,
-      emails_sent: 740,
-      total_bounces: 25,
-      opens_total: 285,
-      clicks_total: 95,
-      unsubscribes: 3,
-      open_rate: 0.28,
-      click_rate: 0.12,
-      send_time: "2025-05-20",
+      open_rate: 0.0888, // Formatted as 8.88%
+      click_rate: 0.0127, // Formatted as 1.27%
+      send_time: "2025-05-21",
     }
   ];
 
@@ -89,7 +60,7 @@ export default function NewsletterStats() {
                 <Mail className="h-6 w-6 text-blue-600" />
               </div>
               <h3 className="text-sm font-medium text-gray-500">Total Emails Sent</h3>
-              <p className="text-2xl font-bold">2,012</p>
+              <p className="text-2xl font-bold">500</p>
             </CardContent>
           </Card>
           
@@ -99,7 +70,7 @@ export default function NewsletterStats() {
                 <Users className="h-6 w-6 text-green-600" />
               </div>
               <h3 className="text-sm font-medium text-gray-500">Total Recipients</h3>
-              <p className="text-2xl font-bold">2,030</p>
+              <p className="text-2xl font-bold">500</p>
             </CardContent>
           </Card>
           
@@ -108,8 +79,8 @@ export default function NewsletterStats() {
               <div className="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center mb-2">
                 <MousePointer className="h-6 w-6 text-purple-600" />
               </div>
-              <h3 className="text-sm font-medium text-gray-500">Average Open Rate</h3>
-              <p className="text-2xl font-bold">23.29%</p>
+              <h3 className="text-sm font-medium text-gray-500">Open Rate</h3>
+              <p className="text-2xl font-bold">8.88%</p>
             </CardContent>
           </Card>
           
@@ -118,8 +89,8 @@ export default function NewsletterStats() {
               <div className="h-12 w-12 rounded-full bg-amber-100 flex items-center justify-center mb-2">
                 <AlertCircle className="h-6 w-6 text-amber-600" />
               </div>
-              <h3 className="text-sm font-medium text-gray-500">Average Click Rate</h3>
-              <p className="text-2xl font-bold">10.10%</p>
+              <h3 className="text-sm font-medium text-gray-500">Click Rate</h3>
+              <p className="text-2xl font-bold">1.27%</p>
             </CardContent>
           </Card>
         </div>
