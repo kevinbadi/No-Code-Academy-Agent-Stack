@@ -5,26 +5,23 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { RefreshCw } from "lucide-react";
 
-// Interface for newsletter analytics data
+// Simple interface for our newsletter analytics data
 interface NewsletterAnalytics {
   id: number;
-  campaign_id: string;
   campaign_name: string;
   subject: string;
   total_recipients: number;
   emails_sent: number;
   total_bounces: number;
   opens_total: number;
-  unique_opens: number;
   clicks_total: number;
-  unique_clicks: number;
   unsubscribes: number;
   open_rate: number;
   click_rate: number;
   send_time: string;
 }
 
-export default function NewsletterAnalytics() {
+export default function NewsletterDisplay() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   
   // Fetch newsletter analytics data
@@ -143,11 +140,11 @@ export default function NewsletterAnalytics() {
                 </CardContent>
               </Card>
             </div>
-          
+            
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {newsletterData.map((campaign) => (
-                <Card key={campaign.id} className="overflow-hidden">
-                  <CardHeader className="bg-gray-50 border-b pb-3">
+                <Card key={campaign.id} className="border border-gray-200 shadow-sm">
+                  <CardHeader className="pb-3 border-b">
                     <CardTitle className="text-lg">{campaign.subject}</CardTitle>
                     <CardDescription>
                       {campaign.campaign_name} • {formatDate(campaign.send_time)}
@@ -156,35 +153,23 @@ export default function NewsletterAnalytics() {
                   <CardContent className="p-0">
                     <div className="divide-y">
                       <div className="px-4 py-3 flex justify-between">
-                        <span className="text-sm text-gray-600">Recipients:</span>
+                        <span className="text-sm font-medium text-gray-500">Recipients:</span>
                         <span className="font-medium">{campaign.total_recipients}</span>
                       </div>
                       <div className="px-4 py-3 flex justify-between">
-                        <span className="text-sm text-gray-600">Emails Sent:</span>
-                        <span className="font-medium">{campaign.emails_sent}</span>
-                      </div>
-                      <div className="px-4 py-3 flex justify-between">
-                        <span className="text-sm text-gray-600">Bounces:</span>
+                        <span className="text-sm font-medium text-gray-500">Bounces:</span>
                         <span className="font-medium">{campaign.total_bounces}</span>
                       </div>
                       <div className="px-4 py-3 flex justify-between">
-                        <span className="text-sm text-gray-600">Opens:</span>
+                        <span className="text-sm font-medium text-gray-500">Opens:</span>
                         <span className="font-medium">{campaign.opens_total}</span>
                       </div>
                       <div className="px-4 py-3 flex justify-between">
-                        <span className="text-sm text-gray-600">Unique Opens:</span>
-                        <span className="font-medium">{campaign.unique_opens}</span>
-                      </div>
-                      <div className="px-4 py-3 flex justify-between">
-                        <span className="text-sm text-gray-600">Clicks:</span>
+                        <span className="text-sm font-medium text-gray-500">Clicks:</span>
                         <span className="font-medium">{campaign.clicks_total}</span>
                       </div>
                       <div className="px-4 py-3 flex justify-between">
-                        <span className="text-sm text-gray-600">Unique Clicks:</span>
-                        <span className="font-medium">{campaign.unique_clicks}</span>
-                      </div>
-                      <div className="px-4 py-3 flex justify-between">
-                        <span className="text-sm text-gray-600">Unsubscribes:</span>
+                        <span className="text-sm font-medium text-gray-500">Unsubscribes:</span>
                         <span className="font-medium">{campaign.unsubscribes || 0}</span>
                       </div>
                       <div className="px-4 py-3 flex justify-between bg-blue-50">

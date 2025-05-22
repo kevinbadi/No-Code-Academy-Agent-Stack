@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Dashboard from "@/pages/dashboard";
 import NewsletterAgent from "@/pages/newsletter-agent";
-import NewsletterAnalytics from "@/pages/newsletter-analytics";
+import NewsletterDisplay from "@/pages/newsletter-display";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -13,7 +13,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Dashboard} />
       <Route path="/agent/newsletter" component={NewsletterAgent} />
-      <Route path="/agent/newsletter-analytics" component={NewsletterAnalytics} />
+      <Route path="/agent/newsletter-analytics" component={NewsletterDisplay} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>
