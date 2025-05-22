@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowUp, ArrowDown, Send, UserCheck, Percent } from "lucide-react";
+import { Send, UserCheck, Percent } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type IconType = "paper-plane" | "user-check" | "percentage";
@@ -10,7 +10,7 @@ interface MetricCardProps {
   debugData?: any; // Optional debug data
   suffix?: string;
   icon: IconType;
-  change: number;
+  change: number; // Kept for backward compatibility
   color: string;
   progressValue: number;
   isLoading?: boolean;
@@ -21,13 +21,10 @@ export default function MetricCard({
   value,
   suffix = "",
   icon,
-  change,
   color,
   progressValue,
   isLoading = false,
 }: MetricCardProps) {
-  const isPositiveChange = change >= 0;
-  
   // Map icon type to component
   const IconComponent = () => {
     switch (icon) {
@@ -56,22 +53,10 @@ export default function MetricCard({
           {isLoading ? (
             <Skeleton className="h-8 w-20" />
           ) : (
-            <>
-              <span className="text-3xl font-bold text-gray-800">
-                {value}
-                {suffix}
-              </span>
-              <span className={`ml-2 text-sm font-medium flex items-center ${
-                isPositiveChange ? "text-green-500" : "text-red-500"
-              }`}>
-                {isPositiveChange ? (
-                  <ArrowUp className="mr-1 h-3 w-3" />
-                ) : (
-                  <ArrowDown className="mr-1 h-3 w-3" />
-                )}
-                {Math.abs(change)}%
-              </span>
-            </>
+            <span className="text-3xl font-bold text-gray-800">
+              {value}
+              {suffix}
+            </span>
           )}
         </div>
         
