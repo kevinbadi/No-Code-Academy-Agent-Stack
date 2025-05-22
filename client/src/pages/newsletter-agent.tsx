@@ -128,7 +128,8 @@ export default function NewsletterAgent() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Newsletter Analytics Agent</h1>
-            <p className="text-gray-500">Monitor and optimize your newsletter performance metrics</p>
+            <p className="text-gray-500">This agent reports analytics from all email campaigns sent to our newsletter subscribers every Monday, Wednesday, and Friday at 5 PM EST.</p>
+            <p className="text-sm text-gray-400 mt-1">Monitor open rates, click rates, subscriber growth, and optimize your newsletter performance.</p>
           </div>
           
           <Button 

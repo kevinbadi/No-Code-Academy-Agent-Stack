@@ -6,6 +6,15 @@ import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { storeWebhookData, getLatestWebhookData } from "./webhook-db";
 import { db, pool } from "./db";
+import { 
+  getNewsletterAnalytics, 
+  getLatestNewsletterAnalytics, 
+  createNewsletterAnalytics, 
+  getNewsletterAnalyticsByCampaign, 
+  getNewsletterAnalyticsByDateRange, 
+  handleNewsletterWebhook, 
+  createNewsletterSample 
+} from "./newsletter-agent";
 
 export async function registerRoutes(app: Express, existingServer?: Server): Promise<Server> {
   // Create a new HTTP server if one wasn't provided
@@ -922,6 +931,70 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
     } catch (error) {
       console.error("Error creating sample Instagram agent data:", error);
       res.status(500).json({ error: "Failed to create sample Instagram agent data" });
+    }
+  });
+  
+  // Newsletter Analytics Agent Routes
+  app.get("/api/newsletter-analytics", async (req: Request, res: Response) => {
+    try {
+      return await getNewsletterAnalytics(req, res);
+    } catch (error) {
+      console.error("Error in newsletter analytics route:", error);
+      return res.status(500).json({ error: "Failed to fetch newsletter analytics" });
+    }
+  });
+  
+  app.get("/api/newsletter-analytics/latest", async (req: Request, res: Response) => {
+    try {
+      return await getLatestNewsletterAnalytics(req, res);
+    } catch (error) {
+      console.error("Error in latest newsletter analytics route:", error);
+      return res.status(500).json({ error: "Failed to fetch latest newsletter analytics" });
+    }
+  });
+  
+  app.get("/api/newsletter-analytics/campaign/:campaignName", async (req: Request, res: Response) => {
+    try {
+      return await getNewsletterAnalyticsByCampaign(req, res);
+    } catch (error) {
+      console.error("Error in newsletter analytics by campaign route:", error);
+      return res.status(500).json({ error: "Failed to fetch newsletter analytics by campaign" });
+    }
+  });
+  
+  app.get("/api/newsletter-analytics/date-range", async (req: Request, res: Response) => {
+    try {
+      return await getNewsletterAnalyticsByDateRange(req, res);
+    } catch (error) {
+      console.error("Error in newsletter analytics by date range route:", error);
+      return res.status(500).json({ error: "Failed to fetch newsletter analytics by date range" });
+    }
+  });
+  
+  app.post("/api/newsletter-analytics", async (req: Request, res: Response) => {
+    try {
+      return await createNewsletterAnalytics(req, res);
+    } catch (error) {
+      console.error("Error in create newsletter analytics route:", error);
+      return res.status(500).json({ error: "Failed to create newsletter analytics" });
+    }
+  });
+  
+  app.post("/api/webhook/newsletter", async (req: Request, res: Response) => {
+    try {
+      return await handleNewsletterWebhook(req, res);
+    } catch (error) {
+      console.error("Error in newsletter webhook route:", error);
+      return res.status(500).json({ error: "Failed to process newsletter webhook" });
+    }
+  });
+  
+  app.post("/api/newsletter-analytics/sample", async (req: Request, res: Response) => {
+    try {
+      return await createNewsletterSample(req, res);
+    } catch (error) {
+      console.error("Error in create newsletter sample route:", error);
+      return res.status(500).json({ error: "Failed to create newsletter sample data" });
     }
   });
 

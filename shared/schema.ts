@@ -167,3 +167,93 @@ export const insertInstagramAgentLeadsSchema = createInsertSchema(instagramAgent
 
 export type InsertInstagramAgentLeads = z.infer<typeof insertInstagramAgentLeadsSchema>;
 export type InstagramAgentLeads = typeof instagramAgentLeads.$inferSelect;
+
+// Newsletter Analytics Agent Schema - stores newsletter campaign data and metrics
+export const newsletterAnalytics = pgTable("newsletter_analytics", {
+  id: serial("id").primaryKey(),
+  timestamp: timestamp("timestamp").notNull().defaultNow(),
+  
+  // Campaign details
+  campaignId: text("campaign_id"),
+  campaignName: text("campaign_name").notNull(),
+  campaignDate: timestamp("campaign_date").notNull(),
+  campaignType: text("campaign_type").default("regular"),
+  subject: text("subject").notNull(),
+  previewText: text("preview_text"),
+  listId: text("list_id"),
+  listIsActive: boolean("list_is_active").default(true),
+  listName: text("list_name"),
+  
+  // Email metrics
+  totalRecipients: integer("total_recipients").notNull(),
+  emailsSent: integer("emails_sent").notNull(),
+  emailsCanceled: integer("emails_canceled").default(0),
+  
+  // Delivery status
+  deliveryStatus: text("delivery_status").default("delivered"),
+  canCancel: boolean("can_cancel").default(false),
+  deliveryEnabled: boolean("delivery_enabled").default(true),
+  
+  // Bounce metrics
+  hardBounces: integer("hard_bounces").default(0),
+  softBounces: integer("soft_bounces").default(0),
+  syntaxErrors: integer("syntax_errors").default(0),
+  totalBounces: integer("total_bounces").default(0),
+  
+  // Open metrics
+  opensTotal: integer("opens_total").default(0),
+  uniqueOpens: integer("unique_opens").default(0),
+  proxyExcludedOpens: integer("proxy_excluded_opens").default(0),
+  proxyExcludedUniqueOpens: integer("proxy_excluded_unique_opens").default(0),
+  lastOpenTime: timestamp("last_open_time"),
+  
+  // Click metrics
+  clicksTotal: integer("clicks_total").default(0),
+  uniqueClicks: integer("unique_clicks").default(0),
+  uniqueSubscriberClicks: integer("unique_subscriber_clicks").default(0),
+  lastClickTime: timestamp("last_click_time"),
+  
+  // Forward metrics
+  forwardsCount: integer("forwards_count").default(0),
+  forwardsOpens: integer("forwards_opens").default(0),
+  
+  // Engagement metrics
+  abuseReports: integer("abuse_reports").default(0),
+  unsubscribes: integer("unsubscribes").default(0),
+  
+  // Calculated rates
+  openRate: real("open_rate").notNull(),
+  proxyExcludedOpenRate: real("proxy_excluded_open_rate"),
+  clickRate: real("click_rate").notNull(),
+  clickToOpenRate: real("click_to_open_rate").notNull(),
+  bounceRate: real("bounce_rate").notNull().default(0),
+  unsubscribeRate: real("unsubscribe_rate").notNull().default(0),
+  
+  // Timing info
+  sendTime: timestamp("send_time").notNull(),
+  dayOfWeek: text("day_of_week").notNull(),
+  
+  // Additional info
+  facebookLikes: json("facebook_likes"),
+  ecommerceData: json("ecommerce_data"),
+  timeseriesData: json("timeseries_data"),
+  
+  // Raw data for reference
+  rawData: json("raw_data")
+});
+
+export const insertNewsletterAnalyticsSchema = createInsertSchema(newsletterAnalytics).omit({
+  id: true,
+  openRate: true,
+  clickRate: true,
+  clickToOpenRate: true,
+  bounceRate: true,
+  unsubscribeRate: true
+}).extend({
+  deviceBreakdown: z.record(z.unknown()).optional(),
+  locationData: z.record(z.unknown()).optional(),
+  rawData: z.record(z.unknown()).optional()
+});
+
+export type InsertNewsletterAnalytics = z.infer<typeof insertNewsletterAnalyticsSchema>;
+export type NewsletterAnalytics = typeof newsletterAnalytics.$inferSelect;
