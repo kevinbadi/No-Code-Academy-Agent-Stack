@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
 import Sidebar from "@/components/sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { RefreshCw, Mail, Calendar, Users, Mouse, AlertCircle } from "lucide-react";
+import { RefreshCw, Mail, Calendar } from "lucide-react";
 
-// Simple interface for our newsletter analytics data
-interface NewsletterAnalytics {
+// Simplified newsletter analytics data
+interface NewsletterData {
   id: number;
   campaign_name: string;
   subject: string;
@@ -19,65 +18,62 @@ interface NewsletterAnalytics {
   open_rate: number;
   click_rate: number;
   send_time: string;
-  campaign_date?: string;
-  campaign_type?: string;
 }
 
-export default function NewsletterDisplay() {
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [displayData, setDisplayData] = useState<NewsletterAnalytics[]>([]);
+export default function SimpleNewsletter() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [newsletterData, setNewsletterData] = useState<NewsletterData[]>([]);
+  const [error, setError] = useState("");
   
-  // Fetch newsletter analytics data
-  const { 
-    data: newsletterData, 
-    isLoading, 
-    refetch 
-  } = useQuery<any[]>({
-    queryKey: ["/api/newsletter-analytics"],
-    refetchOnWindowFocus: false,
-  });
-  
-  // Process data once received
+  // Fetch data on component mount
   useEffect(() => {
-    if (newsletterData && newsletterData.length > 0) {
-      console.log("Newsletter data:", newsletterData);
-      // Transform the data to match our interface
-      const processedData = newsletterData.map(item => ({
-        id: item.id,
-        campaign_name: item.campaign_name,
-        subject: item.subject,
-        total_recipients: item.total_recipients,
-        emails_sent: item.emails_sent,
-        total_bounces: item.total_bounces || 0,
-        opens_total: item.opens_total,
-        clicks_total: item.clicks_total,
-        unsubscribes: item.unsubscribes || 0,
-        open_rate: item.open_rate,
-        click_rate: item.click_rate,
-        send_time: item.send_time,
-        campaign_date: item.campaign_date,
-        campaign_type: item.campaign_type
-      }));
-      setDisplayData(processedData);
-    }
-  }, [newsletterData]);
+    fetchNewsletterData();
+  }, []);
   
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await refetch();
-    setIsRefreshing(false);
+  // Function to fetch newsletter data
+  const fetchNewsletterData = async () => {
+    setIsLoading(true);
+    setError("");
+    
+    try {
+      const response = await fetch("/api/newsletter-analytics");
+      if (!response.ok) {
+        throw new Error(`Error fetching data: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log("Newsletter data from API:", data);
+      
+      if (Array.isArray(data)) {
+        setNewsletterData(data);
+      } else {
+        setNewsletterData([]);
+      }
+    } catch (err) {
+      console.error("Failed to fetch newsletter data:", err);
+      setError("Failed to load newsletter data. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   // Format percentage values for display
   const formatPercentage = (value: number) => {
     if (value === undefined || value === null) return "0.00%";
-    // Check if value is already in decimal form (between 0-1) or percentage form
-    return value > 1 ? value.toFixed(2) + "%" : (value * 100).toFixed(2) + "%";
+    
+    // If value is already in percentage form (e.g., 28 instead of 0.28)
+    if (value > 1) {
+      return value.toFixed(2) + "%";
+    }
+    
+    // If value is in decimal form (e.g., 0.28)
+    return (value * 100).toFixed(2) + "%";
   };
   
   // Format date values for display
   const formatDate = (dateString: string) => {
     if (!dateString) return "N/A";
+    
     try {
       const date = new Date(dateString);
       return date.toLocaleDateString("en-US", {
@@ -106,12 +102,12 @@ export default function NewsletterDisplay() {
           
           <Button 
             variant="outline" 
-            onClick={handleRefresh}
+            onClick={fetchNewsletterData}
             className="flex items-center"
-            disabled={isRefreshing}
+            disabled={isLoading}
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-            {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            {isLoading ? 'Loading...' : 'Refresh Data'}
           </Button>
         </div>
         
@@ -122,7 +118,14 @@ export default function NewsletterDisplay() {
               <p className="text-muted-foreground">Please wait while we fetch the campaign data.</p>
             </div>
           </div>
-        ) : displayData && displayData.length > 0 ? (
+        ) : error ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center text-red-500">
+              <h3 className="text-lg font-medium">Error Loading Data</h3>
+              <p>{error}</p>
+            </div>
+          </div>
+        ) : newsletterData.length > 0 ? (
           <>
             <div className="mb-6">
               <Card>
@@ -150,12 +153,12 @@ export default function NewsletterDisplay() {
                         </tr>
                       </thead>
                       <tbody>
-                        {displayData.map((campaign) => (
+                        {newsletterData.map((campaign) => (
                           <tr key={campaign.id} className="border-b [&>td]:p-2">
                             <td className="font-medium">{campaign.campaign_name}</td>
                             <td>{campaign.subject}</td>
                             <td>{campaign.total_recipients}</td>
-                            <td>{campaign.total_bounces}</td>
+                            <td>{campaign.total_bounces || 0}</td>
                             <td>{campaign.opens_total}</td>
                             <td>{campaign.clicks_total}</td>
                             <td>{campaign.unsubscribes || 0}</td>
@@ -172,7 +175,7 @@ export default function NewsletterDisplay() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {displayData.map((campaign) => (
+              {newsletterData.map((campaign) => (
                 <Card key={campaign.id} className="border border-gray-200 shadow-sm">
                   <CardHeader className="pb-3 border-b">
                     <CardTitle className="text-lg">{campaign.subject}</CardTitle>
@@ -182,13 +185,16 @@ export default function NewsletterDisplay() {
                   </CardHeader>
                   <CardContent className="p-0">
                     <div className="divide-y">
-                      <div className="px-4 py-3 flex justify-between">
-                        <span className="text-sm font-medium text-gray-500">Recipients:</span>
+                      <div className="px-4 py-3 flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-500 flex items-center">
+                          <Mail className="w-4 h-4 mr-2 text-gray-400" />
+                          Recipients:
+                        </span>
                         <span className="font-medium">{campaign.total_recipients}</span>
                       </div>
                       <div className="px-4 py-3 flex justify-between">
                         <span className="text-sm font-medium text-gray-500">Bounces:</span>
-                        <span className="font-medium">{campaign.total_bounces}</span>
+                        <span className="font-medium">{campaign.total_bounces || 0}</span>
                       </div>
                       <div className="px-4 py-3 flex justify-between">
                         <span className="text-sm font-medium text-gray-500">Opens:</span>
@@ -221,6 +227,14 @@ export default function NewsletterDisplay() {
             <div className="text-center">
               <h3 className="text-lg font-medium">No newsletter data available</h3>
               <p className="text-muted-foreground">Try sending a campaign first or create sample data.</p>
+              <Button className="mt-4" onClick={() => {
+                fetch('/api/newsletter-analytics/sample', { method: 'POST' })
+                  .then(response => response.json())
+                  .then(() => fetchNewsletterData())
+                  .catch(err => console.error("Error creating sample:", err));
+              }}>
+                Create Sample Data
+              </Button>
             </div>
           </div>
         )}
