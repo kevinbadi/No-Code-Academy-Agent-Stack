@@ -6,6 +6,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Dashboard from "@/pages/dashboard";
 import NewsletterAgent from "@/pages/newsletter-agent";
 import NewsletterStats from "@/pages/newsletter-stats";
+import InstagramAgent from "@/pages/instagram-agent";
+import LinkedInAgentPage from "@/pages/linkedin-agent";
+import ColdEmailAgentPage from "@/pages/cold-email-agent";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -14,6 +17,9 @@ function Router() {
       <Route path="/" component={Dashboard} />
       <Route path="/agent/newsletter" component={NewsletterAgent} />
       <Route path="/agent/newsletter-analytics" component={NewsletterStats} />
+      <Route path="/agent/instagram" component={InstagramAgent} />
+      <Route path="/agent/linkedin" component={LinkedInAgentPage} />
+      <Route path="/agent/cold-email" component={ColdEmailAgentPage} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>

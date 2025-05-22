@@ -14,7 +14,8 @@ import {
   Instagram,
   BarChartHorizontal,
   FileText,
-  LineChart
+  LineChart,
+  Phone
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -72,15 +73,6 @@ export default function Sidebar() {
           <NavItem href="/settings" icon={<Settings size={16} />} active={location === "/settings"}>
             Settings
           </NavItem>
-          <NavItem href="/team" icon={<Users size={16} />} active={location === "/team"}>
-            Team Management
-          </NavItem>
-          <NavItem href="/analytics" icon={<BarChart size={16} />} active={location === "/analytics"}>
-            Advanced Analytics
-          </NavItem>
-          <NavItem href="/activity" icon={<History size={16} />} active={location === "/activity"}>
-            Activity Log
-          </NavItem>
         </div>
 
         <div className="mt-6 pt-3 border-t border-gray-200">
@@ -100,8 +92,11 @@ export default function Sidebar() {
             <NavItem href="/agent/twitter" icon={<Twitter size={16} />} active={location.includes("twitter")}>
               Twitter Engagement
             </NavItem>
-            <NavItem href="/agent/email" icon={<Mail size={16} />} active={location.includes("email")}>
-              Email Campaign
+            <NavItem href="/agent/phone" icon={<Phone size={16} />} active={location.includes("phone")}>
+              Local Phone Call Agent
+            </NavItem>
+            <NavItem href="/agent/cold-email" icon={<Mail size={16} />} active={location.includes("cold-email")}>
+              Cold Email B2B Agent
             </NavItem>
           </div>
         </div>
