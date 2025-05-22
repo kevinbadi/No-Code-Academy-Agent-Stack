@@ -43,7 +43,7 @@ export default function NewsletterStats() {
     <div className="flex h-screen bg-gray-50">
       <Sidebar />
       
-      <main className="flex-1 overflow-y-auto p-6">
+      <main className="flex-1 overflow-y-auto p-6 md:ml-56">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-800">Newsletter Analytics Agent</h1>
           <p className="text-gray-500">
