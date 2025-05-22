@@ -6,15 +6,13 @@ import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { storeWebhookData, getLatestWebhookData } from "./webhook-db";
 import { db, pool } from "./db";
-import { 
-  getNewsletterAnalytics, 
-  getLatestNewsletterAnalytics, 
-  createNewsletterAnalytics, 
-  getNewsletterAnalyticsByCampaign, 
-  getNewsletterAnalyticsByDateRange, 
-  handleNewsletterWebhook, 
-  createNewsletterSample 
-} from "./newsletter-agent";
+// Import handlers for the newsletter analytics with exact data format
+import {
+  handleNewsletterWebhook,
+  getNewsletterAnalytics,
+  getLatestNewsletterAnalytics,
+  createNewsletterSample
+} from "./newsletter-handler";
 
 export async function registerRoutes(app: Express, existingServer?: Server): Promise<Server> {
   // Create a new HTTP server if one wasn't provided
