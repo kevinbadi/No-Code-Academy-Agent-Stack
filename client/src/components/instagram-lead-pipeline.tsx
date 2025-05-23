@@ -357,12 +357,19 @@ export default function InstagramLeadPipeline() {
     }
   };
   
+  // Prevent counter from briefly showing 0 during refresh
+  const getDisplayMessageCount = () => {
+    return counts.totalMessagesSent || totalMessagesSent || 0;
+  };
+  
   // Calculate daily reachout progress (75 per day goal)
   const getDailyProgress = () => {
+    // Use totalMessagesSent for more accurate tracking (includes all sent messages)
+    const messageCount = counts.totalMessagesSent || totalMessagesSent || 0;
     return {
       total: 75,
-      current: counts.messageSentCount > 75 ? 75 : counts.messageSentCount,
-      percentage: Math.min(100, Math.round((counts.messageSentCount / 75) * 100))
+      current: messageCount > 75 ? 75 : messageCount,
+      percentage: Math.min(100, Math.round((messageCount / 75) * 100))
     };
   };
   
@@ -406,7 +413,7 @@ export default function InstagramLeadPipeline() {
                     <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center mr-3">
                       <MessageSquare className="h-5 w-5 text-orange-600" />
                     </div>
-                    <p className="text-2xl font-bold text-orange-600">{counts.totalMessagesSent || 0}</p>
+                    <p className="text-2xl font-bold text-orange-600">{getDisplayMessageCount()}</p>
                   </div>
                 </div>
               </div>
