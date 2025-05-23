@@ -540,8 +540,12 @@ export default function InstagramLeadPipeline() {
                         <div className="flex items-start gap-4">
                           {/* Lead Avatar */}
                           <Avatar className="h-16 w-16 rounded-full border-2 border-pink-100">
-                            {getCurrentWarmLead()?.profilePictureUrl ? (
-                              <AvatarImage src={getCurrentWarmLead()?.profilePictureUrl} />
+                            {getCurrentWarmLead()?.profilePictureUrl && getCurrentWarmLead()?.profilePictureUrl !== "" ? (
+                              <AvatarImage 
+                                src={getCurrentWarmLead()?.profilePictureUrl} 
+                                alt={getCurrentWarmLead()?.fullName} 
+                                className="object-cover"
+                              />
                             ) : (
                               <AvatarFallback className="bg-pink-50 text-[#E1306C] text-lg">
                                 {getCurrentWarmLead()?.username.substring(0, 2).toUpperCase()}
@@ -639,8 +643,12 @@ export default function InstagramLeadPipeline() {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <Avatar className="h-8 w-8 rounded-full mr-3">
-                                {lead.profilePictureUrl ? (
-                                  <AvatarImage src={lead.profilePictureUrl} />
+                                {lead.profilePictureUrl && lead.profilePictureUrl !== "" ? (
+                                  <AvatarImage 
+                                    src={lead.profilePictureUrl} 
+                                    alt={lead.fullName} 
+                                    className="object-cover"
+                                  />
                                 ) : (
                                   <AvatarFallback className="bg-purple-50 text-[#5851DB]">
                                     {lead.username.substring(0, 2).toUpperCase()}
@@ -704,8 +712,12 @@ export default function InstagramLeadPipeline() {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <Avatar className="h-8 w-8 rounded-full mr-3">
-                                {lead.profilePictureUrl ? (
-                                  <AvatarImage src={lead.profilePictureUrl} />
+                                {lead.profilePictureUrl && lead.profilePictureUrl !== "" ? (
+                                  <AvatarImage 
+                                    src={lead.profilePictureUrl} 
+                                    alt={lead.fullName} 
+                                    className="object-cover"
+                                  />
                                 ) : (
                                   <AvatarFallback className="bg-green-50 text-green-600">
                                     {lead.username.substring(0, 2).toUpperCase()}
