@@ -320,6 +320,32 @@ export default function InstagramLeadPipeline() {
     return num?.toLocaleString() || 0;
   };
   
+  // Format date to be more readable
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Unknown';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return dateString;
+    }
+  };
+  
+  // Calculate daily reachout progress (75 per day goal)
+  const getDailyProgress = () => {
+    return {
+      total: 75,
+      current: counts.messageSentCount > 75 ? 75 : counts.messageSentCount,
+      percentage: Math.min(100, Math.round((counts.messageSentCount / 75) * 100))
+    };
+  };
+  
   return (
     <div className="space-y-6">
       {/* Pipeline Overview */}
@@ -348,39 +374,63 @@ export default function InstagramLeadPipeline() {
         <CardContent className="p-0">
           {/* Pipeline Stats */}
           <div className="px-6 pb-5 border-b border-gray-100">
-            <div className="grid grid-cols-3 gap-4">
-              <div className="p-4 rounded-lg bg-pink-50 border border-pink-100">
-                <div className="flex items-center justify-between">
+            <div className="grid grid-cols-1 gap-4">
+              {/* Daily Reachout Progress */}
+              <div className="p-4 rounded-lg bg-blue-50 border border-blue-100 mb-4">
+                <div className="flex items-center justify-between mb-2">
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">Warm Leads</p>
-                    <p className="text-2xl font-bold text-[#E1306C]">{getLeadCount("warm_lead")}</p>
+                    <p className="text-sm text-gray-700 font-medium">Daily Reachout Progress</p>
+                    <p className="text-xs text-gray-500">Goal: 75 leads per day</p>
                   </div>
-                  <div className="h-10 w-10 rounded-full bg-pink-100 flex items-center justify-center">
-                    <Search className="h-5 w-5 text-[#E1306C]" />
+                  <div className="text-right">
+                    <span className="text-blue-600 font-bold">{getDailyProgress().current}</span>
+                    <span className="text-gray-500">/{getDailyProgress().total}</span>
+                    <span className="ml-2 text-xs text-blue-600 font-medium">({getDailyProgress().percentage}%)</span>
                   </div>
+                </div>
+                <div className="w-full bg-blue-100 rounded-full h-2.5">
+                  <div 
+                    className="bg-blue-600 h-2.5 rounded-full" 
+                    style={{ width: `${getDailyProgress().percentage}%` }}
+                  ></div>
                 </div>
               </div>
               
-              <div className="p-4 rounded-lg bg-purple-50 border border-purple-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">Message Sent</p>
-                    <p className="text-2xl font-bold text-[#5851DB]">{getLeadCount("message_sent")}</p>
-                  </div>
-                  <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
-                    <MessageSquare className="h-5 w-5 text-[#5851DB]" />
+              {/* Lead Status Cards */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="p-4 rounded-lg bg-pink-50 border border-pink-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Warm Leads</p>
+                      <p className="text-2xl font-bold text-[#E1306C]">{getLeadCount("warm_lead")}</p>
+                    </div>
+                    <div className="h-10 w-10 rounded-full bg-pink-100 flex items-center justify-center">
+                      <Search className="h-5 w-5 text-[#E1306C]" />
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              <div className="p-4 rounded-lg bg-green-50 border border-green-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">Sales Closed</p>
-                    <p className="text-2xl font-bold text-green-600">{getLeadCount("sale_closed")}</p>
+                
+                <div className="p-4 rounded-lg bg-purple-50 border border-purple-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Message Sent</p>
+                      <p className="text-2xl font-bold text-[#5851DB]">{getLeadCount("message_sent")}</p>
+                    </div>
+                    <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
+                      <MessageSquare className="h-5 w-5 text-[#5851DB]" />
+                    </div>
                   </div>
-                  <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                    <CheckCircle className="h-5 w-5 text-green-600" />
+                </div>
+                
+                <div className="p-4 rounded-lg bg-green-50 border border-green-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Sales Closed</p>
+                      <p className="text-2xl font-bold text-green-600">{getLeadCount("sale_closed")}</p>
+                    </div>
+                    <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -518,18 +568,10 @@ export default function InstagramLeadPipeline() {
                             <p className="text-gray-700 mb-4">{getCurrentWarmLead()?.bio}</p>
                             
                             {/* Lead Stats */}
-                            <div className="grid grid-cols-3 gap-4 mb-4">
-                              <div className="bg-gray-50 rounded p-2 text-center">
-                                <span className="block text-sm text-gray-500">Followers</span>
-                                <span className="font-semibold">{formatNumber(getCurrentWarmLead()?.followers)}</span>
-                              </div>
-                              <div className="bg-gray-50 rounded p-2 text-center">
-                                <span className="block text-sm text-gray-500">Following</span>
-                                <span className="font-semibold">{formatNumber(getCurrentWarmLead()?.following)}</span>
-                              </div>
+                            <div className="grid grid-cols-1 gap-4 mb-4">
                               <div className="bg-gray-50 rounded p-2 text-center">
                                 <span className="block text-sm text-gray-500">Added</span>
-                                <span className="font-semibold">{getCurrentWarmLead()?.dateAdded}</span>
+                                <span className="font-semibold text-sm">{formatDate(getCurrentWarmLead()?.dateAdded)}</span>
                               </div>
                             </div>
                             
