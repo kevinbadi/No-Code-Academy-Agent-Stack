@@ -226,8 +226,9 @@ export default function InstagramLeadPipeline() {
       }
       
       // Update local state to reflect the change
-      setLeads(prevLeads => 
-        prevLeads.map(lead => {
+      setLeads(prevLeads => {
+        // First update the current lead's status
+        const updatedLeads = prevLeads.map(lead => {
           if (lead.id === leadId) {
             return {
               ...lead,
@@ -237,15 +238,30 @@ export default function InstagramLeadPipeline() {
             };
           }
           return lead;
-        })
-      );
+        });
+        
+        return updatedLeads;
+      });
       
-      // Move to next lead if available
-      if (currentLeadIndex < filteredLeads.length - 1) {
-        setCurrentLeadIndex(prev => prev + 1);
-      } else {
-        // If this was the last lead, refresh the filtered leads
-        filterLeadsByStatus("warm_lead");
+      // Fetch new warm leads from the database to ensure we always have fresh leads
+      try {
+        const newLeadsResponse = await fetch('/api/instagram-leads?status=warm_lead');
+        if (newLeadsResponse.ok) {
+          const newLeads = await newLeadsResponse.json();
+          
+          // Merge the new leads with our existing leads (replacing the warm leads section)
+          setLeads(prevLeads => {
+            // Keep leads that aren't warm leads
+            const nonWarmLeads = prevLeads.filter(lead => lead.status !== 'warm_lead');
+            // Add the new warm leads
+            return [...nonWarmLeads, ...newLeads];
+          });
+          
+          // Reset to the first lead in the warm leads view
+          setCurrentLeadIndex(0);
+        }
+      } catch (fetchError) {
+        console.error('Error fetching new warm leads:', fetchError);
       }
       
       // Clear the note text
