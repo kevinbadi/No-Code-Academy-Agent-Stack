@@ -406,7 +406,7 @@ export default function InstagramLeadPipeline() {
                     <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center mr-3">
                       <MessageSquare className="h-5 w-5 text-orange-600" />
                     </div>
-                    <p className="text-2xl font-bold text-orange-600">{totalMessagesSent}</p>
+                    <p className="text-2xl font-bold text-orange-600">{counts.totalMessagesSent || 0}</p>
                   </div>
                 </div>
               </div>
