@@ -1,21 +1,31 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { 
   Instagram, 
   RefreshCw, 
+  Users, 
   MessageSquare, 
   CheckCircle, 
   Search, 
   User, 
   ExternalLink,
+  Filter,
+  ListFilter,
+  Clock,
+  DollarSign,
+  Calendar,
+  ArrowRightCircle,
+  Download,
   AlertCircle,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ThumbsUp
 } from "lucide-react";
 
 // Define lead status types
@@ -309,9 +319,6 @@ export default function InstagramLeadPipeline() {
   
   // Helper to get the current warm lead
   const getCurrentWarmLead = () => {
-    if (filteredLeads.length === 0 || currentLeadIndex >= filteredLeads.length) {
-      return null;
-    }
     return filteredLeads[currentLeadIndex];
   };
   
@@ -483,11 +490,11 @@ export default function InstagramLeadPipeline() {
                         <div className="flex items-start gap-4">
                           {/* Lead Avatar */}
                           <Avatar className="h-16 w-16 rounded-full border-2 border-pink-100">
-                            {getCurrentWarmLead()?.profilePictureUrl ? (
-                              <AvatarImage src={getCurrentWarmLead()?.profilePictureUrl} />
+                            {getCurrentWarmLead().profilePictureUrl ? (
+                              <AvatarImage src={getCurrentWarmLead().profilePictureUrl} />
                             ) : (
                               <AvatarFallback className="bg-pink-50 text-[#E1306C] text-lg">
-                                {getCurrentWarmLead()?.username.substring(0, 2).toUpperCase()}
+                                {getCurrentWarmLead().username.substring(0, 2).toUpperCase()}
                               </AvatarFallback>
                             )}
                           </Avatar>
@@ -495,8 +502,8 @@ export default function InstagramLeadPipeline() {
                           {/* Lead Details */}
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-semibold text-lg">{getCurrentWarmLead()?.fullName}</h3>
-                              {getCurrentWarmLead()?.isVerified && (
+                              <h3 className="font-semibold text-lg">{getCurrentWarmLead().fullName}</h3>
+                              {getCurrentWarmLead().isVerified && (
                                 <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
                                   Verified
                                 </Badge>
@@ -504,9 +511,9 @@ export default function InstagramLeadPipeline() {
                             </div>
                             
                             <div className="flex items-center text-gray-500 mb-3">
-                              <span className="text-sm">@{getCurrentWarmLead()?.username}</span>
+                              <span className="text-sm">@{getCurrentWarmLead().username}</span>
                               <a 
-                                href={getCurrentWarmLead()?.profileUrl} 
+                                href={getCurrentWarmLead().profileUrl} 
                                 target="_blank" 
                                 rel="noopener noreferrer" 
                                 className="inline-flex items-center text-pink-500 hover:text-pink-600 text-sm ml-2"
@@ -515,28 +522,28 @@ export default function InstagramLeadPipeline() {
                               </a>
                             </div>
                             
-                            <p className="text-gray-700 mb-4">{getCurrentWarmLead()?.bio}</p>
+                            <p className="text-gray-700 mb-4">{getCurrentWarmLead().bio}</p>
                             
                             {/* Lead Stats */}
                             <div className="grid grid-cols-3 gap-4 mb-4">
                               <div className="bg-gray-50 rounded p-2 text-center">
                                 <span className="block text-sm text-gray-500">Followers</span>
-                                <span className="font-semibold">{formatNumber(getCurrentWarmLead()?.followers)}</span>
+                                <span className="font-semibold">{formatNumber(getCurrentWarmLead().followers)}</span>
                               </div>
                               <div className="bg-gray-50 rounded p-2 text-center">
                                 <span className="block text-sm text-gray-500">Following</span>
-                                <span className="font-semibold">{formatNumber(getCurrentWarmLead()?.following)}</span>
+                                <span className="font-semibold">{formatNumber(getCurrentWarmLead().following)}</span>
                               </div>
                               <div className="bg-gray-50 rounded p-2 text-center">
                                 <span className="block text-sm text-gray-500">Added</span>
-                                <span className="font-semibold">{getCurrentWarmLead()?.dateAdded}</span>
+                                <span className="font-semibold">{getCurrentWarmLead().dateAdded}</span>
                               </div>
                             </div>
                             
                             {/* Lead Tags */}
-                            {getCurrentWarmLead()?.tags && getCurrentWarmLead()?.tags.length > 0 && (
+                            {getCurrentWarmLead().tags && getCurrentWarmLead().tags.length > 0 && (
                               <div className="flex flex-wrap gap-2 mb-4">
-                                {getCurrentWarmLead()?.tags.map((tag, index) => (
+                                {getCurrentWarmLead().tags.map((tag, index) => (
                                   <Badge key={index} variant="secondary" className="bg-gray-100">
                                     {tag}
                                   </Badge>
@@ -554,7 +561,7 @@ export default function InstagramLeadPipeline() {
                               />
                               <Button 
                                 className="w-full bg-[#5851DB] hover:bg-[#4c46c3]"
-                                onClick={() => getCurrentWarmLead() && handleMarkMessageSent(getCurrentWarmLead().id)}
+                                onClick={() => handleMarkMessageSent(getCurrentWarmLead().id)}
                                 disabled={isLoading}
                               >
                                 <MessageSquare className="h-4 w-4 mr-2" />
