@@ -38,6 +38,7 @@ interface InstagramLead {
   lastUpdated: string;
   notes?: string;
   tags?: string[];
+  totalMessagesSent?: number;
 }
 
 // Interface for lead counts
@@ -56,6 +57,7 @@ export default function InstagramLeadPipeline() {
   const [filteredLeads, setFilteredLeads] = useState<InstagramLead[]>([]);
   const [currentLeadIndex, setCurrentLeadIndex] = useState(0);
   const [noteText, setNoteText] = useState("");
+  const [totalMessagesSent, setTotalMessagesSent] = useState(0);
   const [counts, setCounts] = useState<LeadCounts>({
     warmLeadCount: 0,
     messageSentCount: 0,
@@ -94,6 +96,9 @@ export default function InstagramLeadPipeline() {
             saleClosedCount: countsData.saleClosedCount || 0,
             totalCount: countsData.totalCount || 0
           });
+          
+          // Update total messages sent
+          setTotalMessagesSent(countsData.totalMessagesSent || 0);
         }
       } else {
         console.error("Failed to refresh Instagram leads:", await response.text());
@@ -384,6 +389,22 @@ export default function InstagramLeadPipeline() {
           {/* Pipeline Stats */}
           <div className="px-6 pb-5 border-b border-gray-100">
             <div className="grid grid-cols-1 gap-4">
+              {/* Total Messages Sent Stat Card */}
+              <div className="p-4 rounded-lg bg-orange-50 border border-orange-100 mb-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-700 font-medium">Total Outreach Messages</p>
+                    <p className="text-xs text-gray-500">Lifetime performance</p>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center mr-3">
+                      <MessageSquare className="h-5 w-5 text-orange-600" />
+                    </div>
+                    <p className="text-2xl font-bold text-orange-600">{totalMessagesSent}</p>
+                  </div>
+                </div>
+              </div>
+              
               {/* Daily Reachout Progress */}
               <div className="p-4 rounded-lg bg-blue-50 border border-blue-100 mb-4">
                 <div className="flex items-center justify-between mb-2">

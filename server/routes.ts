@@ -55,7 +55,8 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
         status: row.status,
         dateAdded: row.timestamp,
         lastUpdated: row.timestamp,
-        notes: row.rawlog,
+        notes: row.notes || row.rawlog,
+        totalMessagesSent: row.total_messages_sent || 0,
         tags: []
       }));
       
@@ -106,13 +107,14 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
   
   app.get("/api/instagram-leads/counts", async (req: Request, res: Response) => {
     try {
-      // Get count of leads for each status
+      // Get count of leads for each status and the total messages sent
       const result = await pool.query(`
         SELECT 
           COUNT(*) FILTER (WHERE status = 'warm_lead') AS warm_lead_count,
           COUNT(*) FILTER (WHERE status = 'message_sent') AS message_sent_count,
           COUNT(*) FILTER (WHERE status = 'sale_closed') AS sale_closed_count,
-          COUNT(*) AS total_count
+          COUNT(*) AS total_count,
+          SUM(COALESCE(total_messages_sent, 0)) AS total_messages_sent
         FROM instagram_agent_leads
       `);
       
@@ -121,14 +123,16 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
           warmLeadCount: parseInt(result.rows[0].warm_lead_count) || 0,
           messageSentCount: parseInt(result.rows[0].message_sent_count) || 0,
           saleClosedCount: parseInt(result.rows[0].sale_closed_count) || 0,
-          totalCount: parseInt(result.rows[0].total_count) || 0
+          totalCount: parseInt(result.rows[0].total_count) || 0,
+          totalMessagesSent: parseInt(result.rows[0].total_messages_sent) || 0
         });
       } else {
         res.json({
           warmLeadCount: 0,
           messageSentCount: 0,
           saleClosedCount: 0,
-          totalCount: 0
+          totalCount: 0,
+          totalMessagesSent: 0
         });
       }
     } catch (error) {
@@ -147,16 +151,38 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
         return res.status(400).json({ error: 'Invalid status value' });
       }
       
+      let query = '';
+      let queryParams = [];
+      
+      // If changing to message_sent, increment the total_messages_sent counter
+      if (status === 'message_sent') {
+        query = `
+          UPDATE instagram_agent_leads
+          SET 
+            status = $1,
+            timestamp = CURRENT_TIMESTAMP,
+            rawlog = COALESCE($2, rawlog),
+            total_messages_sent = COALESCE(total_messages_sent, 0) + 1
+          WHERE id = $3
+          RETURNING *
+        `;
+        queryParams = [status, notes, id];
+      } else {
+        // For other status changes, don't increment the counter
+        query = `
+          UPDATE instagram_agent_leads
+          SET 
+            status = $1,
+            timestamp = CURRENT_TIMESTAMP,
+            rawlog = COALESCE($2, rawlog)
+          WHERE id = $3
+          RETURNING *
+        `;
+        queryParams = [status, notes, id];
+      }
+      
       // Update the lead status in instagram_agent_leads
-      const result = await pool.query(`
-        UPDATE instagram_agent_leads
-        SET 
-          status = $1,
-          timestamp = CURRENT_TIMESTAMP,
-          rawlog = COALESCE($2, rawlog)
-        WHERE id = $3
-        RETURNING *
-      `, [status, notes, id]);
+      const result = await pool.query(query, queryParams);
       
       if (result.rows && result.rows.length > 0) {
         const row = result.rows[0];
@@ -173,6 +199,7 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
           dateAdded: row.timestamp,
           lastUpdated: row.timestamp,
           notes: row.notes || row.rawlog,
+          totalMessagesSent: row.total_messages_sent || 0,
           tags: []
         });
       } else {
