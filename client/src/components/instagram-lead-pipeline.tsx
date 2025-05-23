@@ -209,12 +209,17 @@ export default function InstagramLeadPipeline() {
             return {
               ...lead,
               status: "sale_closed" as LeadStatus,
-              lastUpdated: new Date().toISOString().split('T')[0],
+              lastUpdated: new Date().toISOString(),
               notes: noteText.trim() || lead.notes
             };
           }
           return lead;
         })
+      );
+      
+      // Remove the lead from the filtered leads
+      setFilteredLeads(prevFilteredLeads => 
+        prevFilteredLeads.filter(lead => lead.id !== leadId)
       );
       
       // Update counts
@@ -231,9 +236,6 @@ export default function InstagramLeadPipeline() {
       
       // Clear note text
       setNoteText("");
-      
-      // Refresh the filtered leads after status change
-      filterLeadsByStatus("message_sent");
       
     } catch (error) {
       console.error('Error updating lead status:', error);
