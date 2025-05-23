@@ -137,7 +137,7 @@ export default function InstagramLeadPipeline() {
             return {
               ...lead,
               status: "message_sent" as LeadStatus,
-              lastUpdated: new Date().toISOString().split('T')[0],
+              lastUpdated: new Date().toISOString(),
               notes: noteText.trim() || lead.notes
             };
           }
@@ -162,8 +162,15 @@ export default function InstagramLeadPipeline() {
       // Clear the note text
       setNoteText("");
       
-      // Refresh the filtered leads
-      filterLeadsByStatus("warm_lead");
+      // Remove the processed lead from filtered leads
+      setFilteredLeads(prevFilteredLeads => 
+        prevFilteredLeads.filter(lead => lead.id !== leadId)
+      );
+      
+      // Update current lead index if needed
+      if (currentLeadIndex >= filteredLeads.length - 1) {
+        setCurrentLeadIndex(Math.max(0, filteredLeads.length - 2));
+      }
       
     } catch (error) {
       console.error('Error updating lead status:', error);
