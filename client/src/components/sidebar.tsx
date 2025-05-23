@@ -15,7 +15,9 @@ import {
   BarChartHorizontal,
   FileText,
   LineChart,
-  Phone
+  Phone,
+  Edit3,
+  FileSearch
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -97,6 +99,9 @@ export default function Sidebar() {
             </NavItem>
             <NavItem href="/agent/cold-email" icon={<Mail size={16} />} active={location.includes("cold-email")}>
               Cold Email B2B Agent
+            </NavItem>
+            <NavItem href="/agent/seo-writer" icon={<FileSearch size={16} />} active={location.includes("seo-writer")}>
+              SEO Article Writing Agent
             </NavItem>
           </div>
         </div>

@@ -470,6 +470,59 @@ export default function Dashboard() {
               </div>
             </CardContent>
           </Card>
+          
+          {/* SEO Article Writing Agent Summary */}
+          <Card className="shadow-sm hover:shadow-md transition-shadow duration-200">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center">
+                  <div className="bg-teal-600 p-2 rounded-md mr-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800">SEO Article Writing Agent</h3>
+                    <p className="text-sm text-gray-500">Content creation & optimization</p>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm" asChild>
+                  <a href="/agent/seo-writer">View Details</a>
+                </Button>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                <div className="bg-teal-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-500 mb-1">Articles Written</p>
+                  <p className="text-2xl font-bold text-teal-600">156</p>
+                </div>
+                <div className="bg-teal-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-500 mb-1">Keywords Ranking</p>
+                  <p className="text-2xl font-bold text-teal-600">78</p>
+                </div>
+                <div className="bg-teal-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-500 mb-1">Avg. Word Count</p>
+                  <p className="text-2xl font-bold text-teal-600">1,850</p>
+                </div>
+              </div>
+              
+              <div>
+                <div className="flex justify-between mb-1 text-xs">
+                  <span>Current Project: "Ultimate Guide to Content Marketing in 2025"</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                  <div 
+                    className="bg-teal-600 h-2 rounded-full" 
+                    style={{ width: '65%' }}
+                  ></div>
+                </div>
+                <div className="text-xs text-gray-500 mt-1 text-right">
+                  65% complete - Due in 5 days
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
         
         {/* Attribution */}

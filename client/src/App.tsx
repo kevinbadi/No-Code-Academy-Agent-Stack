@@ -9,6 +9,7 @@ import NewsletterStats from "@/pages/newsletter-stats";
 import InstagramAgent from "@/pages/instagram-agent";
 import LinkedInAgentPage from "@/pages/linkedin-agent";
 import ColdEmailAgentPage from "@/pages/cold-email-agent";
+import SeoArticleWriterPage from "@/pages/seo-article-writer";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/agent/instagram" component={InstagramAgent} />
       <Route path="/agent/linkedin" component={LinkedInAgentPage} />
       <Route path="/agent/cold-email" component={ColdEmailAgentPage} />
+      <Route path="/agent/seo-writer" component={SeoArticleWriterPage} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>
