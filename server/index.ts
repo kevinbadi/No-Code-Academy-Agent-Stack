@@ -64,31 +64,29 @@ app.get('/api/instagram-leads', async (req, res) => {
     
     // Query for Instagram leads with optional status filter
     let query = `
-      SELECT * FROM instagram_leads 
+      SELECT * FROM instagram_agent_leads 
       ${status ? `WHERE status = '${status}'` : ''} 
-      ORDER BY date_added DESC
+      ORDER BY timestamp DESC
       ${limit ? `LIMIT ${limit}` : ''}
     `;
     
     const results = await pool.query(query);
     
-    // Convert snake_case to camelCase for frontend
+    // Map database fields to frontend expected format
     const leads = results.rows.map(row => ({
       id: row.id,
       username: row.username,
-      fullName: row.full_name,
-      profileUrl: row.profile_url,
-      profilePictureUrl: row.profile_picture_url,
-      instagramID: row.instagram_id,
-      isVerified: row.is_verified,
-      bio: row.bio,
-      followers: row.followers,
-      following: row.following,
+      fullName: row.fullname,
+      profileUrl: row.profileurl,
+      profilePictureUrl: row.profilepictureurl,
+      instagramID: row.instagramid,
+      isVerified: row.isverified,
+      bio: row.rawlog,
       status: row.status,
-      dateAdded: row.date_added,
-      lastUpdated: row.last_updated,
-      notes: row.notes,
-      tags: row.tags ? row.tags.split(',') : []
+      dateAdded: row.timestamp,
+      lastUpdated: row.timestamp,
+      notes: row.rawlog,
+      tags: []
     }));
     
     res.json(leads);
@@ -102,9 +100,9 @@ app.get('/api/instagram-leads/next-warm', async (req, res) => {
   try {
     // Get the next warm lead for processing
     const result = await pool.query(`
-      SELECT * FROM instagram_leads 
+      SELECT * FROM instagram_agent_leads 
       WHERE status = 'warm_lead' 
-      ORDER BY date_added ASC
+      ORDER BY timestamp ASC
       LIMIT 1
     `);
     
@@ -113,19 +111,17 @@ app.get('/api/instagram-leads/next-warm', async (req, res) => {
       const lead = {
         id: row.id,
         username: row.username,
-        fullName: row.full_name,
-        profileUrl: row.profile_url,
-        profilePictureUrl: row.profile_picture_url,
-        instagramID: row.instagram_id,
-        isVerified: row.is_verified,
-        bio: row.bio,
-        followers: row.followers,
-        following: row.following,
+        fullName: row.fullname,
+        profileUrl: row.profileurl,
+        profilePictureUrl: row.profilepictureurl,
+        instagramID: row.instagramid,
+        isVerified: row.isverified,
+        bio: row.rawlog,
         status: row.status,
-        dateAdded: row.date_added,
-        lastUpdated: row.last_updated,
-        notes: row.notes,
-        tags: row.tags ? row.tags.split(',') : []
+        dateAdded: row.timestamp,
+        lastUpdated: row.timestamp,
+        notes: row.rawlog,
+        tags: []
       };
       
       res.json(lead);
@@ -147,7 +143,7 @@ app.get('/api/instagram-leads/counts', async (req, res) => {
         COUNT(*) FILTER (WHERE status = 'message_sent') AS message_sent_count,
         COUNT(*) FILTER (WHERE status = 'sale_closed') AS sale_closed_count,
         COUNT(*) AS total_count
-      FROM instagram_leads
+      FROM instagram_agent_leads
     `);
     
     if (result.rows && result.rows.length > 0) {
@@ -183,11 +179,11 @@ app.put('/api/instagram-leads/:id/status', async (req, res) => {
     
     // Update the lead status
     const result = await pool.query(`
-      UPDATE instagram_leads
+      UPDATE instagram_agent_leads
       SET 
         status = $1,
-        last_updated = CURRENT_TIMESTAMP,
-        notes = COALESCE($2, notes)
+        timestamp = CURRENT_TIMESTAMP,
+        rawlog = COALESCE($2, rawlog)
       WHERE id = $3
       RETURNING *
     `, [status, notes, id]);
@@ -197,19 +193,17 @@ app.put('/api/instagram-leads/:id/status', async (req, res) => {
       res.json({
         id: row.id,
         username: row.username,
-        fullName: row.full_name,
-        profileUrl: row.profile_url,
-        profilePictureUrl: row.profile_picture_url,
-        instagramID: row.instagram_id,
-        isVerified: row.is_verified,
-        bio: row.bio,
-        followers: row.followers,
-        following: row.following,
+        fullName: row.fullname,
+        profileUrl: row.profileurl,
+        profilePictureUrl: row.profilepictureurl,
+        instagramID: row.instagramid,
+        isVerified: row.isverified,
+        bio: row.rawlog,
         status: row.status,
-        dateAdded: row.date_added,
-        lastUpdated: row.last_updated,
-        notes: row.notes,
-        tags: row.tags ? row.tags.split(',') : []
+        dateAdded: row.timestamp,
+        lastUpdated: row.timestamp,
+        notes: row.rawlog,
+        tags: []
       });
     } else {
       res.status(404).json({ message: 'Lead not found' });

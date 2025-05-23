@@ -34,31 +34,29 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
       
       // Query for Instagram leads with optional status filter
       let query = `
-        SELECT * FROM instagram_leads 
+        SELECT * FROM instagram_agent_leads 
         ${status ? `WHERE status = '${status}'` : ''} 
-        ORDER BY date_added DESC
+        ORDER BY timestamp DESC
         ${limit ? `LIMIT ${limit}` : ''}
       `;
       
       const results = await pool.query(query);
       
-      // Convert snake_case to camelCase for frontend
+      // Map database fields to frontend expected format
       const leads = results.rows.map(row => ({
         id: row.id,
         username: row.username,
-        fullName: row.full_name,
-        profileUrl: row.profile_url,
-        profilePictureUrl: row.profile_picture_url,
-        instagramID: row.instagram_id,
-        isVerified: row.is_verified,
-        bio: row.bio,
-        followers: row.followers,
-        following: row.following,
+        fullName: row.fullname,
+        profileUrl: row.profileurl,
+        profilePictureUrl: row.profilepictureurl,
+        instagramID: row.instagramid,
+        isVerified: row.isverified,
+        bio: row.rawlog,
         status: row.status,
-        dateAdded: row.date_added,
-        lastUpdated: row.last_updated,
-        notes: row.notes,
-        tags: row.tags ? row.tags.split(',') : []
+        dateAdded: row.timestamp,
+        lastUpdated: row.timestamp,
+        notes: row.rawlog,
+        tags: []
       }));
       
       res.json(leads);
@@ -72,9 +70,9 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
     try {
       // Get the next warm lead for processing
       const result = await pool.query(`
-        SELECT * FROM instagram_leads 
+        SELECT * FROM instagram_agent_leads 
         WHERE status = 'warm_lead' 
-        ORDER BY date_added ASC
+        ORDER BY timestamp ASC
         LIMIT 1
       `);
       
@@ -83,19 +81,17 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
         const lead = {
           id: row.id,
           username: row.username,
-          fullName: row.full_name,
-          profileUrl: row.profile_url,
-          profilePictureUrl: row.profile_picture_url,
-          instagramID: row.instagram_id,
-          isVerified: row.is_verified,
-          bio: row.bio,
-          followers: row.followers,
-          following: row.following,
+          fullName: row.fullname,
+          profileUrl: row.profileurl,
+          profilePictureUrl: row.profilepictureurl,
+          instagramID: row.instagramid,
+          isVerified: row.isverified,
+          bio: row.rawlog,
           status: row.status,
-          dateAdded: row.date_added,
-          lastUpdated: row.last_updated,
-          notes: row.notes,
-          tags: row.tags ? row.tags.split(',') : []
+          dateAdded: row.timestamp,
+          lastUpdated: row.timestamp,
+          notes: row.rawlog,
+          tags: []
         };
         
         res.json(lead);
@@ -117,7 +113,7 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
           COUNT(*) FILTER (WHERE status = 'message_sent') AS message_sent_count,
           COUNT(*) FILTER (WHERE status = 'sale_closed') AS sale_closed_count,
           COUNT(*) AS total_count
-        FROM instagram_leads
+        FROM instagram_agent_leads
       `);
       
       if (result.rows && result.rows.length > 0) {
@@ -151,13 +147,13 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
         return res.status(400).json({ error: 'Invalid status value' });
       }
       
-      // Update the lead status
+      // Update the lead status in instagram_agent_leads
       const result = await pool.query(`
-        UPDATE instagram_leads
+        UPDATE instagram_agent_leads
         SET 
           status = $1,
-          last_updated = CURRENT_TIMESTAMP,
-          notes = COALESCE($2, notes)
+          timestamp = CURRENT_TIMESTAMP,
+          rawlog = COALESCE($2, rawlog)
         WHERE id = $3
         RETURNING *
       `, [status, notes, id]);
@@ -167,19 +163,17 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
         res.json({
           id: row.id,
           username: row.username,
-          fullName: row.full_name,
-          profileUrl: row.profile_url,
-          profilePictureUrl: row.profile_picture_url,
-          instagramID: row.instagram_id,
-          isVerified: row.is_verified,
-          bio: row.bio,
-          followers: row.followers,
-          following: row.following,
+          fullName: row.fullname,
+          profileUrl: row.profileurl,
+          profilePictureUrl: row.profilepictureurl,
+          instagramID: row.instagramid,
+          isVerified: row.isverified,
+          bio: row.rawlog,
           status: row.status,
-          dateAdded: row.date_added,
-          lastUpdated: row.last_updated,
-          notes: row.notes,
-          tags: row.tags ? row.tags.split(',') : []
+          dateAdded: row.timestamp,
+          lastUpdated: row.timestamp,
+          notes: row.rawlog,
+          tags: []
         });
       } else {
         res.status(404).json({ message: 'Lead not found' });
@@ -194,27 +188,27 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
     try {
       // Run the setup script
       const result = await pool.query(`
-        SELECT COUNT(*) FROM instagram_leads
+        SELECT COUNT(*) FROM instagram_agent_leads
       `);
       
       if (parseInt(result.rows[0].count) === 0) {
         await pool.query(`
-          INSERT INTO instagram_leads (
-            username, full_name, profile_url, profile_picture_url, instagram_id,
-            is_verified, bio, followers, following, status, notes, tags
+          INSERT INTO instagram_agent_leads (
+            username, fullname, profileurl, profilepictureurl, instagramid,
+            isverified, status, rawlog
           ) VALUES 
           ('tech.entrepreneur', 'Alex Chen', 'https://instagram.com/tech.entrepreneur', '', '12345678', 
-           false, 'Founder of 3 tech startups. Looking for innovative solutions for my latest venture.', 5680, 847, 'warm_lead', null, 'tech,startup,investor'),
+           false, 'warm_lead', 'Founder of 3 tech startups'),
           ('digital.marketer', 'Maria Johnson', 'https://instagram.com/digital.marketer', '', '87654321', 
-           true, 'Digital marketing consultant helping businesses scale. Open to new tools and platforms.', 12500, 952, 'warm_lead', null, 'marketing,digital,consultant'),
+           true, 'warm_lead', 'Digital marketing consultant'),
           ('startup.ceo', 'James Wilson', 'https://instagram.com/startup.ceo', '', '23456789', 
-           false, 'CEO of a growing fintech startup. Always looking for ways to improve our operations.', 3420, 521, 'message_sent', 'Interested in enterprise plan, follow up next week', 'fintech,ceo,startup'),
+           false, 'warm_lead', 'CEO of a growing fintech startup'),
           ('e.commerce.expert', 'Sophie Taylor', 'https://instagram.com/e.commerce.expert', '', '34567890', 
-           true, 'Helping brands grow online. E-commerce consultant with 10+ years experience.', 28700, 1024, 'sale_closed', 'Purchased premium plan. Very satisfied with onboarding process.', 'ecommerce,retail,consultant'),
+           true, 'warm_lead', 'E-commerce consultant with experience'),
           ('growth.hacker', 'Daniel Brown', 'https://instagram.com/growth.hacker', '', '98765432', 
-           false, 'Growth marketing specialist. Data-driven approach to scaling businesses.', 9400, 780, 'warm_lead', null, 'growth,marketing,data'),
+           false, 'warm_lead', 'Growth marketing specialist'),
           ('product.designer', 'Olivia White', 'https://instagram.com/product.designer', '', '34567891', 
-           true, 'Product Designer with 8+ years of experience. Creating intuitive user experiences.', 18300, 640, 'warm_lead', null, 'design,UX,product')
+           true, 'warm_lead', 'Product Designer with experience')
         `);
       }
       

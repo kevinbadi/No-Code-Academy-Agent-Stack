@@ -7,29 +7,8 @@ export async function setupInstagramLeadsTable() {
   try {
     console.log("Setting up Instagram leads table...");
     
-    // Create the instagram_leads table
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS instagram_leads (
-        id SERIAL PRIMARY KEY,
-        username VARCHAR(255) NOT NULL,
-        full_name VARCHAR(255),
-        profile_url VARCHAR(255),
-        profile_picture_url VARCHAR(255),
-        instagram_id VARCHAR(255),
-        is_verified BOOLEAN DEFAULT FALSE,
-        bio TEXT,
-        followers INTEGER,
-        following INTEGER,
-        status VARCHAR(20) DEFAULT 'warm_lead' NOT NULL,
-        date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-        last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-        notes TEXT,
-        tags TEXT
-      )
-    `);
-    
     // Check if we already have sample data
-    const checkResult = await pool.query(`SELECT COUNT(*) FROM instagram_leads`);
+    const checkResult = await pool.query(`SELECT COUNT(*) FROM instagram_agent_leads`);
     const count = parseInt(checkResult.rows[0].count);
     
     if (count === 0) {
@@ -122,10 +101,10 @@ export async function setupInstagramLeadsTable() {
       // Insert sample leads
       for (const lead of sampleLeads) {
         await pool.query(`
-          INSERT INTO instagram_leads (
-            username, full_name, profile_url, profile_picture_url, instagram_id,
-            is_verified, bio, followers, following, status, notes, tags
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+          INSERT INTO instagram_agent_leads (
+            username, fullname, profileurl, profilepictureurl, instagramid,
+            isverified, rawlog, status
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         `, [
           lead.username,
           lead.fullName,
@@ -134,11 +113,7 @@ export async function setupInstagramLeadsTable() {
           lead.instagramID,
           lead.isVerified,
           lead.bio,
-          lead.followers,
-          lead.following,
-          lead.status,
-          lead.notes || null,
-          lead.tags || null
+          lead.status
         ]);
       }
       
