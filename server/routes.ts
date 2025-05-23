@@ -13,10 +13,218 @@ import {
   getLatestNewsletterAnalytics,
   createNewsletterSample
 } from "./newsletter-handler";
+// Import Instagram leads API handlers
+import { 
+  getInstagramLeads, 
+  getNextWarmLead, 
+  getLeadCountsByStatus, 
+  updateLeadStatus, 
+  createSampleInstagramLeads 
+} from "./instagram-leads-api";
 
 export async function registerRoutes(app: Express, existingServer?: Server): Promise<Server> {
   // Create a new HTTP server if one wasn't provided
   const server = existingServer || new Server(app);
+  
+  // Instagram Leads API routes
+  app.get("/api/instagram-leads", async (req: Request, res: Response) => {
+    try {
+      const status = req.query.status as 'warm_lead' | 'message_sent' | 'sale_closed' | undefined;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      
+      // Query for Instagram leads with optional status filter
+      let query = `
+        SELECT * FROM instagram_leads 
+        ${status ? `WHERE status = '${status}'` : ''} 
+        ORDER BY date_added DESC
+        ${limit ? `LIMIT ${limit}` : ''}
+      `;
+      
+      const results = await pool.query(query);
+      
+      // Convert snake_case to camelCase for frontend
+      const leads = results.rows.map(row => ({
+        id: row.id,
+        username: row.username,
+        fullName: row.full_name,
+        profileUrl: row.profile_url,
+        profilePictureUrl: row.profile_picture_url,
+        instagramID: row.instagram_id,
+        isVerified: row.is_verified,
+        bio: row.bio,
+        followers: row.followers,
+        following: row.following,
+        status: row.status,
+        dateAdded: row.date_added,
+        lastUpdated: row.last_updated,
+        notes: row.notes,
+        tags: row.tags ? row.tags.split(',') : []
+      }));
+      
+      res.json(leads);
+    } catch (error) {
+      console.error("Error fetching Instagram leads:", error);
+      res.status(500).json({ error: "Failed to fetch Instagram leads" });
+    }
+  });
+  
+  app.get("/api/instagram-leads/next-warm", async (req: Request, res: Response) => {
+    try {
+      // Get the next warm lead for processing
+      const result = await pool.query(`
+        SELECT * FROM instagram_leads 
+        WHERE status = 'warm_lead' 
+        ORDER BY date_added ASC
+        LIMIT 1
+      `);
+      
+      if (result.rows && result.rows.length > 0) {
+        const row = result.rows[0];
+        const lead = {
+          id: row.id,
+          username: row.username,
+          fullName: row.full_name,
+          profileUrl: row.profile_url,
+          profilePictureUrl: row.profile_picture_url,
+          instagramID: row.instagram_id,
+          isVerified: row.is_verified,
+          bio: row.bio,
+          followers: row.followers,
+          following: row.following,
+          status: row.status,
+          dateAdded: row.date_added,
+          lastUpdated: row.last_updated,
+          notes: row.notes,
+          tags: row.tags ? row.tags.split(',') : []
+        };
+        
+        res.json(lead);
+      } else {
+        res.status(404).json({ message: "No warm leads available" });
+      }
+    } catch (error) {
+      console.error("Error fetching next warm lead:", error);
+      res.status(500).json({ error: "Failed to fetch next warm lead" });
+    }
+  });
+  
+  app.get("/api/instagram-leads/counts", async (req: Request, res: Response) => {
+    try {
+      // Get count of leads for each status
+      const result = await pool.query(`
+        SELECT 
+          COUNT(*) FILTER (WHERE status = 'warm_lead') AS warm_lead_count,
+          COUNT(*) FILTER (WHERE status = 'message_sent') AS message_sent_count,
+          COUNT(*) FILTER (WHERE status = 'sale_closed') AS sale_closed_count,
+          COUNT(*) AS total_count
+        FROM instagram_leads
+      `);
+      
+      if (result.rows && result.rows.length > 0) {
+        res.json({
+          warmLeadCount: parseInt(result.rows[0].warm_lead_count) || 0,
+          messageSentCount: parseInt(result.rows[0].message_sent_count) || 0,
+          saleClosedCount: parseInt(result.rows[0].sale_closed_count) || 0,
+          totalCount: parseInt(result.rows[0].total_count) || 0
+        });
+      } else {
+        res.json({
+          warmLeadCount: 0,
+          messageSentCount: 0,
+          saleClosedCount: 0,
+          totalCount: 0
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching lead counts:", error);
+      res.status(500).json({ error: "Failed to fetch lead counts" });
+    }
+  });
+  
+  app.put("/api/instagram-leads/:id/status", async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { status, notes } = req.body;
+      
+      // Validate status
+      if (!['warm_lead', 'message_sent', 'sale_closed'].includes(status)) {
+        return res.status(400).json({ error: 'Invalid status value' });
+      }
+      
+      // Update the lead status
+      const result = await pool.query(`
+        UPDATE instagram_leads
+        SET 
+          status = $1,
+          last_updated = CURRENT_TIMESTAMP,
+          notes = COALESCE($2, notes)
+        WHERE id = $3
+        RETURNING *
+      `, [status, notes, id]);
+      
+      if (result.rows && result.rows.length > 0) {
+        const row = result.rows[0];
+        res.json({
+          id: row.id,
+          username: row.username,
+          fullName: row.full_name,
+          profileUrl: row.profile_url,
+          profilePictureUrl: row.profile_picture_url,
+          instagramID: row.instagram_id,
+          isVerified: row.is_verified,
+          bio: row.bio,
+          followers: row.followers,
+          following: row.following,
+          status: row.status,
+          dateAdded: row.date_added,
+          lastUpdated: row.last_updated,
+          notes: row.notes,
+          tags: row.tags ? row.tags.split(',') : []
+        });
+      } else {
+        res.status(404).json({ message: 'Lead not found' });
+      }
+    } catch (error) {
+      console.error("Error updating lead status:", error);
+      res.status(500).json({ error: "Failed to update lead status" });
+    }
+  });
+  
+  app.post("/api/instagram-leads/sample", async (req: Request, res: Response) => {
+    try {
+      // Run the setup script
+      const result = await pool.query(`
+        SELECT COUNT(*) FROM instagram_leads
+      `);
+      
+      if (parseInt(result.rows[0].count) === 0) {
+        await pool.query(`
+          INSERT INTO instagram_leads (
+            username, full_name, profile_url, profile_picture_url, instagram_id,
+            is_verified, bio, followers, following, status, notes, tags
+          ) VALUES 
+          ('tech.entrepreneur', 'Alex Chen', 'https://instagram.com/tech.entrepreneur', '', '12345678', 
+           false, 'Founder of 3 tech startups. Looking for innovative solutions for my latest venture.', 5680, 847, 'warm_lead', null, 'tech,startup,investor'),
+          ('digital.marketer', 'Maria Johnson', 'https://instagram.com/digital.marketer', '', '87654321', 
+           true, 'Digital marketing consultant helping businesses scale. Open to new tools and platforms.', 12500, 952, 'warm_lead', null, 'marketing,digital,consultant'),
+          ('startup.ceo', 'James Wilson', 'https://instagram.com/startup.ceo', '', '23456789', 
+           false, 'CEO of a growing fintech startup. Always looking for ways to improve our operations.', 3420, 521, 'message_sent', 'Interested in enterprise plan, follow up next week', 'fintech,ceo,startup'),
+          ('e.commerce.expert', 'Sophie Taylor', 'https://instagram.com/e.commerce.expert', '', '34567890', 
+           true, 'Helping brands grow online. E-commerce consultant with 10+ years experience.', 28700, 1024, 'sale_closed', 'Purchased premium plan. Very satisfied with onboarding process.', 'ecommerce,retail,consultant'),
+          ('growth.hacker', 'Daniel Brown', 'https://instagram.com/growth.hacker', '', '98765432', 
+           false, 'Growth marketing specialist. Data-driven approach to scaling businesses.', 9400, 780, 'warm_lead', null, 'growth,marketing,data'),
+          ('product.designer', 'Olivia White', 'https://instagram.com/product.designer', '', '34567891', 
+           true, 'Product Designer with 8+ years of experience. Creating intuitive user experiences.', 18300, 640, 'warm_lead', null, 'design,UX,product')
+        `);
+      }
+      
+      res.json({ message: "Sample Instagram leads created successfully" });
+    } catch (error) {
+      console.error("Error creating sample Instagram leads:", error);
+      res.status(500).json({ error: "Failed to create sample Instagram leads" });
+    }
+  });
+  
   // Trigger external webhook to get real agent data
   app.post("/api/trigger-agent-webhook", async (req: Request, res: Response) => {
     try {

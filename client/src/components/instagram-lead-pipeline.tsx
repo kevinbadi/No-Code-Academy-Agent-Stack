@@ -50,20 +50,84 @@ interface InstagramLead {
   tags?: string[];
 }
 
+// Interface for lead counts
+interface LeadCounts {
+  warmLeadCount: number;
+  messageSentCount: number;
+  saleClosedCount: number;
+  totalCount: number;
+}
+
 export default function InstagramLeadPipeline() {
   const [activeTab, setActiveTab] = useState<LeadStatus>("warm_lead");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [leads, setLeads] = useState<InstagramLead[]>([]);
   const [filteredLeads, setFilteredLeads] = useState<InstagramLead[]>([]);
   const [currentLeadIndex, setCurrentLeadIndex] = useState(0);
   const [noteText, setNoteText] = useState("");
+  const [counts, setCounts] = useState<LeadCounts>({
+    warmLeadCount: 0,
+    messageSentCount: 0,
+    saleClosedCount: 0,
+    totalCount: 0
+  });
   
-  // Sample data - in a real app this would come from your API
+  // Filter leads based on current tab
+  const filterLeadsByStatus = (status: LeadStatus) => {
+    setActiveTab(status);
+    const filtered = leads.filter(lead => lead.status === status);
+    setFilteredLeads(filtered);
+    setCurrentLeadIndex(0); // Reset to first lead when changing tabs
+  };
+  
+  // Fetch real data from our database API
   useEffect(() => {
-    // Simulating an API call to fetch leads
     setIsLoading(true);
-    setTimeout(() => {
-      const sampleLeads: InstagramLead[] = [
+    setError(null);
+    
+    const fetchLeads = async () => {
+      try {
+        // Fetch all Instagram leads from our API
+        const response = await fetch('/api/instagram-leads');
+        if (response.ok) {
+          const leadsData = await response.json();
+          setLeads(leadsData);
+          filterLeadsByStatus("warm_lead");
+        } else {
+          console.error("Failed to fetch Instagram leads:", await response.text());
+          setError("Failed to load Instagram leads");
+        }
+      } catch (error) {
+        console.error("Error fetching Instagram leads:", error);
+        setError("Error connecting to the server");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    // Fetch lead counts for badges
+    const fetchLeadCounts = async () => {
+      try {
+        const response = await fetch('/api/instagram-leads/counts');
+        if (response.ok) {
+          const countsData = await response.json();
+          setCounts({
+            warmLeadCount: countsData.warmLeadCount || 0,
+            messageSentCount: countsData.messageSentCount || 0,
+            saleClosedCount: countsData.saleClosedCount || 0,
+            totalCount: countsData.totalCount || 0
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching lead counts:", error);
+      }
+    };
+    
+    // Run both fetch operations
+    fetchLeads();
+    fetchLeadCounts();
+  }, []);
         {
           id: 1,
           username: "tonda.thr",
@@ -440,160 +504,172 @@ export default function InstagramLeadPipeline() {
               </TabsList>
             </div>
             
-            {/* WARM LEADS - Show one by one */}
+            {/* WARM LEADS - Show one by one - SEPARATE VIEW */}
             <TabsContent value="warm_lead" className="pt-0 pb-0">
-              {isLoading ? (
-                <div className="flex justify-center items-center py-20">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E1306C]"></div>
-                </div>
-              ) : filteredLeads.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <div className="h-16 w-16 bg-pink-50 rounded-full flex items-center justify-center mb-4">
-                    <AlertCircle className="h-8 w-8 text-[#E1306C]" />
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900">No warm leads found</h3>
-                  <p className="mt-2 text-sm text-gray-500">
-                    Your agent is searching for new potential leads.
-                  </p>
-                </div>
-              ) : (
-                <div className="p-6">
-                  {/* Lead navigation */}
-                  <div className="flex justify-between items-center mb-4">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => navigateLeads('prev')}
-                      disabled={currentLeadIndex === 0}
-                      className="w-24"
-                    >
-                      <ChevronLeft className="h-4 w-4 mr-1" />
-                      Previous
-                    </Button>
-                    
-                    <span className="text-sm text-gray-500">
-                      Lead {currentLeadIndex + 1} of {filteredLeads.length}
-                    </span>
-                    
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => navigateLeads('next')}
-                      disabled={currentLeadIndex === filteredLeads.length - 1}
-                      className="w-24"
-                    >
-                      Next
-                      <ChevronRight className="h-4 w-4 ml-1" />
-                    </Button>
-                  </div>
+              <div className="bg-gradient-to-r from-pink-50 to-purple-50 p-6 rounded-lg border border-pink-100">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-lg font-medium text-[#E1306C] flex items-center">
+                    <Search className="h-5 w-5 mr-2" />
+                    Instagram Warm Lead
+                  </h3>
                   
-                  {/* Current warm lead details */}
-                  {getCurrentWarmLead() && (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      {/* Lead profile information */}
-                      <div className="md:col-span-2 bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                        <div className="flex items-center mb-4">
-                          <Avatar className="h-16 w-16 border-2 border-white shadow-md mr-4">
+                  {filteredLeads.length > 0 && (
+                    <div className="flex items-center space-x-3">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => navigateLeads('prev')}
+                        disabled={currentLeadIndex === 0 || isLoading}
+                      >
+                        <ChevronLeft className="h-4 w-4 mr-1" />
+                        Previous
+                      </Button>
+                      
+                      <span className="text-sm font-medium">
+                        {currentLeadIndex + 1} of {filteredLeads.length}
+                      </span>
+                      
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => navigateLeads('next')}
+                        disabled={currentLeadIndex === filteredLeads.length - 1 || isLoading}
+                      >
+                        Next
+                        <ChevronRight className="h-4 w-4 ml-1" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                
+                {isLoading ? (
+                  <div className="flex justify-center items-center py-20">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#E1306C]"></div>
+                  </div>
+                ) : filteredLeads.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-20 text-center">
+                    <div className="h-16 w-16 bg-pink-50 rounded-full flex items-center justify-center mb-4">
+                      <AlertCircle className="h-8 w-8 text-[#E1306C]" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900">No warm leads found</h3>
+                    <p className="mt-2 text-sm text-gray-500">
+                      Your agent is searching for new potential leads.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-6">
+                    {/* Instagram Profile Card */}
+                    <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+                      {/* Profile Header */}
+                      <div className="border-b border-gray-100 p-6">
+                        <div className="flex items-center">
+                          <Avatar className="h-20 w-20 border-4 border-white shadow-md mr-6">
                             <AvatarImage src={getCurrentWarmLead().profilePictureUrl} alt={getCurrentWarmLead().username} />
-                            <AvatarFallback className="bg-gradient-to-br from-pink-400 to-[#E1306C] text-white text-xl">
+                            <AvatarFallback className="bg-gradient-to-br from-pink-400 to-[#E1306C] text-white text-2xl">
                               {getCurrentWarmLead().fullName.substring(0, 2).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                           
                           <div>
-                            <div className="flex items-center">
-                              <h3 className="text-lg font-bold text-gray-900">{getCurrentWarmLead().fullName}</h3>
+                            <div className="flex items-center mb-1">
+                              <h3 className="text-xl font-bold text-gray-900">{getCurrentWarmLead().fullName}</h3>
                               {getCurrentWarmLead().isVerified && (
                                 <Badge variant="outline" className="ml-2 text-[#E1306C] border-[#E1306C]">Verified</Badge>
                               )}
                             </div>
                             
-                            <div className="flex items-center text-gray-500 text-sm mt-1">
-                              <span>@{getCurrentWarmLead().username}</span>
+                            <div className="text-gray-500 text-sm mb-2">@{getCurrentWarmLead().username}</div>
+                            
+                            <div className="flex items-center space-x-4 text-sm">
                               <a 
                                 href={getCurrentWarmLead().profileUrl} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
-                                className="ml-3 text-[#E1306C] hover:text-pink-700 inline-flex items-center"
+                                className="text-[#E1306C] hover:text-pink-700 inline-flex items-center"
                               >
-                                <ExternalLink className="h-3 w-3 mr-1" />
-                                View Profile
+                                <ExternalLink className="h-3.5 w-3.5 mr-1" />
+                                View on Instagram
                               </a>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                          <div className="border border-gray-100 rounded-md p-3 bg-gray-50">
-                            <div className="text-xs text-gray-500 mb-1">Followers</div>
-                            <div className="text-lg font-semibold">{formatNumber(getCurrentWarmLead().followers)}</div>
-                          </div>
-                          
-                          <div className="border border-gray-100 rounded-md p-3 bg-gray-50">
-                            <div className="text-xs text-gray-500 mb-1">Following</div>
-                            <div className="text-lg font-semibold">{formatNumber(getCurrentWarmLead().following)}</div>
-                          </div>
-                        </div>
-                        
-                        <div className="mb-6">
-                          <h4 className="text-sm font-medium text-gray-500 mb-2">Bio</h4>
-                          <p className="text-base text-gray-700 p-3 bg-gray-50 rounded-md border border-gray-100">
-                            {getCurrentWarmLead().bio || "No bio available"}
-                          </p>
-                        </div>
-                        
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-500 mb-2">Tags</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {getCurrentWarmLead().tags?.map((tag, i) => (
-                              <span key={i} className="px-2.5 py-1 bg-pink-50 text-pink-700 rounded-full text-xs font-medium">
-                                {tag}
+                              
+                              <span className="text-gray-400">•</span>
+                              
+                              <span className="text-gray-600">
+                                ID: {getCurrentWarmLead().instagramID}
                               </span>
-                            ))}
+                            </div>
                           </div>
                         </div>
                       </div>
                       
-                      {/* Action panel */}
-                      <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Lead Actions</h3>
+                      {/* Profile Stats */}
+                      <div className="grid grid-cols-3 divide-x divide-gray-100 border-b border-gray-100">
+                        <div className="p-4 text-center">
+                          <div className="text-2xl font-bold text-gray-900">{formatNumber(getCurrentWarmLead().followers)}</div>
+                          <div className="text-xs text-gray-500 mt-1">Followers</div>
+                        </div>
                         
-                        <div className="space-y-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Add Note
-                            </label>
-                            <Textarea 
-                              placeholder="Add details about your interaction with this lead..." 
-                              className="w-full h-32 resize-none"
-                              value={noteText}
-                              onChange={(e) => setNoteText(e.target.value)}
-                            />
-                          </div>
-                          
+                        <div className="p-4 text-center">
+                          <div className="text-2xl font-bold text-gray-900">{formatNumber(getCurrentWarmLead().following)}</div>
+                          <div className="text-xs text-gray-500 mt-1">Following</div>
+                        </div>
+                        
+                        <div className="p-4 text-center">
+                          <div className="text-2xl font-bold text-gray-900">{getCurrentWarmLead().dateAdded}</div>
+                          <div className="text-xs text-gray-500 mt-1">Date Added</div>
+                        </div>
+                      </div>
+                      
+                      {/* Bio */}
+                      <div className="p-6 border-b border-gray-100">
+                        <h4 className="text-sm font-semibold text-gray-700 mb-2">Bio</h4>
+                        <p className="text-gray-800">
+                          {getCurrentWarmLead().bio || "No bio available"}
+                        </p>
+                      </div>
+                      
+                      {/* Tags */}
+                      <div className="p-6 border-b border-gray-100">
+                        <h4 className="text-sm font-semibold text-gray-700 mb-2">Tags</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {getCurrentWarmLead().tags?.map((tag, i) => (
+                            <span key={i} className="px-2.5 py-1 bg-pink-50 text-pink-700 rounded-full text-xs font-medium">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Action Panel */}
+                      <div className="p-6 bg-gray-50">
+                        <h4 className="text-sm font-semibold text-gray-700 mb-3">Send Personalized Message</h4>
+                        
+                        <Textarea 
+                          placeholder="Add notes about your message to this lead..." 
+                          className="w-full h-24 resize-none mb-4"
+                          value={noteText}
+                          onChange={(e) => setNoteText(e.target.value)}
+                        />
+                        
+                        <div className="flex flex-col sm:flex-row gap-3">
                           <Button 
-                            className="w-full bg-gradient-to-r from-[#FCAF45] to-[#E1306C] hover:opacity-90 text-white"
+                            className="flex-1 bg-gradient-to-r from-[#FCAF45] to-[#E1306C] hover:opacity-90 text-white"
                             onClick={() => handleMarkMessageSent(getCurrentWarmLead().id)}
+                            disabled={isLoading}
                           >
                             <MessageSquare className="h-4 w-4 mr-1.5" />
                             Message Sent
                           </Button>
                           
-                          <Button variant="outline" className="w-full">
+                          <Button variant="outline" className="flex-1">
                             <ExternalLink className="h-4 w-4 mr-1.5" />
                             Open in Instagram
                           </Button>
-                          
-                          <div className="p-3 bg-gray-50 rounded-md border border-gray-200 text-sm text-gray-600">
-                            <p className="font-medium mb-1">Lead added on:</p>
-                            <p>{getCurrentWarmLead().dateAdded}</p>
-                          </div>
                         </div>
                       </div>
                     </div>
-                  )}
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
             </TabsContent>
             
             {/* MESSAGE SENT - Table View */}
