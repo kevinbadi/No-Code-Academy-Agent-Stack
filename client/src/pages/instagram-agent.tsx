@@ -3,7 +3,7 @@ import Sidebar from "@/components/sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { RefreshCcw } from "lucide-react";
-import InstagramWarmLeadAgent from "@/components/instagram-agent";
+import InstagramLeadPipeline from "@/components/instagram-lead-pipeline";
 
 export default function InstagramAgentPage() {
   return (
@@ -16,7 +16,7 @@ export default function InstagramAgentPage() {
           </div>
           
           <div className="grid grid-cols-1 gap-6">
-            <InstagramWarmLeadAgent />
+            <InstagramLeadPipeline />
           </div>
         </div>
       </div>
