@@ -172,7 +172,7 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
           status: row.status,
           dateAdded: row.timestamp,
           lastUpdated: row.timestamp,
-          notes: row.rawlog,
+          notes: row.notes || row.rawlog,
           tags: []
         });
       } else {
@@ -181,6 +181,48 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
     } catch (error) {
       console.error("Error updating lead status:", error);
       res.status(500).json({ error: "Failed to update lead status" });
+    }
+  });
+  
+  // New endpoint to save notes for Instagram leads
+  app.put("/api/instagram-leads/:id/notes", async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { notes } = req.body;
+      
+      // Update just the notes field
+      const result = await pool.query(`
+        UPDATE instagram_agent_leads
+        SET 
+          notes = $1,
+          timestamp = CURRENT_TIMESTAMP
+        WHERE id = $2
+        RETURNING *
+      `, [notes, id]);
+      
+      if (result.rows && result.rows.length > 0) {
+        const row = result.rows[0];
+        res.json({
+          id: row.id,
+          username: row.username,
+          fullName: row.fullname,
+          profileUrl: row.profileurl,
+          profilePictureUrl: row.profilepictureurl,
+          instagramID: row.instagramid,
+          isVerified: row.isverified,
+          bio: row.rawlog,
+          status: row.status,
+          dateAdded: row.timestamp,
+          lastUpdated: row.timestamp,
+          notes: row.notes,
+          tags: []
+        });
+      } else {
+        res.status(404).json({ message: 'Lead not found' });
+      }
+    } catch (error) {
+      console.error("Error updating lead notes:", error);
+      res.status(500).json({ error: "Failed to update lead notes" });
     }
   });
   

@@ -537,24 +537,9 @@ export default function InstagramLeadPipeline() {
                     {/* Current Lead Card */}
                     {getCurrentWarmLead() && (
                       <div className="p-6">
-                        <div className="flex items-start gap-4">
-                          {/* Lead Avatar */}
-                          <Avatar className="h-16 w-16 rounded-full border-2 border-pink-100">
-                            {getCurrentWarmLead()?.profilePictureUrl && getCurrentWarmLead()?.profilePictureUrl !== "" ? (
-                              <AvatarImage 
-                                src={getCurrentWarmLead()?.profilePictureUrl} 
-                                alt={getCurrentWarmLead()?.fullName} 
-                                className="object-cover"
-                              />
-                            ) : (
-                              <AvatarFallback className="bg-pink-50 text-[#E1306C] text-lg">
-                                {getCurrentWarmLead()?.username.substring(0, 2).toUpperCase()}
-                              </AvatarFallback>
-                            )}
-                          </Avatar>
-                          
+                        <div className="flex flex-col">
                           {/* Lead Details */}
-                          <div className="flex-1">
+                          <div className="w-full">
                             <div className="flex items-center gap-2 mb-1">
                               <h3 className="font-semibold text-lg">{getCurrentWarmLead()?.fullName}</h3>
                               {getCurrentWarmLead()?.isVerified && (
@@ -599,12 +584,61 @@ export default function InstagramLeadPipeline() {
                             
                             {/* Action Form */}
                             <div className="mt-4">
-                              <Textarea
-                                placeholder="Add notes about this lead (optional)"
-                                className="min-h-[80px] mb-3"
-                                value={noteText}
-                                onChange={(e) => setNoteText(e.target.value)}
-                              />
+                              <div className="mb-3">
+                                <div className="flex justify-between items-center mb-2">
+                                  <h4 className="text-sm font-medium text-gray-700">Lead Notes</h4>
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    disabled={isLoading}
+                                    onClick={async () => {
+                                      if (!getCurrentWarmLead()) return;
+                                      
+                                      try {
+                                        setIsLoading(true);
+                                        const response = await fetch(`/api/instagram-leads/${getCurrentWarmLead()?.id}/notes`, {
+                                          method: 'PUT',
+                                          headers: {
+                                            'Content-Type': 'application/json',
+                                          },
+                                          body: JSON.stringify({
+                                            notes: noteText
+                                          }),
+                                        });
+                                        
+                                        if (response.ok) {
+                                          // Update local lead state with new notes
+                                          setLeads(prevLeads => 
+                                            prevLeads.map(lead => {
+                                              if (lead.id === getCurrentWarmLead()?.id) {
+                                                return {
+                                                  ...lead,
+                                                  notes: noteText
+                                                };
+                                              }
+                                              return lead;
+                                            })
+                                          );
+                                        } else {
+                                          console.error('Failed to save notes');
+                                        }
+                                      } catch (error) {
+                                        console.error('Error saving notes:', error);
+                                      } finally {
+                                        setIsLoading(false);
+                                      }
+                                    }}
+                                  >
+                                    Save Notes
+                                  </Button>
+                                </div>
+                                <Textarea
+                                  placeholder="Add notes about this lead (optional)"
+                                  className="min-h-[80px]"
+                                  value={noteText}
+                                  onChange={(e) => setNoteText(e.target.value)}
+                                />
+                              </div>
                               <Button 
                                 className="w-full bg-[#5851DB] hover:bg-[#4c46c3]"
                                 onClick={() => getCurrentWarmLead() && handleMarkMessageSent(getCurrentWarmLead().id)}
