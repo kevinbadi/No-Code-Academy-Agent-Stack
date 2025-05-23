@@ -126,6 +126,7 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
           totalCount: parseInt(result.rows[0].total_count) || 0,
           totalMessagesSent: parseInt(result.rows[0].total_messages_sent) || 0
         });
+        console.log("Sending counts with totalMessagesSent:", result.rows[0].total_messages_sent);
       } else {
         res.json({
           warmLeadCount: 0,

@@ -58,11 +58,12 @@ export default function InstagramLeadPipeline() {
   const [currentLeadIndex, setCurrentLeadIndex] = useState(0);
   const [noteText, setNoteText] = useState("");
   const [totalMessagesSent, setTotalMessagesSent] = useState(0);
-  const [counts, setCounts] = useState<LeadCounts>({
+  const [counts, setCounts] = useState<LeadCounts & { totalMessagesSent?: number }>({
     warmLeadCount: 0,
     messageSentCount: 0,
     saleClosedCount: 0,
-    totalCount: 0
+    totalCount: 0,
+    totalMessagesSent: 0
   });
   
   // Filter leads based on current tab
@@ -90,15 +91,20 @@ export default function InstagramLeadPipeline() {
         const countsResponse = await fetch('/api/instagram-leads/counts');
         if (countsResponse.ok) {
           const countsData = await countsResponse.json();
+          console.log("Retrieved counts data:", countsData);
+          
+          // Update all counts including totalMessagesSent
           setCounts({
             warmLeadCount: countsData.warmLeadCount || 0,
             messageSentCount: countsData.messageSentCount || 0,
             saleClosedCount: countsData.saleClosedCount || 0,
-            totalCount: countsData.totalCount || 0
+            totalCount: countsData.totalCount || 0,
+            totalMessagesSent: countsData.totalMessagesSent || 0
           });
           
-          // Update total messages sent
+          // Also update the separate totalMessagesSent state
           setTotalMessagesSent(countsData.totalMessagesSent || 0);
+          console.log("Setting total messages sent to:", countsData.totalMessagesSent || 0);
         }
       } else {
         console.error("Failed to refresh Instagram leads:", await response.text());

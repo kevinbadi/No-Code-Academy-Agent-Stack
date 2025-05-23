@@ -146,19 +146,30 @@ app.get('/api/instagram-leads/counts', async (req, res) => {
       FROM instagram_agent_leads
     `);
     
+    // Get total messages sent from dedicated stats table
+    const statsResult = await pool.query(`
+      SELECT stat_value FROM instagram_stats 
+      WHERE stat_name = 'total_messages_sent'
+    `);
+    
+    const totalMessagesSent = statsResult.rows.length > 0 ? parseInt(statsResult.rows[0].stat_value) : 0;
+    console.log("Total messages sent from stats table:", totalMessagesSent);
+    
     if (result.rows && result.rows.length > 0) {
       res.json({
         warmLeadCount: parseInt(result.rows[0].warm_lead_count) || 0,
         messageSentCount: parseInt(result.rows[0].message_sent_count) || 0,
         saleClosedCount: parseInt(result.rows[0].sale_closed_count) || 0,
-        totalCount: parseInt(result.rows[0].total_count) || 0
+        totalCount: parseInt(result.rows[0].total_count) || 0,
+        totalMessagesSent: totalMessagesSent
       });
     } else {
       res.json({
         warmLeadCount: 0,
         messageSentCount: 0,
         saleClosedCount: 0,
-        totalCount: 0
+        totalCount: 0,
+        totalMessagesSent: totalMessagesSent
       });
     }
   } catch (error) {
@@ -177,16 +188,39 @@ app.put('/api/instagram-leads/:id/status', async (req, res) => {
       return res.status(400).json({ error: 'Invalid status value' });
     }
     
+    // Get the current status of the lead to check if it's changing to 'message_sent'
+    const currentStatusResult = await pool.query(
+      'SELECT status FROM instagram_agent_leads WHERE id = $1',
+      [id]
+    );
+    
+    const isChangingToMessageSent = 
+      currentStatusResult.rows.length > 0 && 
+      currentStatusResult.rows[0].status === 'warm_lead' && 
+      status === 'message_sent';
+    
     // Update the lead status
     const result = await pool.query(`
       UPDATE instagram_agent_leads
       SET 
         status = $1,
         timestamp = CURRENT_TIMESTAMP,
-        rawlog = COALESCE($2, rawlog)
+        rawlog = COALESCE($2, rawlog),
+        total_messages_sent = CASE WHEN $1 = 'message_sent' AND status = 'warm_lead' THEN 1 ELSE total_messages_sent END
       WHERE id = $3
       RETURNING *
     `, [status, notes, id]);
+    
+    // If status changed to message_sent, increment the total messages counter
+    if (isChangingToMessageSent) {
+      await pool.query(`
+        UPDATE instagram_stats 
+        SET stat_value = stat_value + 1,
+            last_updated = NOW()
+        WHERE stat_name = 'total_messages_sent'
+      `);
+      console.log("Incremented total messages counter");
+    }
     
     if (result.rows && result.rows.length > 0) {
       const row = result.rows[0];
