@@ -58,12 +58,14 @@ export default function InstagramLeadPipeline() {
   const [currentLeadIndex, setCurrentLeadIndex] = useState(0);
   const [noteText, setNoteText] = useState("");
   const [totalMessagesSent, setTotalMessagesSent] = useState(0);
-  const [counts, setCounts] = useState<LeadCounts & { totalMessagesSent?: number }>({
+  const [dailyMessagesSent, setDailyMessagesSent] = useState(0);
+  const [counts, setCounts] = useState<LeadCounts & { totalMessagesSent?: number, dailyMessagesSent?: number }>({
     warmLeadCount: 0,
     messageSentCount: 0,
     saleClosedCount: 0,
     totalCount: 0,
-    totalMessagesSent: 0
+    totalMessagesSent: 0,
+    dailyMessagesSent: 0
   });
   
   // Filter leads based on current tab
@@ -93,18 +95,20 @@ export default function InstagramLeadPipeline() {
           const countsData = await countsResponse.json();
           console.log("Retrieved counts data:", countsData);
           
-          // Update all counts including totalMessagesSent
+          // Update all counts including totalMessagesSent and dailyMessagesSent
           setCounts({
             warmLeadCount: countsData.warmLeadCount || 0,
             messageSentCount: countsData.messageSentCount || 0,
             saleClosedCount: countsData.saleClosedCount || 0,
             totalCount: countsData.totalCount || 0,
-            totalMessagesSent: countsData.totalMessagesSent || 0
+            totalMessagesSent: countsData.totalMessagesSent || 0,
+            dailyMessagesSent: countsData.dailyMessagesSent || 0
           });
           
-          // Also update the separate totalMessagesSent state
+          // Update both message count states
           setTotalMessagesSent(countsData.totalMessagesSent || 0);
-          console.log("Setting total messages sent to:", countsData.totalMessagesSent || 0);
+          setDailyMessagesSent(countsData.dailyMessagesSent || 0);
+          console.log("Daily messages sent today:", countsData.dailyMessagesSent || 0);
         }
       } else {
         console.error("Failed to refresh Instagram leads:", await response.text());
@@ -368,13 +372,18 @@ export default function InstagramLeadPipeline() {
   
   // Prevent counter from briefly showing 0 during refresh
   const getDisplayMessageCount = () => {
+    return counts.dailyMessagesSent || dailyMessagesSent || 0;
+  };
+  
+  // Get total messages sent for lifetime stats
+  const getTotalMessageCount = () => {
     return counts.totalMessagesSent || totalMessagesSent || 0;
   };
   
   // Calculate daily reachout progress (75 per day goal)
   const getDailyProgress = () => {
-    // Use totalMessagesSent for more accurate tracking (includes all sent messages)
-    const messageCount = counts.totalMessagesSent || totalMessagesSent || 0;
+    // Use dailyMessagesSent for accurate daily tracking
+    const messageCount = counts.dailyMessagesSent || dailyMessagesSent || 0;
     return {
       total: 75,
       current: messageCount > 75 ? 75 : messageCount,

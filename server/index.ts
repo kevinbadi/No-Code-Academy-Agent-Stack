@@ -146,14 +146,45 @@ app.get('/api/instagram-leads/counts', async (req, res) => {
       FROM instagram_agent_leads
     `);
     
-    // Get total messages sent from dedicated stats table
+    // Get total messages sent and last reset date from dedicated stats table
     const statsResult = await pool.query(`
-      SELECT stat_value FROM instagram_stats 
+      SELECT stat_value, last_updated, last_reset, daily_messages_sent 
+      FROM instagram_stats 
       WHERE stat_name = 'total_messages_sent'
     `);
     
-    const totalMessagesSent = statsResult.rows.length > 0 ? parseInt(statsResult.rows[0].stat_value) : 0;
+    let totalMessagesSent = 0;
+    let dailyMessagesSent = 0;
+    
+    if (statsResult.rows.length > 0) {
+      totalMessagesSent = parseInt(statsResult.rows[0].stat_value);
+      const lastResetDate = statsResult.rows[0].last_reset;
+      const today = new Date().toISOString().split('T')[0]; // Today's date in YYYY-MM-DD format
+      
+      if (!lastResetDate || new Date(lastResetDate).toISOString().split('T')[0] !== today) {
+        // It's a new day, reset the daily counter
+        console.log("Resetting daily message count for a new day");
+        await pool.query(`
+          UPDATE instagram_stats 
+          SET daily_messages_sent = 0,
+              last_reset = CURRENT_DATE
+          WHERE stat_name = 'total_messages_sent'
+        `);
+        dailyMessagesSent = 0;
+      } else {
+        // Same day, use the existing daily count
+        dailyMessagesSent = parseInt(statsResult.rows[0].daily_messages_sent || '0');
+      }
+    } else {
+      // If no record exists, create one with daily counter set to 0
+      await pool.query(`
+        INSERT INTO instagram_stats (stat_name, stat_value, daily_messages_sent, last_reset, last_updated)
+        VALUES ('total_messages_sent', 0, 0, CURRENT_DATE, NOW())
+      `);
+    }
+    
     console.log("Total messages sent from stats table:", totalMessagesSent);
+    console.log("Daily messages sent:", dailyMessagesSent);
     
     if (result.rows && result.rows.length > 0) {
       res.json({
@@ -161,7 +192,8 @@ app.get('/api/instagram-leads/counts', async (req, res) => {
         messageSentCount: parseInt(result.rows[0].message_sent_count) || 0,
         saleClosedCount: parseInt(result.rows[0].sale_closed_count) || 0,
         totalCount: parseInt(result.rows[0].total_count) || 0,
-        totalMessagesSent: totalMessagesSent
+        totalMessagesSent: totalMessagesSent,
+        dailyMessagesSent: dailyMessagesSent // Add daily messages sent
       });
     } else {
       res.json({
@@ -169,7 +201,8 @@ app.get('/api/instagram-leads/counts', async (req, res) => {
         messageSentCount: 0,
         saleClosedCount: 0,
         totalCount: 0,
-        totalMessagesSent: totalMessagesSent
+        totalMessagesSent: totalMessagesSent,
+        dailyMessagesSent: dailyMessagesSent // Add daily messages sent
       });
     }
   } catch (error) {
@@ -211,15 +244,16 @@ app.put('/api/instagram-leads/:id/status', async (req, res) => {
       RETURNING *
     `, [status, notes, id]);
     
-    // If status changed to message_sent, increment the total messages counter
+    // If status changed to message_sent, increment both total and daily message counters
     if (isChangingToMessageSent) {
       await pool.query(`
         UPDATE instagram_stats 
         SET stat_value = stat_value + 1,
+            daily_messages_sent = daily_messages_sent + 1,
             last_updated = NOW()
         WHERE stat_name = 'total_messages_sent'
       `);
-      console.log("Incremented total messages counter");
+      console.log("Incremented total and daily messages counters");
     }
     
     if (result.rows && result.rows.length > 0) {
