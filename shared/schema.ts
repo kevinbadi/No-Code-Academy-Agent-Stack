@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, timestamp, real, json, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, real, json, boolean, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -257,3 +257,24 @@ export const insertNewsletterAnalyticsSchema = createInsertSchema(newsletterAnal
 
 export type InsertNewsletterAnalytics = z.infer<typeof insertNewsletterAnalyticsSchema>;
 export type NewsletterAnalytics = typeof newsletterAnalytics.$inferSelect;
+
+// Instagram Posts Schema - stores URLs of posts uploaded since last warm leads were added
+export const instagramPosts = pgTable("instagram_posts", {
+  id: serial("id").primaryKey(),
+  postUrl: text("post_url").notNull(),
+  postDescription: text("post_description"),
+  postDate: timestamp("post_date").notNull().defaultNow(),
+  addedToWarmLeads: boolean("added_to_warm_leads").notNull().default(false),
+  addedToWarmLeadsDate: timestamp("added_to_warm_leads_date"),
+  engagementStats: jsonb("engagement_stats")
+});
+
+export const insertInstagramPostSchema = createInsertSchema(instagramPosts).omit({
+  id: true,
+  addedToWarmLeadsDate: true
+}).extend({
+  engagementStats: z.record(z.unknown()).optional()
+});
+
+export type InsertInstagramPost = z.infer<typeof insertInstagramPostSchema>;
+export type InstagramPost = typeof instagramPosts.$inferSelect;
