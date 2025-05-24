@@ -166,8 +166,12 @@ export default function InstagramLeadPipeline() {
           warmLeadCount: countsData.warmLeadCount || 0,
           messageSentCount: countsData.messageSentCount || 0,
           saleClosedCount: countsData.saleClosedCount || 0,
-          totalCount: countsData.totalCount || 0
+          totalCount: countsData.totalCount || 0,
+          totalMessagesSent: countsData.totalMessagesSent || 0
         });
+        
+        // Update the separate totalMessagesSent state
+        setTotalMessagesSent(countsData.totalMessagesSent || 0);
       }
       
       // Clear the note text
@@ -241,7 +245,8 @@ export default function InstagramLeadPipeline() {
           warmLeadCount: countsData.warmLeadCount || 0,
           messageSentCount: countsData.messageSentCount || 0,
           saleClosedCount: countsData.saleClosedCount || 0,
-          totalCount: countsData.totalCount || 0
+          totalCount: countsData.totalCount || 0,
+          totalMessagesSent: countsData.totalMessagesSent || 0
         });
       }
       
@@ -291,8 +296,12 @@ export default function InstagramLeadPipeline() {
             warmLeadCount: countsData.warmLeadCount || 0,
             messageSentCount: countsData.messageSentCount || 0,
             saleClosedCount: countsData.saleClosedCount || 0,
-            totalCount: countsData.totalCount || 0
+            totalCount: countsData.totalCount || 0,
+            totalMessagesSent: countsData.totalMessagesSent || 0
           });
+          
+          // Set the separate totalMessagesSent state
+          setTotalMessagesSent(countsData.totalMessagesSent || 0);
         }
       } catch (error) {
         console.error("Error fetching lead counts:", error);
@@ -337,7 +346,7 @@ export default function InstagramLeadPipeline() {
   
   // Format large numbers with commas
   const formatNumber = (num?: number) => {
-    return num?.toLocaleString() || 0;
+    return num?.toLocaleString() || "0";
   };
   
   // Format date to be more readable
@@ -376,309 +385,248 @@ export default function InstagramLeadPipeline() {
   return (
     <div className="space-y-6">
       {/* Pipeline Overview */}
-      <Card className="shadow-sm border border-gray-100">
-        <CardHeader className="pb-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle className="text-xl text-gray-800">
-                <span className="flex items-center">
-                  <Instagram className="h-5 w-5 mr-2 text-[#E1306C]" />
-                  Instagram Lead Pipeline
-                </span>
-              </CardTitle>
-              <CardDescription className="text-gray-500 mt-1">
-                Manage and track your Instagram warm leads through your sales pipeline
-              </CardDescription>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
-                <RefreshCw className={`h-4 w-4 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
-                Refresh
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          {/* Pipeline Stats */}
-          <div className="px-6 pb-5 border-b border-gray-100">
-            <div className="grid grid-cols-1 gap-4">
-              {/* Total Messages Sent Stat Card */}
-              <div className="p-4 rounded-lg bg-orange-50 border border-orange-100 mb-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-700 font-medium">Total Outreach Messages</p>
-                    <p className="text-xs text-gray-500">Lifetime performance</p>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center mr-3">
-                      <MessageSquare className="h-5 w-5 text-orange-600" />
-                    </div>
-                    <p className="text-2xl font-bold text-orange-600">{getDisplayMessageCount()}</p>
-                  </div>
+      <Card className="shadow-lg border-0 overflow-hidden">
+        <div className="bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#FCAF45] p-1">
+          <div className="bg-white dark:bg-gray-950 p-5">
+            <CardHeader className="pb-4 px-2">
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle className="text-2xl font-bold bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#FCAF45] inline-block text-transparent bg-clip-text">
+                    <span className="flex items-center">
+                      <Instagram className="h-6 w-6 mr-3 text-[#E1306C]" />
+                      Instagram Lead Pipeline
+                    </span>
+                  </CardTitle>
+                  <CardDescription className="text-gray-600 dark:text-gray-400 mt-2 ml-1">
+                    Manage and track your Instagram warm leads through your sales pipeline
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleRefresh} 
+                    disabled={isLoading}
+                    className="border border-gray-200 hover:bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#FCAF45] hover:text-white transition-all duration-300"
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </Button>
                 </div>
               </div>
-              
-              {/* Daily Reachout Progress */}
-              <div className="p-4 rounded-lg bg-blue-50 border border-blue-100 mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div>
-                    <p className="text-sm text-gray-700 font-medium">Daily Reachout Progress</p>
-                    <p className="text-xs text-gray-500">Goal: 75 leads per day</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-blue-600 font-bold">{getDailyProgress().current}</span>
-                    <span className="text-gray-500">/{getDailyProgress().total}</span>
-                    <span className="ml-2 text-xs text-blue-600 font-medium">({getDailyProgress().percentage}%)</span>
-                  </div>
-                </div>
-                <div className="w-full bg-blue-100 rounded-full h-2.5">
-                  <div 
-                    className="bg-blue-600 h-2.5 rounded-full" 
-                    style={{ width: `${getDailyProgress().percentage}%` }}
-                  ></div>
-                </div>
-              </div>
-              
-              {/* Lead Status Cards */}
-              <div className="grid grid-cols-3 gap-4">
-                <div className="p-4 rounded-lg bg-pink-50 border border-pink-100">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Warm Leads</p>
-                      <p className="text-2xl font-bold text-[#E1306C]">{getLeadCount("warm_lead")}</p>
-                    </div>
-                    <div className="h-10 w-10 rounded-full bg-pink-100 flex items-center justify-center">
-                      <Search className="h-5 w-5 text-[#E1306C]" />
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="p-4 rounded-lg bg-purple-50 border border-purple-100">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Message Sent</p>
-                      <p className="text-2xl font-bold text-[#5851DB]">{getLeadCount("message_sent")}</p>
-                    </div>
-                    <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
-                      <MessageSquare className="h-5 w-5 text-[#5851DB]" />
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="p-4 rounded-lg bg-green-50 border border-green-100">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Sales Closed</p>
-                      <p className="text-2xl font-bold text-green-600">{getLeadCount("sale_closed")}</p>
-                    </div>
-                    <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Lead Management Tabs */}
-          <Tabs defaultValue="warm_lead" value={activeTab} onValueChange={(value) => filterLeadsByStatus(value as LeadStatus)}>
-            <div className="px-6 py-4 border-b border-gray-100">
-              <TabsList className="grid grid-cols-3 gap-4">
-                <TabsTrigger value="warm_lead" className="flex items-center">
-                  <Search className="h-4 w-4 mr-1.5" />
-                  Warm Leads
-                  <Badge className="ml-2 bg-pink-100 text-[#E1306C] hover:bg-pink-100">
-                    {getLeadCount("warm_lead")}
-                  </Badge>
-                </TabsTrigger>
-                <TabsTrigger value="message_sent" className="flex items-center">
-                  <MessageSquare className="h-4 w-4 mr-1.5" />
-                  Message Sent
-                  <Badge className="ml-2 bg-purple-100 text-[#5851DB] hover:bg-purple-100">
-                    {getLeadCount("message_sent")}
-                  </Badge>
-                </TabsTrigger>
-                <TabsTrigger value="sale_closed" className="flex items-center">
-                  <CheckCircle className="h-4 w-4 mr-1.5" />
-                  Sale Closed
-                  <Badge className="ml-2 bg-green-100 text-green-600 hover:bg-green-100">
-                    {getLeadCount("sale_closed")}
-                  </Badge>
-                </TabsTrigger>
-              </TabsList>
-            </div>
-            
-            {/* Loading State */}
-            {isLoading && (
-              <div className="p-8 flex flex-col items-center justify-center">
-                <RefreshCw className="h-10 w-10 text-gray-400 animate-spin mb-4" />
-                <p className="text-gray-500">Loading Instagram leads...</p>
-              </div>
-            )}
-            
-            {/* Error State */}
-            {error && (
-              <div className="p-8 flex flex-col items-center justify-center">
-                <AlertCircle className="h-10 w-10 text-red-500 mb-4" />
-                <p className="text-red-500 font-medium mb-2">{error}</p>
-                <Button variant="outline" size="sm" onClick={handleRefresh}>
-                  <RefreshCw className="h-4 w-4 mr-1.5" />
-                  Retry
-                </Button>
-              </div>
-            )}
-            
-            {/* Empty State */}
-            {!isLoading && !error && filteredLeads.length === 0 && (
-              <div className="p-8 flex flex-col items-center justify-center">
-                <User className="h-10 w-10 text-gray-300 mb-4" />
-                <p className="text-gray-500 mb-2">No {activeTab.replace('_', ' ')} leads found</p>
-                <Button variant="outline" size="sm" onClick={handleRefresh}>
-                  <RefreshCw className="h-4 w-4 mr-1.5" />
-                  Refresh
-                </Button>
-              </div>
-            )}
-            
-            {/* Warm Leads Tab - Card View */}
-            <TabsContent value="warm_lead" className="p-0">
-              {!isLoading && !error && filteredLeads.length > 0 && (
-                <div className="px-6 py-4">
-                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-                    {/* Lead Navigation */}
-                    <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => navigateLeads('prev')}
-                        disabled={currentLeadIndex === 0}
-                      >
-                        <ChevronLeft className="h-4 w-4 mr-1" />
-                        Previous
-                      </Button>
-                      <span className="text-sm text-gray-500">
-                        Lead {currentLeadIndex + 1} of {filteredLeads.length}
-                      </span>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => navigateLeads('next')}
-                        disabled={currentLeadIndex === filteredLeads.length - 1}
-                      >
-                        Next
-                        <ChevronRight className="h-4 w-4 ml-1" />
-                      </Button>
+            </CardHeader>
+            <CardContent className="p-0">
+              {/* Pipeline Stats */}
+              <div className="px-6 pb-5 border-b border-gray-100">
+                <div className="grid grid-cols-1 gap-4">
+                  {/* Stats Cards in a Beautiful Layout */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                    {/* Total Messages Sent - Premium Gradient Design */}
+                    <div className="relative p-6 rounded-xl bg-gradient-to-br from-orange-50 to-rose-50 border border-orange-100 shadow-sm overflow-hidden group hover:shadow-md transition-all duration-300">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-orange-100 rounded-full -mt-16 -mr-16 opacity-40 group-hover:scale-110 transition-all duration-300"></div>
+                      <div className="flex items-center justify-between relative z-10">
+                        <div className="space-y-2">
+                          <h3 className="text-base font-semibold text-gray-800">Total Outreach Messages</h3>
+                          <p className="text-sm text-gray-500">Lifetime performance</p>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="h-14 w-14 rounded-full bg-gradient-to-r from-orange-400 to-rose-400 flex items-center justify-center mr-3 shadow-md">
+                            <MessageSquare className="h-6 w-6 text-white" />
+                          </div>
+                          <div className="text-right">
+                            <p className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-rose-500 text-transparent bg-clip-text">{getDisplayMessageCount()}</p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                     
-                    {/* Current Lead Card */}
-                    {getCurrentWarmLead() && (
-                      <div className="p-6">
-                        <div className="flex flex-col">
-                          {/* Lead Details */}
-                          <div className="w-full">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-semibold text-lg">{getCurrentWarmLead()?.fullName}</h3>
+                    {/* Daily Reachout Progress - Modern Design with Animation */}
+                    <div className="relative p-6 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 shadow-sm overflow-hidden group hover:shadow-md transition-all duration-300">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-blue-100 rounded-full -mt-16 -mr-16 opacity-40 group-hover:scale-110 transition-all duration-300"></div>
+                      <div className="flex items-center justify-between mb-3 relative z-10">
+                        <div className="space-y-2">
+                          <h3 className="text-base font-semibold text-gray-800">Daily Outreach Progress</h3>
+                          <p className="text-sm text-gray-500">Goal: 75 leads per day</p>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 text-transparent bg-clip-text">{getDailyProgress().current}</span>
+                          <span className="text-gray-500 text-lg">/{getDailyProgress().total}</span>
+                          <p className="text-sm font-medium text-blue-600">({getDailyProgress().percentage}%)</p>
+                        </div>
+                      </div>
+                      <div className="w-full bg-blue-100 rounded-full h-3 overflow-hidden relative group-hover:bg-blue-200 transition-all duration-300">
+                        <div 
+                          className="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-700 ease-in-out"
+                          style={{ width: `${getDailyProgress().percentage}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Lead Status Cards */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="p-4 rounded-lg bg-gradient-to-br from-pink-50 to-pink-100 border border-pink-100 relative overflow-hidden group hover:shadow-sm transition-all duration-300">
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-pink-200 rounded-full -mt-12 -mr-12 opacity-20 group-hover:scale-110 transition-all duration-300"></div>
+                      <div className="flex flex-col items-center relative z-10">
+                        <Badge className="bg-pink-100 text-pink-700 hover:bg-pink-200 mb-2">Warm Leads</Badge>
+                        <span className="text-2xl font-bold text-pink-600">{getLeadCount('warm_lead')}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 rounded-lg bg-gradient-to-br from-violet-50 to-violet-100 border border-violet-100 relative overflow-hidden group hover:shadow-sm transition-all duration-300">
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-violet-200 rounded-full -mt-12 -mr-12 opacity-20 group-hover:scale-110 transition-all duration-300"></div>
+                      <div className="flex flex-col items-center relative z-10">
+                        <Badge className="bg-violet-100 text-violet-700 hover:bg-violet-200 mb-2">Message Sent</Badge>
+                        <span className="text-2xl font-bold text-violet-600">{getLeadCount('message_sent')}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-100 relative overflow-hidden group hover:shadow-sm transition-all duration-300">
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-200 rounded-full -mt-12 -mr-12 opacity-20 group-hover:scale-110 transition-all duration-300"></div>
+                      <div className="flex flex-col items-center relative z-10">
+                        <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 mb-2">Sale Closed</Badge>
+                        <span className="text-2xl font-bold text-emerald-600">{getLeadCount('sale_closed')}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Pipeline Management Tabs */}
+              <Tabs defaultValue="warm_lead" value={activeTab} onValueChange={(value) => filterLeadsByStatus(value as LeadStatus)} className="w-full">
+                <div className="px-6 py-3 border-b border-gray-100">
+                  <TabsList className="bg-gray-100/70 p-1 rounded-lg grid grid-cols-3 gap-1">
+                    <TabsTrigger value="warm_lead" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#833AB4] data-[state=active]:to-[#FD1D1D] data-[state=active]:text-white">
+                      Warm Leads
+                      <Badge variant="outline" className="ml-2 bg-white/20">{getLeadCount('warm_lead')}</Badge>
+                    </TabsTrigger>
+                    <TabsTrigger value="message_sent" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#833AB4] data-[state=active]:to-[#FD1D1D] data-[state=active]:text-white">
+                      Messages Sent
+                      <Badge variant="outline" className="ml-2 bg-white/20">{getLeadCount('message_sent')}</Badge>
+                    </TabsTrigger>
+                    <TabsTrigger value="sale_closed" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#833AB4] data-[state=active]:to-[#FD1D1D] data-[state=active]:text-white">
+                      Sales Closed
+                      <Badge variant="outline" className="ml-2 bg-white/20">{getLeadCount('sale_closed')}</Badge>
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+                
+                {/* Warm Leads Tab */}
+                <TabsContent value="warm_lead" className="p-0">
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 p-4 m-6 rounded-lg flex items-center">
+                      <AlertCircle className="h-5 w-5 mr-2" />
+                      {error}
+                    </div>
+                  )}
+                  
+                  {/* Lead Workspace - Where you work with the current lead */}
+                  {filteredLeads.length > 0 && (
+                    <div className="p-6 border-b border-gray-100">
+                      <div className="grid grid-cols-3 gap-6">
+                        {/* Lead Profile Card */}
+                        <div className="col-span-1 rounded-lg border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md transition-all duration-300">
+                          <div className="flex flex-col items-center text-center">
+                            {getCurrentWarmLead()?.profilePictureUrl ? (
+                              <Avatar className="h-24 w-24 mb-4 border-2 border-pink-200">
+                                <AvatarImage 
+                                  src={getCurrentWarmLead()?.profilePictureUrl} 
+                                  alt={getCurrentWarmLead()?.fullName} 
+                                  className="object-cover"
+                                />
+                                <AvatarFallback className="bg-gradient-to-r from-[#833AB4] to-[#FD1D1D] text-white text-lg">
+                                  {getCurrentWarmLead()?.username.substring(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                            ) : (
+                              <Avatar className="h-24 w-24 mb-4 border-2 border-pink-200">
+                                <AvatarFallback className="bg-gradient-to-r from-[#833AB4] to-[#FD1D1D] text-white text-lg">
+                                  {getCurrentWarmLead()?.username.substring(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                            )}
+                            
+                            <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                              {getCurrentWarmLead()?.fullName}
                               {getCurrentWarmLead()?.isVerified && (
-                                <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
-                                  Verified
-                                </Badge>
+                                <span className="inline-flex items-center ml-1 text-blue-500">
+                                  <CheckCircle className="h-4 w-4" />
+                                </span>
                               )}
+                            </h3>
+                            <p className="text-gray-500 mb-3">@{getCurrentWarmLead()?.username}</p>
+                            
+                            <div className="flex items-center justify-center space-x-3 mb-4 text-sm">
+                              <div className="flex flex-col items-center">
+                                <span className="font-semibold text-gray-800">{formatNumber(getCurrentWarmLead()?.followers)}</span>
+                                <span className="text-gray-500 text-xs">Followers</span>
+                              </div>
+                              <div className="h-8 w-px bg-gray-200"></div>
+                              <div className="flex flex-col items-center">
+                                <span className="font-semibold text-gray-800">{formatNumber(getCurrentWarmLead()?.following)}</span>
+                                <span className="text-gray-500 text-xs">Following</span>
+                              </div>
                             </div>
                             
-                            <div className="flex items-center text-gray-500 mb-3">
-                              <span className="text-sm">@{getCurrentWarmLead()?.username}</span>
+                            <div className="w-full">
                               <a 
                                 href={getCurrentWarmLead()?.profileUrl} 
                                 target="_blank" 
                                 rel="noopener noreferrer" 
-                                className="inline-flex items-center text-pink-500 hover:text-pink-600 text-sm ml-2"
+                                className="flex items-center justify-center text-sm text-blue-600 hover:text-blue-800 transition-colors"
                               >
-                                View Profile <ExternalLink className="h-3 w-3 ml-1" />
+                                <ExternalLink className="h-4 w-4 mr-1" />
+                                View Profile
                               </a>
                             </div>
-                            
-                            <p className="text-gray-700 mb-4">{getCurrentWarmLead()?.bio}</p>
-                            
-                            {/* Lead Stats */}
-                            <div className="grid grid-cols-1 gap-4 mb-4">
-                              <div className="bg-gray-50 rounded p-2 text-center">
-                                <span className="block text-sm text-gray-500">Added</span>
-                                <span className="font-semibold text-sm">{formatDate(getCurrentWarmLead()?.dateAdded)}</span>
-                              </div>
+                          </div>
+                        </div>
+                        
+                        {/* Message/Notes Area */}
+                        <div className="col-span-2 space-y-4">
+                          <div className="bg-gradient-to-r from-[#833AB4]/10 via-[#FD1D1D]/10 to-[#FCAF45]/10 p-4 rounded-lg">
+                            <h3 className="font-medium text-gray-800 mb-2">Lead Notes</h3>
+                            <Textarea 
+                              placeholder="Add notes about this lead (optional)..."
+                              className="w-full bg-white border-gray-200 focus:border-pink-300 focus:ring-pink-300"
+                              value={noteText}
+                              onChange={(e) => setNoteText(e.target.value)}
+                              rows={4}
+                            />
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => navigateLeads('prev')} 
+                                disabled={currentLeadIndex === 0 || isLoading}
+                                className="border border-gray-200 hover:border-pink-300"
+                              >
+                                <ChevronLeft className="h-4 w-4 mr-1" />
+                                Previous
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => navigateLeads('next')} 
+                                disabled={currentLeadIndex >= filteredLeads.length - 1 || isLoading}
+                                className="border border-gray-200 hover:border-pink-300"
+                              >
+                                Next
+                                <ChevronRight className="h-4 w-4 ml-1" />
+                              </Button>
+                              <span className="text-sm text-gray-500">
+                                {filteredLeads.length > 0 ? `${currentLeadIndex + 1} of ${filteredLeads.length}` : '0 of 0'}
+                              </span>
                             </div>
                             
-                            {/* Lead Tags */}
-                            {getCurrentWarmLead()?.tags && getCurrentWarmLead()?.tags.length > 0 && (
-                              <div className="flex flex-wrap gap-2 mb-4">
-                                {getCurrentWarmLead()?.tags.map((tag, index) => (
-                                  <Badge key={index} variant="secondary" className="bg-gray-100">
-                                    {tag}
-                                  </Badge>
-                                ))}
-                              </div>
-                            )}
-                            
-                            {/* Action Form */}
-                            <div className="mt-4">
-                              <div className="mb-3">
-                                <div className="flex justify-between items-center mb-2">
-                                  <h4 className="text-sm font-medium text-gray-700">Lead Notes</h4>
-                                  <Button 
-                                    size="sm" 
-                                    variant="outline"
-                                    disabled={isLoading}
-                                    onClick={async () => {
-                                      if (!getCurrentWarmLead()) return;
-                                      
-                                      try {
-                                        setIsLoading(true);
-                                        const response = await fetch(`/api/instagram-leads/${getCurrentWarmLead()?.id}/notes`, {
-                                          method: 'PUT',
-                                          headers: {
-                                            'Content-Type': 'application/json',
-                                          },
-                                          body: JSON.stringify({
-                                            notes: noteText
-                                          }),
-                                        });
-                                        
-                                        if (response.ok) {
-                                          // Update local lead state with new notes
-                                          setLeads(prevLeads => 
-                                            prevLeads.map(lead => {
-                                              if (lead.id === getCurrentWarmLead()?.id) {
-                                                return {
-                                                  ...lead,
-                                                  notes: noteText
-                                                };
-                                              }
-                                              return lead;
-                                            })
-                                          );
-                                        } else {
-                                          console.error('Failed to save notes');
-                                        }
-                                      } catch (error) {
-                                        console.error('Error saving notes:', error);
-                                      } finally {
-                                        setIsLoading(false);
-                                      }
-                                    }}
-                                  >
-                                    Save Notes
-                                  </Button>
-                                </div>
-                                <Textarea
-                                  placeholder="Add notes about this lead (optional)"
-                                  className="min-h-[80px]"
-                                  value={noteText}
-                                  onChange={(e) => setNoteText(e.target.value)}
-                                />
-                              </div>
+                            <div>
                               <Button 
-                                className="w-full bg-[#5851DB] hover:bg-[#4c46c3]"
-                                onClick={() => getCurrentWarmLead() && handleMarkMessageSent(getCurrentWarmLead().id)}
-                                disabled={isLoading}
+                                disabled={isLoading || !getCurrentWarmLead()} 
+                                onClick={() => getCurrentWarmLead() && handleMarkMessageSent(getCurrentWarmLead()!.id)}
+                                className="bg-gradient-to-r from-[#833AB4] to-[#FD1D1D] hover:from-[#833AB4]/90 hover:to-[#FD1D1D]/90 text-white shadow-md"
                               >
                                 <MessageSquare className="h-4 w-4 mr-2" />
                                 Mark Message Sent
@@ -687,140 +635,240 @@ export default function InstagramLeadPipeline() {
                           </div>
                         </div>
                       </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </TabsContent>
-            
-            {/* Message Sent Tab - Table View */}
-            <TabsContent value="message_sent" className="p-0">
-              {!isLoading && !error && filteredLeads.length > 0 && (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="bg-gray-50 border-b border-gray-200">
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lead</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Followers</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Added</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredLeads.map((lead) => (
-                        <tr key={lead.id}>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <Avatar className="h-8 w-8 rounded-full mr-3">
-                                {lead.profilePictureUrl && lead.profilePictureUrl !== "" ? (
-                                  <AvatarImage 
-                                    src={lead.profilePictureUrl} 
-                                    alt={lead.fullName} 
-                                    className="object-cover"
-                                  />
-                                ) : (
-                                  <AvatarFallback className="bg-purple-50 text-[#5851DB]">
-                                    {lead.username.substring(0, 2).toUpperCase()}
-                                  </AvatarFallback>
-                                )}
-                              </Avatar>
-                              <div>
-                                <div className="font-medium text-gray-900">{lead.fullName}</div>
-                                <div className="text-gray-500 text-sm">@{lead.username}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {formatNumber(lead.followers)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {lead.dateAdded}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-500 max-w-[200px] truncate">
-                            {lead.notes || "No notes"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="text-green-600 hover:text-green-800"
-                              onClick={() => {
-                                setNoteText(lead.notes || "");
-                                handleCloseSale(lead.id);
-                              }}
+                    </div>
+                  )}
+                  
+                  {/* Leads Table */}
+                  {filteredLeads.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-gray-50 text-xs uppercase text-gray-500 border-b border-gray-100">
+                          <tr>
+                            <th className="px-6 py-3 text-left">Profile</th>
+                            <th className="px-6 py-3 text-left">Followers</th>
+                            <th className="px-6 py-3 text-left">Date Added</th>
+                            <th className="px-6 py-3 text-left">Last Updated</th>
+                            <th className="px-6 py-3 text-left">Notes</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {filteredLeads.map((lead) => (
+                            <tr 
+                              key={lead.id} 
+                              className={`hover:bg-gray-50 ${lead.id === getCurrentWarmLead()?.id ? 'bg-pink-50' : ''}`}
+                              onClick={() => setCurrentLeadIndex(filteredLeads.findIndex(l => l.id === lead.id))}
                             >
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              Close Sale
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </TabsContent>
-            
-            {/* Sale Closed Tab - Table View */}
-            <TabsContent value="sale_closed" className="p-0">
-              {!isLoading && !error && filteredLeads.length > 0 && (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="bg-gray-50 border-b border-gray-200">
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lead</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Followers</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Added</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Closed</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredLeads.map((lead) => (
-                        <tr key={lead.id} className="bg-green-50 bg-opacity-30">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <Avatar className="h-8 w-8 rounded-full mr-3">
-                                {lead.profilePictureUrl && lead.profilePictureUrl !== "" ? (
-                                  <AvatarImage 
-                                    src={lead.profilePictureUrl} 
-                                    alt={lead.fullName} 
-                                    className="object-cover"
-                                  />
-                                ) : (
-                                  <AvatarFallback className="bg-green-50 text-green-600">
-                                    {lead.username.substring(0, 2).toUpperCase()}
-                                  </AvatarFallback>
-                                )}
-                              </Avatar>
-                              <div>
-                                <div className="font-medium text-gray-900">{lead.fullName}</div>
-                                <div className="text-gray-500 text-sm">@{lead.username}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {formatNumber(lead.followers)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {lead.dateAdded}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {lead.lastUpdated}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-500 max-w-[200px] truncate">
-                            {lead.notes || "No notes"}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </CardContent>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center">
+                                  <Avatar className="h-10 w-10 mr-3">
+                                    {lead.profilePictureUrl && lead.profilePictureUrl !== "" ? (
+                                      <AvatarImage 
+                                        src={lead.profilePictureUrl} 
+                                        alt={lead.fullName} 
+                                        className="object-cover"
+                                      />
+                                    ) : (
+                                      <AvatarFallback className="bg-green-50 text-green-600">
+                                        {lead.username.substring(0, 2).toUpperCase()}
+                                      </AvatarFallback>
+                                    )}
+                                  </Avatar>
+                                  <div>
+                                    <div className="font-medium text-gray-900">{lead.fullName}</div>
+                                    <div className="text-gray-500 text-sm">@{lead.username}</div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {formatNumber(lead.followers)}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {lead.dateAdded}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {lead.lastUpdated}
+                              </td>
+                              <td className="px-6 py-4 text-sm text-gray-500 max-w-[200px] truncate">
+                                {lead.notes || "No notes"}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="p-8 text-center">
+                      <div className="flex flex-col items-center justify-center p-8 rounded-lg bg-gray-50">
+                        <User className="h-10 w-10 text-gray-400 mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-1">No warm leads found</h3>
+                        <p className="text-gray-500 mb-4">All your warm leads will appear here.</p>
+                        <Button 
+                          onClick={handleRefresh} 
+                          variant="outline" 
+                          className="border border-gray-200 hover:bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#FCAF45] hover:text-white transition-all duration-300"
+                        >
+                          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                          Refresh
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </TabsContent>
+                
+                {/* Messages Sent Tab - Shows leads that have been messaged */}
+                <TabsContent value="message_sent" className="p-0">
+                  {filteredLeads.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-gray-50 text-xs uppercase text-gray-500 border-b border-gray-100">
+                          <tr>
+                            <th className="px-6 py-3 text-left">Profile</th>
+                            <th className="px-6 py-3 text-left">Followers</th>
+                            <th className="px-6 py-3 text-left">Message Date</th>
+                            <th className="px-6 py-3 text-left">Notes</th>
+                            <th className="px-6 py-3 text-left">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {filteredLeads.map((lead) => (
+                            <tr key={lead.id} className="hover:bg-gray-50">
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center">
+                                  <Avatar className="h-10 w-10 mr-3">
+                                    {lead.profilePictureUrl && lead.profilePictureUrl !== "" ? (
+                                      <AvatarImage 
+                                        src={lead.profilePictureUrl} 
+                                        alt={lead.fullName} 
+                                        className="object-cover"
+                                      />
+                                    ) : (
+                                      <AvatarFallback className="bg-violet-50 text-violet-600">
+                                        {lead.username.substring(0, 2).toUpperCase()}
+                                      </AvatarFallback>
+                                    )}
+                                  </Avatar>
+                                  <div>
+                                    <div className="font-medium text-gray-900">{lead.fullName}</div>
+                                    <div className="text-gray-500 text-sm">@{lead.username}</div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {formatNumber(lead.followers)}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {lead.lastUpdated}
+                              </td>
+                              <td className="px-6 py-4 text-sm text-gray-500 max-w-[300px] truncate">
+                                {lead.notes || "No notes"}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleCloseSale(lead.id)}
+                                  className="bg-gradient-to-r from-[#FCAF45] to-[#FD1D1D] hover:from-[#FCAF45]/90 hover:to-[#FD1D1D]/90 text-white"
+                                >
+                                  <CheckCircle className="h-4 w-4 mr-1" />
+                                  Close Sale
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="p-8 text-center">
+                      <div className="flex flex-col items-center justify-center p-8 rounded-lg bg-gray-50">
+                        <MessageSquare className="h-10 w-10 text-gray-400 mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-1">No leads with messages sent</h3>
+                        <p className="text-gray-500 mb-4">Leads you've sent messages to will appear here.</p>
+                        <Button 
+                          onClick={handleRefresh} 
+                          variant="outline" 
+                          className="border border-gray-200 hover:bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#FCAF45] hover:text-white transition-all duration-300"
+                        >
+                          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                          Refresh
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </TabsContent>
+                
+                {/* Sales Closed Tab - Shows leads where sales have been closed */}
+                <TabsContent value="sale_closed" className="p-0">
+                  {filteredLeads.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-gray-50 text-xs uppercase text-gray-500 border-b border-gray-100">
+                          <tr>
+                            <th className="px-6 py-3 text-left">Profile</th>
+                            <th className="px-6 py-3 text-left">Followers</th>
+                            <th className="px-6 py-3 text-left">Sale Date</th>
+                            <th className="px-6 py-3 text-left">Notes</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {filteredLeads.map((lead) => (
+                            <tr key={lead.id} className="hover:bg-gray-50">
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center">
+                                  <Avatar className="h-10 w-10 mr-3">
+                                    {lead.profilePictureUrl && lead.profilePictureUrl !== "" ? (
+                                      <AvatarImage 
+                                        src={lead.profilePictureUrl} 
+                                        alt={lead.fullName} 
+                                        className="object-cover"
+                                      />
+                                    ) : (
+                                      <AvatarFallback className="bg-green-50 text-green-600">
+                                        {lead.username.substring(0, 2).toUpperCase()}
+                                      </AvatarFallback>
+                                    )}
+                                  </Avatar>
+                                  <div>
+                                    <div className="font-medium text-gray-900">{lead.fullName}</div>
+                                    <div className="text-gray-500 text-sm">@{lead.username}</div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {formatNumber(lead.followers)}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {lead.lastUpdated}
+                              </td>
+                              <td className="px-6 py-4 text-sm text-gray-500 max-w-[200px] truncate">
+                                {lead.notes || "No notes"}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="p-8 text-center">
+                      <div className="flex flex-col items-center justify-center p-8 rounded-lg bg-gray-50">
+                        <CheckCircle className="h-10 w-10 text-gray-400 mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-1">No closed sales yet</h3>
+                        <p className="text-gray-500 mb-4">Leads with closed sales will appear here.</p>
+                        <Button 
+                          onClick={handleRefresh} 
+                          variant="outline" 
+                          className="border border-gray-200 hover:bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#FCAF45] hover:text-white transition-all duration-300"
+                        >
+                          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                          Refresh
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </div>
+        </div>
       </Card>
     </div>
   );

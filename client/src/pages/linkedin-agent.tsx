@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMetrics, useLatestMetric, useActivities, useRefreshData, useLatestLinkedinAgentLeads } from "@/hooks/use-metrics";
 import { DateRangeValue, DATE_RANGES, getDateRangeValues } from "@/lib/date-utils";
 import { useQuery } from "@tanstack/react-query";
@@ -29,6 +29,8 @@ import {
 export default function LinkedInAgentPage() {
   const [dateRange, setDateRange] = useState<DateRangeValue>("7days");
   const { toast } = useToast();
+  const [dataUpdated, setDataUpdated] = useState(false);
+  const [previousData, setPreviousData] = useState<LinkedinAgentLeads | null>(null);
   
   // Get the latest LinkedIn agent leads data from the PostgreSQL database
   const { data: linkedinLeadsFromAPI, isLoading: isLoadingLeads } = useLatestLinkedinAgentLeads();
@@ -50,6 +52,34 @@ export default function LinkedInAgentPage() {
     rawLog: "",
     processData: {}
   };
+  
+  // Add animation effect when data changes
+  useEffect(() => {
+    if (previousData && linkedinLeadsFromAPI) {
+      // Check if any meaningful values have changed
+      if (
+        previousData.totalSent !== linkedinLeadsFromAPI.totalSent ||
+        previousData.totalAccepted !== linkedinLeadsFromAPI.totalAccepted ||
+        previousData.dailySent !== linkedinLeadsFromAPI.dailySent ||
+        previousData.dailyAccepted !== linkedinLeadsFromAPI.dailyAccepted
+      ) {
+        // Trigger animation by setting dataUpdated to true
+        setDataUpdated(true);
+        
+        // Reset animation flag after animation completes
+        const timer = setTimeout(() => {
+          setDataUpdated(false);
+        }, 1000);
+        
+        return () => clearTimeout(timer);
+      }
+    }
+    
+    // Update previous data for next comparison
+    if (linkedinLeadsFromAPI) {
+      setPreviousData(linkedinLeadsFromAPI);
+    }
+  }, [linkedinLeadsFromAPI, previousData]);
   
   // Extract metrics from the most recent row in LinkedIn leads table
   const totalInvitesSent = linkedinLeads.totalSent || 0;

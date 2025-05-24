@@ -1,31 +1,21 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { 
   Instagram, 
   RefreshCw, 
-  Users, 
   MessageSquare, 
   CheckCircle, 
   Search, 
   User, 
   ExternalLink,
-  Filter,
-  ListFilter,
-  Clock,
-  DollarSign,
-  Calendar,
-  ArrowRightCircle,
-  Download,
   AlertCircle,
   ChevronLeft,
-  ChevronRight,
-  ThumbsUp
+  ChevronRight
 } from "lucide-react";
 
 // Define lead status types
@@ -48,6 +38,7 @@ interface InstagramLead {
   lastUpdated: string;
   notes?: string;
   tags?: string[];
+  totalMessagesSent?: number;
 }
 
 // Interface for lead counts
@@ -66,11 +57,13 @@ export default function InstagramLeadPipeline() {
   const [filteredLeads, setFilteredLeads] = useState<InstagramLead[]>([]);
   const [currentLeadIndex, setCurrentLeadIndex] = useState(0);
   const [noteText, setNoteText] = useState("");
-  const [counts, setCounts] = useState<LeadCounts>({
+  const [totalMessagesSent, setTotalMessagesSent] = useState(0);
+  const [counts, setCounts] = useState<LeadCounts & { totalMessagesSent?: number }>({
     warmLeadCount: 0,
     messageSentCount: 0,
     saleClosedCount: 0,
-    totalCount: 0
+    totalCount: 0,
+    totalMessagesSent: 0
   });
   
   // Filter leads based on current tab
@@ -98,12 +91,20 @@ export default function InstagramLeadPipeline() {
         const countsResponse = await fetch('/api/instagram-leads/counts');
         if (countsResponse.ok) {
           const countsData = await countsResponse.json();
+          console.log("Retrieved counts data:", countsData);
+          
+          // Update all counts including totalMessagesSent
           setCounts({
             warmLeadCount: countsData.warmLeadCount || 0,
             messageSentCount: countsData.messageSentCount || 0,
             saleClosedCount: countsData.saleClosedCount || 0,
-            totalCount: countsData.totalCount || 0
+            totalCount: countsData.totalCount || 0,
+            totalMessagesSent: countsData.totalMessagesSent || 0
           });
+          
+          // Also update the separate totalMessagesSent state
+          setTotalMessagesSent(countsData.totalMessagesSent || 0);
+          console.log("Setting total messages sent to:", countsData.totalMessagesSent || 0);
         }
       } else {
         console.error("Failed to refresh Instagram leads:", await response.text());
@@ -147,7 +148,7 @@ export default function InstagramLeadPipeline() {
             return {
               ...lead,
               status: "message_sent" as LeadStatus,
-              lastUpdated: new Date().toISOString().split('T')[0],
+              lastUpdated: new Date().toISOString(),
               notes: noteText.trim() || lead.notes
             };
           }
@@ -172,8 +173,15 @@ export default function InstagramLeadPipeline() {
       // Clear the note text
       setNoteText("");
       
-      // Refresh the filtered leads
-      filterLeadsByStatus("warm_lead");
+      // Remove the processed lead from filtered leads
+      setFilteredLeads(prevFilteredLeads => 
+        prevFilteredLeads.filter(lead => lead.id !== leadId)
+      );
+      
+      // Update current lead index if needed
+      if (currentLeadIndex >= filteredLeads.length - 1) {
+        setCurrentLeadIndex(Math.max(0, filteredLeads.length - 2));
+      }
       
     } catch (error) {
       console.error('Error updating lead status:', error);
@@ -212,12 +220,17 @@ export default function InstagramLeadPipeline() {
             return {
               ...lead,
               status: "sale_closed" as LeadStatus,
-              lastUpdated: new Date().toISOString().split('T')[0],
+              lastUpdated: new Date().toISOString(),
               notes: noteText.trim() || lead.notes
             };
           }
           return lead;
         })
+      );
+      
+      // Remove the lead from the filtered leads
+      setFilteredLeads(prevFilteredLeads => 
+        prevFilteredLeads.filter(lead => lead.id !== leadId)
       );
       
       // Update counts
@@ -234,9 +247,6 @@ export default function InstagramLeadPipeline() {
       
       // Clear note text
       setNoteText("");
-      
-      // Refresh the filtered leads after status change
-      filterLeadsByStatus("message_sent");
       
     } catch (error) {
       console.error('Error updating lead status:', error);
@@ -319,6 +329,9 @@ export default function InstagramLeadPipeline() {
   
   // Helper to get the current warm lead
   const getCurrentWarmLead = () => {
+    if (filteredLeads.length === 0 || currentLeadIndex >= filteredLeads.length) {
+      return null;
+    }
     return filteredLeads[currentLeadIndex];
   };
   
@@ -327,67 +340,148 @@ export default function InstagramLeadPipeline() {
     return num?.toLocaleString() || 0;
   };
   
+  // Format date to be more readable
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Unknown';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return dateString;
+    }
+  };
+  
+  // Prevent counter from briefly showing 0 during refresh
+  const getDisplayMessageCount = () => {
+    return counts.totalMessagesSent || totalMessagesSent || 0;
+  };
+  
+  // Calculate daily reachout progress (75 per day goal)
+  const getDailyProgress = () => {
+    // Use totalMessagesSent for more accurate tracking (includes all sent messages)
+    const messageCount = counts.totalMessagesSent || totalMessagesSent || 0;
+    return {
+      total: 75,
+      current: messageCount > 75 ? 75 : messageCount,
+      percentage: Math.min(100, Math.round((messageCount / 75) * 100))
+    };
+  };
+  
   return (
     <div className="space-y-6">
       {/* Pipeline Overview */}
-      <Card className="shadow-sm border border-gray-100">
-        <CardHeader className="pb-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle className="text-xl text-gray-800">
-                <span className="flex items-center">
-                  <Instagram className="h-5 w-5 mr-2 text-[#E1306C]" />
-                  Instagram Lead Pipeline
-                </span>
-              </CardTitle>
-              <CardDescription className="text-gray-500 mt-1">
-                Manage and track your Instagram warm leads through your sales pipeline
-              </CardDescription>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
-                <RefreshCw className={`h-4 w-4 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
-                Refresh
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          {/* Pipeline Stats */}
-          <div className="px-6 pb-5 border-b border-gray-100">
-            <div className="grid grid-cols-3 gap-4">
-              <div className="p-4 rounded-lg bg-pink-50 border border-pink-100">
+      <Card className="shadow-lg border-0 overflow-hidden">
+        <div className="bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#FCAF45] p-1">
+          <div className="bg-white dark:bg-gray-950 p-5">
+            <CardHeader className="pb-4 px-2">
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle className="text-2xl font-bold bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#FCAF45] inline-block text-transparent bg-clip-text">
+                    <span className="flex items-center">
+                      <Instagram className="h-6 w-6 mr-3 text-[#E1306C]" />
+                      Instagram Lead Pipeline
+                    </span>
+                  </CardTitle>
+                  <CardDescription className="text-gray-600 dark:text-gray-400 mt-2 ml-1">
+                    Manage and track your Instagram warm leads through your sales pipeline
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleRefresh} 
+                    disabled={isLoading}
+                    className="border border-gray-200 hover:bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#FCAF45] hover:text-white transition-all duration-300"
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              {/* Pipeline Stats */}
+              <div className="px-6 pb-5 border-b border-gray-100">
+            <div className="grid grid-cols-1 gap-4">
+              {/* Total Messages Sent Stat Card */}
+              <div className="p-4 rounded-lg bg-orange-50 border border-orange-100 mb-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">Warm Leads</p>
-                    <p className="text-2xl font-bold text-[#E1306C]">{getLeadCount("warm_lead")}</p>
+                    <p className="text-sm text-gray-700 font-medium">Total Outreach Messages</p>
+                    <p className="text-xs text-gray-500">Lifetime performance</p>
                   </div>
-                  <div className="h-10 w-10 rounded-full bg-pink-100 flex items-center justify-center">
-                    <Search className="h-5 w-5 text-[#E1306C]" />
+                  <div className="flex items-center">
+                    <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center mr-3">
+                      <MessageSquare className="h-5 w-5 text-orange-600" />
+                    </div>
+                    <p className="text-2xl font-bold text-orange-600">{getDisplayMessageCount()}</p>
                   </div>
                 </div>
               </div>
               
-              <div className="p-4 rounded-lg bg-purple-50 border border-purple-100">
-                <div className="flex items-center justify-between">
+              {/* Daily Reachout Progress */}
+              <div className="p-4 rounded-lg bg-blue-50 border border-blue-100 mb-4">
+                <div className="flex items-center justify-between mb-2">
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">Message Sent</p>
-                    <p className="text-2xl font-bold text-[#5851DB]">{getLeadCount("message_sent")}</p>
+                    <p className="text-sm text-gray-700 font-medium">Daily Reachout Progress</p>
+                    <p className="text-xs text-gray-500">Goal: 75 leads per day</p>
                   </div>
-                  <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
-                    <MessageSquare className="h-5 w-5 text-[#5851DB]" />
+                  <div className="text-right">
+                    <span className="text-blue-600 font-bold">{getDailyProgress().current}</span>
+                    <span className="text-gray-500">/{getDailyProgress().total}</span>
+                    <span className="ml-2 text-xs text-blue-600 font-medium">({getDailyProgress().percentage}%)</span>
                   </div>
+                </div>
+                <div className="w-full bg-blue-100 rounded-full h-2.5">
+                  <div 
+                    className="bg-blue-600 h-2.5 rounded-full" 
+                    style={{ width: `${getDailyProgress().percentage}%` }}
+                  ></div>
                 </div>
               </div>
               
-              <div className="p-4 rounded-lg bg-green-50 border border-green-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">Sales Closed</p>
-                    <p className="text-2xl font-bold text-green-600">{getLeadCount("sale_closed")}</p>
+              {/* Lead Status Cards */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="p-4 rounded-lg bg-pink-50 border border-pink-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Warm Leads</p>
+                      <p className="text-2xl font-bold text-[#E1306C]">{getLeadCount("warm_lead")}</p>
+                    </div>
+                    <div className="h-10 w-10 rounded-full bg-pink-100 flex items-center justify-center">
+                      <Search className="h-5 w-5 text-[#E1306C]" />
+                    </div>
                   </div>
-                  <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                    <CheckCircle className="h-5 w-5 text-green-600" />
+                </div>
+                
+                <div className="p-4 rounded-lg bg-purple-50 border border-purple-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Message Sent</p>
+                      <p className="text-2xl font-bold text-[#5851DB]">{getLeadCount("message_sent")}</p>
+                    </div>
+                    <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
+                      <MessageSquare className="h-5 w-5 text-[#5851DB]" />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-4 rounded-lg bg-green-50 border border-green-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Sales Closed</p>
+                      <p className="text-2xl font-bold text-green-600">{getLeadCount("sale_closed")}</p>
+                    </div>
+                    <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -487,23 +581,12 @@ export default function InstagramLeadPipeline() {
                     {/* Current Lead Card */}
                     {getCurrentWarmLead() && (
                       <div className="p-6">
-                        <div className="flex items-start gap-4">
-                          {/* Lead Avatar */}
-                          <Avatar className="h-16 w-16 rounded-full border-2 border-pink-100">
-                            {getCurrentWarmLead().profilePictureUrl ? (
-                              <AvatarImage src={getCurrentWarmLead().profilePictureUrl} />
-                            ) : (
-                              <AvatarFallback className="bg-pink-50 text-[#E1306C] text-lg">
-                                {getCurrentWarmLead().username.substring(0, 2).toUpperCase()}
-                              </AvatarFallback>
-                            )}
-                          </Avatar>
-                          
+                        <div className="flex flex-col">
                           {/* Lead Details */}
-                          <div className="flex-1">
+                          <div className="w-full">
                             <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-semibold text-lg">{getCurrentWarmLead().fullName}</h3>
-                              {getCurrentWarmLead().isVerified && (
+                              <h3 className="font-semibold text-lg">{getCurrentWarmLead()?.fullName}</h3>
+                              {getCurrentWarmLead()?.isVerified && (
                                 <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
                                   Verified
                                 </Badge>
@@ -511,9 +594,9 @@ export default function InstagramLeadPipeline() {
                             </div>
                             
                             <div className="flex items-center text-gray-500 mb-3">
-                              <span className="text-sm">@{getCurrentWarmLead().username}</span>
+                              <span className="text-sm">@{getCurrentWarmLead()?.username}</span>
                               <a 
-                                href={getCurrentWarmLead().profileUrl} 
+                                href={getCurrentWarmLead()?.profileUrl} 
                                 target="_blank" 
                                 rel="noopener noreferrer" 
                                 className="inline-flex items-center text-pink-500 hover:text-pink-600 text-sm ml-2"
@@ -522,28 +605,20 @@ export default function InstagramLeadPipeline() {
                               </a>
                             </div>
                             
-                            <p className="text-gray-700 mb-4">{getCurrentWarmLead().bio}</p>
+                            <p className="text-gray-700 mb-4">{getCurrentWarmLead()?.bio}</p>
                             
                             {/* Lead Stats */}
-                            <div className="grid grid-cols-3 gap-4 mb-4">
-                              <div className="bg-gray-50 rounded p-2 text-center">
-                                <span className="block text-sm text-gray-500">Followers</span>
-                                <span className="font-semibold">{formatNumber(getCurrentWarmLead().followers)}</span>
-                              </div>
-                              <div className="bg-gray-50 rounded p-2 text-center">
-                                <span className="block text-sm text-gray-500">Following</span>
-                                <span className="font-semibold">{formatNumber(getCurrentWarmLead().following)}</span>
-                              </div>
+                            <div className="grid grid-cols-1 gap-4 mb-4">
                               <div className="bg-gray-50 rounded p-2 text-center">
                                 <span className="block text-sm text-gray-500">Added</span>
-                                <span className="font-semibold">{getCurrentWarmLead().dateAdded}</span>
+                                <span className="font-semibold text-sm">{formatDate(getCurrentWarmLead()?.dateAdded)}</span>
                               </div>
                             </div>
                             
                             {/* Lead Tags */}
-                            {getCurrentWarmLead().tags && getCurrentWarmLead().tags.length > 0 && (
+                            {getCurrentWarmLead()?.tags && getCurrentWarmLead()?.tags.length > 0 && (
                               <div className="flex flex-wrap gap-2 mb-4">
-                                {getCurrentWarmLead().tags.map((tag, index) => (
+                                {getCurrentWarmLead()?.tags.map((tag, index) => (
                                   <Badge key={index} variant="secondary" className="bg-gray-100">
                                     {tag}
                                   </Badge>
@@ -553,15 +628,64 @@ export default function InstagramLeadPipeline() {
                             
                             {/* Action Form */}
                             <div className="mt-4">
-                              <Textarea
-                                placeholder="Add notes about this lead (optional)"
-                                className="min-h-[80px] mb-3"
-                                value={noteText}
-                                onChange={(e) => setNoteText(e.target.value)}
-                              />
+                              <div className="mb-3">
+                                <div className="flex justify-between items-center mb-2">
+                                  <h4 className="text-sm font-medium text-gray-700">Lead Notes</h4>
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    disabled={isLoading}
+                                    onClick={async () => {
+                                      if (!getCurrentWarmLead()) return;
+                                      
+                                      try {
+                                        setIsLoading(true);
+                                        const response = await fetch(`/api/instagram-leads/${getCurrentWarmLead()?.id}/notes`, {
+                                          method: 'PUT',
+                                          headers: {
+                                            'Content-Type': 'application/json',
+                                          },
+                                          body: JSON.stringify({
+                                            notes: noteText
+                                          }),
+                                        });
+                                        
+                                        if (response.ok) {
+                                          // Update local lead state with new notes
+                                          setLeads(prevLeads => 
+                                            prevLeads.map(lead => {
+                                              if (lead.id === getCurrentWarmLead()?.id) {
+                                                return {
+                                                  ...lead,
+                                                  notes: noteText
+                                                };
+                                              }
+                                              return lead;
+                                            })
+                                          );
+                                        } else {
+                                          console.error('Failed to save notes');
+                                        }
+                                      } catch (error) {
+                                        console.error('Error saving notes:', error);
+                                      } finally {
+                                        setIsLoading(false);
+                                      }
+                                    }}
+                                  >
+                                    Save Notes
+                                  </Button>
+                                </div>
+                                <Textarea
+                                  placeholder="Add notes about this lead (optional)"
+                                  className="min-h-[80px]"
+                                  value={noteText}
+                                  onChange={(e) => setNoteText(e.target.value)}
+                                />
+                              </div>
                               <Button 
                                 className="w-full bg-[#5851DB] hover:bg-[#4c46c3]"
-                                onClick={() => handleMarkMessageSent(getCurrentWarmLead().id)}
+                                onClick={() => getCurrentWarmLead() && handleMarkMessageSent(getCurrentWarmLead().id)}
                                 disabled={isLoading}
                               >
                                 <MessageSquare className="h-4 w-4 mr-2" />
@@ -597,8 +721,12 @@ export default function InstagramLeadPipeline() {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <Avatar className="h-8 w-8 rounded-full mr-3">
-                                {lead.profilePictureUrl ? (
-                                  <AvatarImage src={lead.profilePictureUrl} />
+                                {lead.profilePictureUrl && lead.profilePictureUrl !== "" ? (
+                                  <AvatarImage 
+                                    src={lead.profilePictureUrl} 
+                                    alt={lead.fullName} 
+                                    className="object-cover"
+                                  />
                                 ) : (
                                   <AvatarFallback className="bg-purple-50 text-[#5851DB]">
                                     {lead.username.substring(0, 2).toUpperCase()}
@@ -662,8 +790,12 @@ export default function InstagramLeadPipeline() {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <Avatar className="h-8 w-8 rounded-full mr-3">
-                                {lead.profilePictureUrl ? (
-                                  <AvatarImage src={lead.profilePictureUrl} />
+                                {lead.profilePictureUrl && lead.profilePictureUrl !== "" ? (
+                                  <AvatarImage 
+                                    src={lead.profilePictureUrl} 
+                                    alt={lead.fullName} 
+                                    className="object-cover"
+                                  />
                                 ) : (
                                   <AvatarFallback className="bg-green-50 text-green-600">
                                     {lead.username.substring(0, 2).toUpperCase()}

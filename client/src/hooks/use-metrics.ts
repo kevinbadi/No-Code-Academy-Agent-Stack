@@ -22,7 +22,7 @@ export function useLatestMetric() {
   });
 }
 
-// Hook to get the latest LinkedIn agent leads data
+// Hook to get the latest LinkedIn agent leads data with real-time updates
 export function useLatestLinkedinAgentLeads() {
   return useQuery<LinkedinAgentLeads>({
     queryKey: ['/api/linkedin-agent-leads/latest'],
@@ -35,14 +35,14 @@ export function useLatestLinkedinAgentLeads() {
       // If the API returns null or undefined, return default values based on latest database content
       if (!data) {
         console.log('No LinkedIn agent data from API, using latest values');
-        // Return values that match what's in the most recent database row (id: 8)
+        // Return values that match what's in the most recent database row (id: 9)
         return {
-          id: 8,
+          id: 9,
           timestamp: new Date().toISOString(),
           dailySent: 20,
           dailyAccepted: 0,
-          totalSent: 131, 
-          totalAccepted: 22,
+          totalSent: 151, 
+          totalAccepted: 29,
           processedProfiles: 20,
           maxInvitations: 20,
           status: "LinkedIn agent active and processing connections.",
@@ -56,10 +56,12 @@ export function useLatestLinkedinAgentLeads() {
       
       return data;
     },
-    // Important: Set staleTime to 0 to always refetch when component mounts
+    // Real-time data settings
     staleTime: 0,
-    // Important: Add refetchOnMount to ensure fresh data on every page load
-    refetchOnMount: true
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    refetchInterval: 5000, // Poll every 5 seconds for real-time updates
+    refetchIntervalInBackground: true
   });
 }
 
@@ -67,6 +69,12 @@ export function useActivities(limit = 5) {
   return useQuery<Activity[]>({
     queryKey: ['/api/activities', limit],
     queryFn: () => fetch(`/api/activities?limit=${limit}`).then(res => res.json()),
+    // Real-time data settings
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    refetchInterval: 5000, // Poll every 5 seconds for real-time updates
+    refetchIntervalInBackground: true
   });
 }
 

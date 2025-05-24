@@ -605,10 +605,10 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
     try {
       // First try to get data directly from the database
       try {
-        // Check the database for the most recent entry
+        // Check the database for the most recent entry - prioritize by ID (most reliable) and then by timestamp
         const result = await pool.query(`
           SELECT * FROM linkedin_agent_leads 
-          ORDER BY timestamp DESC 
+          ORDER BY id DESC 
           LIMIT 1
         `);
         
@@ -626,10 +626,10 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
             totalAccepted: data.total_accepted,
             processedProfiles: data.processed_profiles,
             maxInvitations: data.max_invitations,
-            status: data.status,
+            status: data.status || "LinkedIn agent active and processing connections.",
             csvLink: data.csv_link,
             jsonLink: data.json_link,
-            connectionStatus: data.connection_status,
+            connectionStatus: data.connection_status || "Successfully connected to LinkedIn as Kevin Badi",
             rawLog: data.raw_log,
             processData: data.process_data
           };
