@@ -430,71 +430,71 @@ export default function InstagramLeadPipeline() {
                 <div className="grid grid-cols-1 gap-4">
                   {/* Stats Cards in a Beautiful Layout */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
-                    {/* Total Messages Sent - Premium Gradient Design */}
-                    <div className="relative p-6 rounded-xl bg-gradient-to-br from-orange-50 to-rose-50 border border-orange-100 shadow-sm overflow-hidden group hover:shadow-md transition-all duration-300">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-orange-100 rounded-full -mt-16 -mr-16 opacity-40 group-hover:scale-110 transition-all duration-300"></div>
+                    {/* Today's Messages - Instagram Gradient Design */}
+                    <div className="relative p-6 rounded-xl bg-gradient-to-br from-[#FCAF4533] to-[#E1306C33] border border-[#E1306C33] shadow-sm overflow-hidden group hover:shadow-md transition-all duration-300">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-[#E1306C22] rounded-full -mt-16 -mr-16 opacity-40 group-hover:scale-110 transition-all duration-300"></div>
                       <div className="flex items-center justify-between relative z-10">
                         <div className="space-y-2">
-                          <h3 className="text-base font-semibold text-gray-800">Total Outreach Messages</h3>
-                          <p className="text-sm text-gray-500">Lifetime performance</p>
+                          <h3 className="text-base font-semibold text-gray-800">Today's Messages</h3>
+                          <p className="text-sm text-gray-500">Daily performance</p>
                         </div>
                         <div className="flex items-center">
-                          <div className="h-14 w-14 rounded-full bg-gradient-to-r from-orange-400 to-rose-400 flex items-center justify-center mr-3 shadow-md">
+                          <div className="h-14 w-14 rounded-full bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#FCAF45] flex items-center justify-center mr-3 shadow-md">
                             <MessageSquare className="h-6 w-6 text-white" />
                           </div>
                           <div className="text-right">
-                            <p className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-rose-500 text-transparent bg-clip-text">{getDisplayMessageCount()}</p>
+                            <p className="text-3xl font-bold bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#FCAF45] text-transparent bg-clip-text">{getDisplayMessageCount()}</p>
                           </div>
                         </div>
                       </div>
                     </div>
                     
-                    {/* Daily Reachout Progress - Modern Design with Animation */}
-                    <div className="relative p-6 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 shadow-sm overflow-hidden group hover:shadow-md transition-all duration-300">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-blue-100 rounded-full -mt-16 -mr-16 opacity-40 group-hover:scale-110 transition-all duration-300"></div>
+                    {/* Daily Outreach Progress - Instagram Theme */}
+                    <div className="relative p-6 rounded-xl bg-gradient-to-br from-[#833AB433] to-[#FD1D1D33] border border-[#833AB433] shadow-sm overflow-hidden group hover:shadow-md transition-all duration-300">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-[#833AB422] rounded-full -mt-16 -mr-16 opacity-40 group-hover:scale-110 transition-all duration-300"></div>
                       <div className="flex items-center justify-between mb-3 relative z-10">
                         <div className="space-y-2">
                           <h3 className="text-base font-semibold text-gray-800">Daily Outreach Progress</h3>
                           <p className="text-sm text-gray-500">Goal: 75 leads per day</p>
                         </div>
                         <div className="text-right">
-                          <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 text-transparent bg-clip-text">{getDailyProgress().current}</span>
+                          <span className="text-2xl font-bold bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#FCAF45] text-transparent bg-clip-text">{getDailyProgress().current}</span>
                           <span className="text-gray-500 text-lg">/{getDailyProgress().total}</span>
-                          <p className="text-sm font-medium text-blue-600">({getDailyProgress().percentage}%)</p>
+                          <p className="text-sm font-medium text-[#E1306C]">({getDailyProgress().percentage}%)</p>
                         </div>
                       </div>
-                      <div className="w-full bg-blue-100 rounded-full h-3 overflow-hidden relative group-hover:bg-blue-200 transition-all duration-300">
+                      <div className="w-full bg-[#E1306C22] rounded-full h-3 overflow-hidden relative group-hover:bg-[#E1306C33] transition-all duration-300">
                         <div 
-                          className="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-700 ease-in-out"
+                          className="bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#FCAF45] h-3 rounded-full transition-all duration-700 ease-in-out"
                           style={{ width: `${getDailyProgress().percentage}%` }}
                         ></div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Lead Status Cards */}
+                  {/* Lead Status Cards - Instagram Theme */}
                   <div className="grid grid-cols-3 gap-4">
-                    <div className="p-4 rounded-lg bg-gradient-to-br from-pink-50 to-pink-100 border border-pink-100 relative overflow-hidden group hover:shadow-sm transition-all duration-300">
-                      <div className="absolute top-0 right-0 w-24 h-24 bg-pink-200 rounded-full -mt-12 -mr-12 opacity-20 group-hover:scale-110 transition-all duration-300"></div>
+                    <div className="p-4 rounded-lg bg-gradient-to-br from-[#FCAF4522] to-[#FCAF4544] border border-[#FCAF4544] relative overflow-hidden group hover:shadow-sm transition-all duration-300">
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-[#FCAF4533] rounded-full -mt-12 -mr-12 opacity-20 group-hover:scale-110 transition-all duration-300"></div>
                       <div className="flex flex-col items-center relative z-10">
-                        <Badge className="bg-pink-100 text-pink-700 hover:bg-pink-200 mb-2">Warm Leads</Badge>
-                        <span className="text-2xl font-bold text-pink-600">{getLeadCount('warm_lead')}</span>
+                        <Badge className="bg-[#FCAF4544] text-[#833AB4] hover:bg-[#FCAF4566] mb-2">Warm Leads</Badge>
+                        <span className="text-2xl font-bold bg-gradient-to-r from-[#833AB4] to-[#FCAF45] text-transparent bg-clip-text">{getLeadCount('warm_lead')}</span>
                       </div>
                     </div>
                     
-                    <div className="p-4 rounded-lg bg-gradient-to-br from-violet-50 to-violet-100 border border-violet-100 relative overflow-hidden group hover:shadow-sm transition-all duration-300">
-                      <div className="absolute top-0 right-0 w-24 h-24 bg-violet-200 rounded-full -mt-12 -mr-12 opacity-20 group-hover:scale-110 transition-all duration-300"></div>
+                    <div className="p-4 rounded-lg bg-gradient-to-br from-[#FD1D1D22] to-[#FD1D1D44] border border-[#FD1D1D44] relative overflow-hidden group hover:shadow-sm transition-all duration-300">
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-[#FD1D1D33] rounded-full -mt-12 -mr-12 opacity-20 group-hover:scale-110 transition-all duration-300"></div>
                       <div className="flex flex-col items-center relative z-10">
-                        <Badge className="bg-violet-100 text-violet-700 hover:bg-violet-200 mb-2">Message Sent</Badge>
-                        <span className="text-2xl font-bold text-violet-600">{getLeadCount('message_sent')}</span>
+                        <Badge className="bg-[#FD1D1D44] text-[#833AB4] hover:bg-[#FD1D1D66] mb-2">Message Sent</Badge>
+                        <span className="text-2xl font-bold bg-gradient-to-r from-[#FD1D1D] to-[#833AB4] text-transparent bg-clip-text">{getLeadCount('message_sent')}</span>
                       </div>
                     </div>
                     
-                    <div className="p-4 rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-100 relative overflow-hidden group hover:shadow-sm transition-all duration-300">
-                      <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-200 rounded-full -mt-12 -mr-12 opacity-20 group-hover:scale-110 transition-all duration-300"></div>
+                    <div className="p-4 rounded-lg bg-gradient-to-br from-[#833AB422] to-[#833AB444] border border-[#833AB444] relative overflow-hidden group hover:shadow-sm transition-all duration-300">
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-[#833AB433] rounded-full -mt-12 -mr-12 opacity-20 group-hover:scale-110 transition-all duration-300"></div>
                       <div className="flex flex-col items-center relative z-10">
-                        <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 mb-2">Sale Closed</Badge>
-                        <span className="text-2xl font-bold text-emerald-600">{getLeadCount('sale_closed')}</span>
+                        <Badge className="bg-[#833AB444] text-[#E1306C] hover:bg-[#833AB466] mb-2">Sale Closed</Badge>
+                        <span className="text-2xl font-bold bg-gradient-to-r from-[#E1306C] to-[#833AB4] text-transparent bg-clip-text">{getLeadCount('sale_closed')}</span>
                       </div>
                     </div>
                   </div>
@@ -565,24 +565,14 @@ export default function InstagramLeadPipeline() {
                             </h3>
                             <p className="text-gray-500 mb-3">@{getCurrentWarmLead()?.username}</p>
                             
-                            <div className="flex items-center justify-center space-x-3 mb-4 text-sm">
-                              <div className="flex flex-col items-center">
-                                <span className="font-semibold text-gray-800">{formatNumber(getCurrentWarmLead()?.followers)}</span>
-                                <span className="text-gray-500 text-xs">Followers</span>
-                              </div>
-                              <div className="h-8 w-px bg-gray-200"></div>
-                              <div className="flex flex-col items-center">
-                                <span className="font-semibold text-gray-800">{formatNumber(getCurrentWarmLead()?.following)}</span>
-                                <span className="text-gray-500 text-xs">Following</span>
-                              </div>
-                            </div>
+                            {/* Followers/Following count removed as requested */}
                             
                             <div className="w-full">
                               <a 
                                 href={getCurrentWarmLead()?.profileUrl} 
                                 target="_blank" 
                                 rel="noopener noreferrer" 
-                                className="flex items-center justify-center text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                                className="flex items-center justify-center text-sm text-[#E1306C] hover:text-[#833AB4] transition-colors"
                               >
                                 <ExternalLink className="h-4 w-4 mr-1" />
                                 View Profile
@@ -597,7 +587,7 @@ export default function InstagramLeadPipeline() {
                             <h3 className="font-medium text-gray-800 mb-2">Lead Notes</h3>
                             <Textarea 
                               placeholder="Add notes about this lead (optional)..."
-                              className="w-full bg-white border-gray-200 focus:border-pink-300 focus:ring-pink-300"
+                              className="w-full bg-white border-gray-200 focus:border-[#E1306C] focus:ring-[#833AB4]"
                               value={noteText}
                               onChange={(e) => setNoteText(e.target.value)}
                               rows={4}
@@ -611,7 +601,7 @@ export default function InstagramLeadPipeline() {
                                 size="sm" 
                                 onClick={() => navigateLeads('prev')} 
                                 disabled={currentLeadIndex === 0 || isLoading}
-                                className="border border-gray-200 hover:border-pink-300"
+                                className="border border-gray-200 hover:border-[#E1306C] hover:text-[#833AB4] transition-all duration-300"
                               >
                                 <ChevronLeft className="h-4 w-4 mr-1" />
                                 Previous
@@ -621,7 +611,7 @@ export default function InstagramLeadPipeline() {
                                 size="sm" 
                                 onClick={() => navigateLeads('next')} 
                                 disabled={currentLeadIndex >= filteredLeads.length - 1 || isLoading}
-                                className="border border-gray-200 hover:border-pink-300"
+                                className="border border-gray-200 hover:border-[#E1306C] hover:text-[#833AB4] transition-all duration-300"
                               >
                                 Next
                                 <ChevronRight className="h-4 w-4 ml-1" />
@@ -664,7 +654,7 @@ export default function InstagramLeadPipeline() {
                           {filteredLeads.map((lead) => (
                             <tr 
                               key={lead.id} 
-                              className={`hover:bg-gray-50 ${lead.id === getCurrentWarmLead()?.id ? 'bg-pink-50' : ''}`}
+                              className={`hover:bg-[#FCAF4511] transition-colors duration-200 ${lead.id === getCurrentWarmLead()?.id ? 'bg-[#E1306C15]' : ''}`}
                               onClick={() => setCurrentLeadIndex(filteredLeads.findIndex(l => l.id === lead.id))}
                             >
                               <td className="px-6 py-4 whitespace-nowrap">
@@ -707,9 +697,9 @@ export default function InstagramLeadPipeline() {
                     </div>
                   ) : (
                     <div className="p-8 text-center">
-                      <div className="flex flex-col items-center justify-center p-8 rounded-lg bg-gray-50">
-                        <User className="h-10 w-10 text-gray-400 mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-1">No warm leads found</h3>
+                      <div className="flex flex-col items-center justify-center p-8 rounded-lg bg-gradient-to-r from-[#833AB411] via-[#FD1D1D11] to-[#FCAF4511]">
+                        <User className="h-10 w-10 text-[#E1306C] mb-4" />
+                        <h3 className="text-lg font-medium bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#FCAF45] inline-block text-transparent bg-clip-text mb-1">No warm leads found</h3>
                         <p className="text-gray-500 mb-4">All your warm leads will appear here.</p>
                         <Button 
                           onClick={handleRefresh} 

@@ -219,7 +219,7 @@ export default function Dashboard() {
         
         {/* Agent Summary Cards */}
         <h3 className="text-xl font-semibold text-gray-800 mb-4">Agent Performance Overview</h3>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
           
           {/* LinkedIn Agent Summary */}
           <Card className="shadow-sm hover:shadow-md transition-shadow duration-200">
@@ -315,6 +315,56 @@ export default function Dashboard() {
                   <div 
                     className="bg-gradient-to-r from-[#FCAF45] to-[#E1306C] h-2 rounded-full" 
                     style={{ width: `${Math.min(100, (13 / 15) * 100)}%` }}
+                  ></div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Facebook Sales Manager Summary */}
+          <Card className="shadow-sm hover:shadow-md transition-shadow duration-200">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center">
+                  <div className="bg-gradient-to-br from-[#1877F2] to-[#4267B2] p-2 rounded-md mr-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800">Facebook Sales Manager</h3>
+                    <p className="text-sm text-gray-500">AI-powered sales automation</p>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm" asChild>
+                  <a href="/agent/facebook">View Details</a>
+                </Button>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-500 mb-1">Agents Online</p>
+                  <p className="text-2xl font-bold text-[#1877F2]">12</p>
+                </div>
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-500 mb-1">Conversations</p>
+                  <p className="text-2xl font-bold text-[#1877F2]">245</p>
+                </div>
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-500 mb-1">Total Sales</p>
+                  <p className="text-2xl font-bold text-[#1877F2]">$18.5K</p>
+                </div>
+              </div>
+              
+              <div>
+                <div className="flex justify-between mb-1 text-xs">
+                  <span>Weekly Performance</span>
+                  <span>+12% vs last week</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-gradient-to-r from-[#1877F2] to-[#4267B2] h-2 rounded-full" 
+                    style={{ width: `${Math.min(100, 78)}%` }}
                   ></div>
                 </div>
               </div>

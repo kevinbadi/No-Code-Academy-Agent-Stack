@@ -12,7 +12,7 @@ export default function InstagramAgentPage() {
       <div className="flex-1 md:ml-56 p-4 md:p-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-800">Instagram Warm Lead Agent</h1>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#FCAF45] inline-block text-transparent bg-clip-text">Instagram Warm Lead Agent</h1>
           </div>
           
           <div className="grid grid-cols-1 gap-6">

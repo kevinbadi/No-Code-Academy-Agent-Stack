@@ -19,6 +19,7 @@ import {
   Edit3,
   FileSearch
 } from "lucide-react";
+import { Facebook } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface NavItemProps {
@@ -30,16 +31,14 @@ interface NavItemProps {
 
 function NavItem({ href, icon, children, active = false }: NavItemProps) {
   return (
-    <Link href={href}>
-      <a className={cn(
-        "flex items-center p-3 rounded-md font-medium transition-colors",
-        active 
-          ? "text-[#0077B5] bg-blue-50" 
-          : "text-gray-600 hover:bg-gray-100"
-      )}>
-        <span className="mr-3">{icon}</span>
-        <span>{children}</span>
-      </a>
+    <Link href={href} className={cn(
+      "flex items-center p-3 rounded-md font-medium transition-colors",
+      active 
+        ? "text-[#0077B5] bg-blue-50" 
+        : "text-gray-600 hover:bg-gray-100"
+    )}>
+      <span className="mr-3">{icon}</span>
+      <span>{children}</span>
     </Link>
   );
 }
@@ -87,6 +86,9 @@ export default function Sidebar() {
             </NavItem>
             <NavItem href="/agent/instagram" icon={<Instagram size={16} />} active={location.includes("instagram")}>
               Instagram Warm Leads
+            </NavItem>
+            <NavItem href="/agent/facebook" icon={<Facebook size={16} />} active={location.includes("facebook")}>
+              Facebook Sales Manager
             </NavItem>
             <NavItem href="/agent/newsletter-analytics" icon={<FileText size={16} />} active={location.includes("newsletter")}>
               Newsletter Analytics
