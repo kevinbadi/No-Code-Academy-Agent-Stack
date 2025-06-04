@@ -7,9 +7,13 @@ const PERPLEXITY_API_KEY = "pplx-6904ce9889930dd5215de7426fe6029bc7d592f27847570
  */
 export async function searchContentIdeas(req: Request, res: Response) {
   try {
+    console.log("=== CONTENT SEARCH REQUEST ===");
+    console.log("Request body:", req.body);
+    
     const { message, niche } = req.body;
     
     if (!message) {
+      console.log("No message provided");
       return res.status(400).json({ error: "Message is required" });
     }
 
@@ -35,6 +39,9 @@ export async function searchContentIdeas(req: Request, res: Response) {
       ]
     };
 
+    console.log("Making Perplexity API call...");
+    console.log("Request body:", JSON.stringify(requestBody, null, 2));
+
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
       headers: {
@@ -44,23 +51,43 @@ export async function searchContentIdeas(req: Request, res: Response) {
       body: JSON.stringify(requestBody)
     });
 
+    console.log("Perplexity response status:", response.status);
+    console.log("Perplexity response headers:", Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
       const errorText = await response.text();
+      console.log("Perplexity API error:", errorText);
       return res.status(response.status).json({ 
         error: "Failed to search for content ideas",
         details: errorText
       });
     }
 
-    const data = await response.json();
+    const responseText = await response.text();
+    console.log("Raw Perplexity response:", responseText);
 
-    // Format response
+    let data;
+    try {
+      data = JSON.parse(responseText);
+      console.log("Parsed Perplexity data:", JSON.stringify(data, null, 2));
+    } catch (parseError) {
+      console.log("JSON parse error:", parseError);
+      console.log("Response text that failed to parse:", responseText);
+      return res.status(500).json({ 
+        error: "Failed to parse API response",
+        details: responseText
+      });
+    }
+
     const result = {
       content: data.choices?.[0]?.message?.content || "No content generated",
       citations: data.citations || [],
       related_questions: data.related_questions || [],
       usage: data.usage || {}
     };
+
+    console.log("Sending result to frontend:", JSON.stringify(result, null, 2));
+    console.log("=== CONTENT SEARCH REQUEST END ===");
 
     return res.json(result);
 
