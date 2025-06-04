@@ -339,6 +339,78 @@ app.post('/api/linkedin-agent-leads', async (req, res) => {
   }
 });
 
+// Perplexity Chat API route
+app.post('/api/perplexity-chat', async (req, res) => {
+  console.log("=== PERPLEXITY CHAT API CALL START ===");
+  console.log("Request body:", JSON.stringify(req.body, null, 2));
+  
+  const { message } = req.body;
+  
+  if (!message) {
+    console.log("No message provided");
+    return res.status(400).json({ error: "Message is required" });
+  }
+
+  try {
+    console.log("Making Perplexity API call for message:", message);
+    
+    const response = await fetch('https://api.perplexity.ai/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: "llama-3.1-sonar-small-128k-online",
+        messages: [
+          {
+            role: "system",
+            content: "Be precise and concise."
+          },
+          {
+            role: "user",
+            content: message
+          }
+        ],
+        temperature: 0.2,
+        top_p: 0.9,
+        return_images: false,
+        return_related_questions: false,
+        search_recency_filter: "month",
+        top_k: 0,
+        stream: false,
+        presence_penalty: 0,
+        frequency_penalty: 1
+      })
+    });
+
+    console.log("Perplexity response status:", response.status);
+    console.log("Perplexity response headers:", Object.fromEntries(response.headers.entries()));
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.log("Perplexity API error:", errorText);
+      return res.status(500).json({ error: "API call failed", details: errorText });
+    }
+
+    const data = await response.json();
+    console.log("Perplexity API success:", JSON.stringify(data, null, 2));
+
+    return res.json({
+      content: data.choices?.[0]?.message?.content || "No response generated",
+      citations: data.citations || [],
+      usage: data.usage || {}
+    });
+
+  } catch (error) {
+    console.error("=== PERPLEXITY CHAT ERROR ===");
+    console.error("Error type:", typeof error);
+    console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
+    return res.status(500).json({ error: "Internal error", details: error.message });
+  }
+});
+
 // Error handling middleware
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   const status = err.status || err.statusCode || 500;
