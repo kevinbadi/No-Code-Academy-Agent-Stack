@@ -886,11 +886,11 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
       const response = await fetch('https://api.perplexity.ai/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer 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',
+          'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: "sonar",
+          model: "llama-3.1-sonar-small-128k-online",
           messages: [
             {
               role: "system",
@@ -900,7 +900,16 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
               role: "user",
               content: message
             }
-          ]
+          ],
+          temperature: 0.2,
+          top_p: 0.9,
+          return_images: false,
+          return_related_questions: false,
+          search_recency_filter: "month",
+          top_k: 0,
+          stream: false,
+          presence_penalty: 0,
+          frequency_penalty: 1
         })
       });
 
