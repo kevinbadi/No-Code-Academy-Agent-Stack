@@ -812,13 +812,58 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
   
   // Content Research API routes
   app.post("/api/content-research/search", async (req: Request, res: Response) => {
-    console.log("=== ROUTE HIT: /api/content-research/search ===");
+    console.log("=== PERPLEXITY API CALL START ===");
     console.log("Request body:", req.body);
+    
+    const { message } = req.body;
+    
+    if (!message) {
+      return res.status(400).json({ error: "Message is required" });
+    }
+
     try {
-      return await searchContentIdeas(req, res);
+      const response = await fetch('https://api.perplexity.ai/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer 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',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: "sonar",
+          messages: [
+            {
+              role: "system",
+              content: "You are a social media content expert. Generate engaging, viral content ideas with specific post types, hooks, and engagement strategies. Be creative and actionable."
+            },
+            {
+              role: "user",
+              content: `Generate 5 creative social media content ideas for: ${message}. Include specific post types, hooks, and engagement strategies.`
+            }
+          ]
+        })
+      });
+
+      console.log("Perplexity response status:", response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log("Perplexity error:", errorText);
+        return res.status(500).json({ error: "API call failed", details: errorText });
+      }
+
+      const data = await response.json();
+      console.log("Perplexity success:", data);
+
+      return res.json({
+        content: data.choices?.[0]?.message?.content || "No content generated",
+        citations: data.citations || [],
+        related_questions: data.related_questions || [],
+        usage: data.usage || {}
+      });
+
     } catch (error: any) {
-      console.error("Route error:", error);
-      return res.status(500).json({ error: "Route error", details: error.message });
+      console.error("=== ERROR ===", error);
+      return res.status(500).json({ error: "Internal error", details: error.message });
     }
   });
   app.get("/api/content-research/trending", getTrendingTopics);
