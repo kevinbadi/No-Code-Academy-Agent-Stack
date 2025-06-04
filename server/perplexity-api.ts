@@ -37,7 +37,7 @@ export async function searchContentIdeas(req: Request, res: Response) {
     userPrompt += ". Include specific post types, hooks, and engagement strategies.";
 
     const requestBody = {
-      model: "llama-3.1-sonar-small-128k-online",
+      model: "sonar",
       messages: [
         {
           role: "system",
@@ -47,17 +47,7 @@ export async function searchContentIdeas(req: Request, res: Response) {
           role: "user", 
           content: userPrompt
         }
-      ],
-      max_tokens: 1000,
-      temperature: 0.7,
-      top_p: 0.9,
-      return_images: false,
-      return_related_questions: true,
-      search_recency_filter: "month",
-      top_k: 0,
-      stream: false,
-      presence_penalty: 0,
-      frequency_penalty: 1
+      ]
     };
 
     console.log("Perplexity request body:", JSON.stringify(requestBody, null, 2));
@@ -165,7 +155,7 @@ export async function getTrendingTopics(req: Request, res: Response) {
     userPrompt += "? Include emerging trends and viral topics from the past week.";
 
     const requestBody = {
-      model: "llama-3.1-sonar-small-128k-online",
+      model: "sonar",
       messages: [
         {
           role: "system",
@@ -175,12 +165,7 @@ export async function getTrendingTopics(req: Request, res: Response) {
           role: "user",
           content: userPrompt
         }
-      ],
-      max_tokens: 800,
-      temperature: 0.3,
-      search_recency_filter: "week",
-      return_related_questions: true,
-      stream: false
+      ]
     };
 
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
