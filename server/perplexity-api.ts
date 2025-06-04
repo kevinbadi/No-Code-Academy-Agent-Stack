@@ -5,11 +5,27 @@ import { Request, Response } from "express";
  */
 export async function searchContentIdeas(req: Request, res: Response) {
   try {
+    console.log("=== Content Research API Call Started ===");
+    console.log("Request body:", JSON.stringify(req.body, null, 2));
+    
     const { query, platform, niche } = req.body;
     
     if (!query) {
+      console.log("ERROR: No query provided");
       return res.status(400).json({ error: "Query is required" });
     }
+
+    // Check if API key exists
+    if (!process.env.PERPLEXITY_API_KEY) {
+      console.log("ERROR: PERPLEXITY_API_KEY environment variable not found");
+      return res.status(500).json({ 
+        error: "Perplexity API key not configured",
+        message: "Please configure PERPLEXITY_API_KEY environment variable"
+      });
+    }
+
+    console.log("API Key present:", process.env.PERPLEXITY_API_KEY ? "YES" : "NO");
+    console.log("API Key length:", process.env.PERPLEXITY_API_KEY?.length || 0);
 
     // Construct a targeted prompt for content idea generation
     const systemPrompt = "You are a social media content strategist. Provide creative, engaging content ideas with specific actionable suggestions. Be precise and practical.";
@@ -44,6 +60,9 @@ export async function searchContentIdeas(req: Request, res: Response) {
       frequency_penalty: 1
     };
 
+    console.log("Perplexity request body:", JSON.stringify(requestBody, null, 2));
+    console.log("Making request to Perplexity API...");
+
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
       headers: {
@@ -53,31 +72,79 @@ export async function searchContentIdeas(req: Request, res: Response) {
       body: JSON.stringify(requestBody)
     });
 
+    console.log("Perplexity API response status:", response.status);
+    console.log("Perplexity API response headers:", Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Perplexity API error:', response.status, errorText);
+      console.error('=== PERPLEXITY API ERROR ===');
+      console.error('Status:', response.status);
+      console.error('Status Text:', response.statusText);
+      console.error('Error Response:', errorText);
+      console.error('=== END PERPLEXITY API ERROR ===');
+      
       return res.status(response.status).json({ 
         error: "Failed to search for content ideas",
-        details: errorText 
+        details: errorText,
+        status: response.status,
+        statusText: response.statusText
       });
     }
 
-    const data = await response.json();
+    const responseText = await response.text();
+    console.log("Raw Perplexity API response:", responseText.substring(0, 500) + "...");
+
+    let data;
+    try {
+      data = JSON.parse(responseText);
+      console.log("Parsed Perplexity API response successfully");
+      console.log("Response structure:", {
+        hasChoices: !!data.choices,
+        choicesLength: data.choices?.length || 0,
+        hasCitations: !!data.citations,
+        hasUsage: !!data.usage
+      });
+    } catch (parseError) {
+      console.error("Failed to parse Perplexity API response as JSON:");
+      console.error("Parse error:", parseError);
+      console.error("Response text:", responseText);
+      return res.status(500).json({
+        error: "Invalid JSON response from Perplexity API",
+        details: "Response was not valid JSON",
+        rawResponse: responseText.substring(0, 1000)
+      });
+    }
     
-    res.json({
+    const result = {
       success: true,
-      content: data.choices[0]?.message?.content || "No content generated",
+      content: data.choices?.[0]?.message?.content || "No content generated",
       citations: data.citations || [],
       searchResults: data.search_results || [],
-      relatedQuestions: data.choices[0]?.related_questions || [],
+      relatedQuestions: data.choices?.[0]?.related_questions || [],
       usage: data.usage
+    };
+
+    console.log("Sending successful response:", {
+      contentLength: result.content.length,
+      citationsCount: result.citations.length,
+      searchResultsCount: result.searchResults.length,
+      relatedQuestionsCount: result.relatedQuestions.length
     });
+    console.log("=== Content Research API Call Completed Successfully ===");
+
+    res.json(result);
 
   } catch (error) {
-    console.error("Error in content research:", error);
+    console.error("=== UNEXPECTED ERROR IN CONTENT RESEARCH ===");
+    console.error("Error type:", error?.constructor?.name);
+    console.error("Error message:", error instanceof Error ? error.message : "Unknown error");
+    console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
+    console.error("=== END UNEXPECTED ERROR ===");
+    
     res.status(500).json({ 
       error: "Internal server error",
-      message: error instanceof Error ? error.message : "Unknown error"
+      message: error instanceof Error ? error.message : "Unknown error",
+      type: error?.constructor?.name || "Unknown"
     });
   }
 }
