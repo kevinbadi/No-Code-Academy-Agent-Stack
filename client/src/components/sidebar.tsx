@@ -18,7 +18,8 @@ import {
   Phone,
   Edit3,
   FileSearch,
-  Lightbulb
+  Lightbulb,
+  MessageCircle
 } from "lucide-react";
 import { Facebook } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -116,6 +117,9 @@ export default function Sidebar() {
           <div className="mt-2 space-y-1">
             <NavItem href="/content-research" icon={<Lightbulb size={16} />} active={location.includes("content-research")}>
               Content Research
+            </NavItem>
+            <NavItem href="/perplexity-chat" icon={<MessageCircle size={16} />} active={location.includes("perplexity-chat")}>
+              Perplexity Chat
             </NavItem>
           </div>
         </div>

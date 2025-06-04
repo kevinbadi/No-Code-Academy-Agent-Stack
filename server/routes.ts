@@ -867,6 +867,66 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
     }
   });
   app.get("/api/content-research/trending", getTrendingTopics);
+
+  // Perplexity Chat API route
+  app.post("/api/perplexity-chat", async (req: Request, res: Response) => {
+    console.log("=== PERPLEXITY CHAT API CALL ===");
+    console.log("Request body:", req.body);
+    
+    const { message } = req.body;
+    
+    if (!message) {
+      console.log("No message provided");
+      return res.status(400).json({ error: "Message is required" });
+    }
+
+    try {
+      console.log("Making Perplexity API call for message:", message);
+      
+      const response = await fetch('https://api.perplexity.ai/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer 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',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: "sonar",
+          messages: [
+            {
+              role: "system",
+              content: "Be precise and concise."
+            },
+            {
+              role: "user",
+              content: message
+            }
+          ]
+        })
+      });
+
+      console.log("Perplexity response status:", response.status);
+      console.log("Perplexity response headers:", Object.fromEntries(response.headers.entries()));
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log("Perplexity API error:", errorText);
+        return res.status(500).json({ error: "API call failed", details: errorText });
+      }
+
+      const data = await response.json();
+      console.log("Perplexity API success:", JSON.stringify(data, null, 2));
+
+      return res.json({
+        content: data.choices?.[0]?.message?.content || "No response generated",
+        citations: data.citations || [],
+        usage: data.usage || {}
+      });
+
+    } catch (error: any) {
+      console.error("=== PERPLEXITY CHAT ERROR ===", error);
+      return res.status(500).json({ error: "Internal error", details: error.message });
+    }
+  });
   
   // Route to get activities
   app.get("/api/activities", async (req: Request, res: Response) => {

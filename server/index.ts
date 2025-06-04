@@ -50,7 +50,7 @@ import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { pool } from "./db"; // Import the database pool for Instagram leads
 
-const PORT = 8888; // Try a completely different port
+const PORT = process.env.PORT || 5000;
 
 // Create HTTP server
 const server = http.createServer(app);
