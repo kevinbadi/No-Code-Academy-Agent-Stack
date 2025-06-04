@@ -870,8 +870,9 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
 
   // Perplexity Chat API route
   app.post("/api/perplexity-chat", async (req: Request, res: Response) => {
-    console.log("=== PERPLEXITY CHAT API CALL ===");
-    console.log("Request body:", req.body);
+    console.log("=== PERPLEXITY CHAT API CALL START ===");
+    console.log("Request body:", JSON.stringify(req.body, null, 2));
+    console.log("Headers:", JSON.stringify(req.headers, null, 2));
     
     const { message } = req.body;
     
@@ -932,7 +933,11 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
       });
 
     } catch (error: any) {
-      console.error("=== PERPLEXITY CHAT ERROR ===", error);
+      console.error("=== PERPLEXITY CHAT ERROR ===");
+      console.error("Error type:", typeof error);
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+      console.error("Full error:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
       return res.status(500).json({ error: "Internal error", details: error.message });
     }
   });
