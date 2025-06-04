@@ -278,3 +278,39 @@ export const insertInstagramPostSchema = createInsertSchema(instagramPosts).omit
 
 export type InsertInstagramPost = z.infer<typeof insertInstagramPostSchema>;
 export type InstagramPost = typeof instagramPosts.$inferSelect;
+
+// LinkedIn Agent 2 Schema - stores enhanced LinkedIn data structure
+export const linkedinAgent2 = pgTable("linkedin_agent_2", {
+  id: serial("id").primaryKey(),
+  timestamp: timestamp("timestamp").notNull().defaultNow(),
+  
+  // Invite summary (day collection)
+  daySent: integer("day_sent").notNull(),
+  dayAccepted: integer("day_accepted").notNull(),
+  processedProfiles: integer("processed_profiles").notNull(),
+  maxInvitations: integer("max_invitations").notNull(),
+  
+  // Total collection
+  totalSent: integer("total_sent").notNull(),
+  totalAccepted: integer("total_accepted").notNull(),
+  
+  // Status
+  status: text("status").notNull(),
+  
+  // Links collection
+  csvLink: text("csv_link"),
+  jsonLink: text("json_link"),
+  
+  // Connection status
+  connectionStatus: text("connection_status"),
+  
+  // Process collection data
+  processData: json("process_data")
+});
+
+export const insertLinkedinAgent2Schema = createInsertSchema(linkedinAgent2).omit({
+  id: true
+});
+
+export type InsertLinkedinAgent2 = z.infer<typeof insertLinkedinAgent2Schema>;
+export type LinkedinAgent2 = typeof linkedinAgent2.$inferSelect;

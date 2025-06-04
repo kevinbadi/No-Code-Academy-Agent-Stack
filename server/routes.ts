@@ -21,6 +21,14 @@ import {
   updateLeadStatus, 
   createSampleInstagramLeads 
 } from "./instagram-leads-api";
+// Import LinkedIn Agent 2 handlers
+import {
+  getLinkedinAgent2Data,
+  getLatestLinkedinAgent2Data,
+  createLinkedinAgent2Data,
+  handleLinkedinAgent2Webhook,
+  createSampleLinkedinAgent2Data
+} from "./linkedin-agent-2-endpoints";
 
 export async function registerRoutes(app: Express, existingServer?: Server): Promise<Server> {
   // Create a new HTTP server if one wasn't provided
@@ -789,6 +797,13 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
       });
     }
   });
+  
+  // LinkedIn Agent 2 API routes
+  app.get("/api/linkedin-agent-2", getLinkedinAgent2Data);
+  app.get("/api/linkedin-agent-2/latest", getLatestLinkedinAgent2Data);
+  app.post("/api/linkedin-agent-2", createLinkedinAgent2Data);
+  app.post("/api/webhook/linkedin-agent-2", handleLinkedinAgent2Webhook);
+  app.post("/api/linkedin-agent-2/sample", createSampleLinkedinAgent2Data);
   
   // Route to get activities
   app.get("/api/activities", async (req: Request, res: Response) => {
