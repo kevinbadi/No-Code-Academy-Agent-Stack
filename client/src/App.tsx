@@ -11,6 +11,7 @@ import LinkedInAgentPage from "@/pages/linkedin-agent";
 import FacebookAgentPage from "@/pages/facebook-agent";
 import ColdEmailAgentPage from "@/pages/cold-email-agent";
 import SeoArticleWriterPage from "@/pages/seo-article-writer";
+import ContentResearchPage from "@/pages/content-research";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -24,6 +25,7 @@ function Router() {
       <Route path="/agent/facebook" component={FacebookAgentPage} />
       <Route path="/agent/cold-email" component={ColdEmailAgentPage} />
       <Route path="/agent/seo-writer" component={SeoArticleWriterPage} />
+      <Route path="/content-research" component={ContentResearchPage} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>

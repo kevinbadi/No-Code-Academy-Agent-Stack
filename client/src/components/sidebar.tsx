@@ -17,7 +17,8 @@ import {
   LineChart,
   Phone,
   Edit3,
-  FileSearch
+  FileSearch,
+  Lightbulb
 } from "lucide-react";
 import { Facebook } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -104,6 +105,17 @@ export default function Sidebar() {
             </NavItem>
             <NavItem href="/agent/seo-writer" icon={<FileSearch size={16} />} active={location.includes("seo-writer")}>
               SEO Article Writing Agent
+            </NavItem>
+          </div>
+        </div>
+
+        <div className="mt-6 pt-3 border-t border-gray-200">
+          <h3 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            Content Tools
+          </h3>
+          <div className="mt-2 space-y-1">
+            <NavItem href="/content-research" icon={<Lightbulb size={16} />} active={location.includes("content-research")}>
+              Content Research
             </NavItem>
           </div>
         </div>

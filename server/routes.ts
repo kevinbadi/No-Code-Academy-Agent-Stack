@@ -29,6 +29,11 @@ import {
   handleLinkedinAgent2Webhook,
   createSampleLinkedinAgent2Data
 } from "./linkedin-agent-2-endpoints";
+// Import Perplexity API handlers
+import {
+  searchContentIdeas,
+  getTrendingTopics
+} from "./perplexity-api";
 
 export async function registerRoutes(app: Express, existingServer?: Server): Promise<Server> {
   // Create a new HTTP server if one wasn't provided
@@ -804,6 +809,10 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
   app.post("/api/linkedin-agent-2", createLinkedinAgent2Data);
   app.post("/api/webhook/linkedin-agent-2", handleLinkedinAgent2Webhook);
   app.post("/api/linkedin-agent-2/sample", createSampleLinkedinAgent2Data);
+  
+  // Content Research API routes
+  app.post("/api/content-research/search", searchContentIdeas);
+  app.get("/api/content-research/trending", getTrendingTopics);
   
   // Route to get activities
   app.get("/api/activities", async (req: Request, res: Response) => {
