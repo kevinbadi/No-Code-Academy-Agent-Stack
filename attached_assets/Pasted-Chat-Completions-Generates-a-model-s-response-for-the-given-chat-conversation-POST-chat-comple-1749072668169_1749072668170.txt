@@ -1,0 +1,186 @@
+Chat Completions
+Generates a model’s response for the given chat conversation.
+
+POST
+/
+chat
+/
+completions
+
+Try it
+Authorizations
+​
+Authorization
+stringheaderrequired
+Bearer authentication header of the form Bearer <token>, where <token> is your auth token.
+
+Body
+application/json
+​
+model
+stringrequired
+The name of the model that will complete your prompt. Refer to Supported Models to find all the models offered.
+
+Example:
+"sonar"
+
+​
+messages
+object[]required
+A list of messages comprising the conversation so far.
+
+
+Show child attributes
+
+Example:
+[
+  {
+    "role": "system",
+    "content": "Be precise and concise."
+  },
+  {
+    "role": "user",
+    "content": "How many stars are there in our galaxy?"
+  }
+]
+​
+max_tokens
+integer
+The maximum number of completion tokens returned by the API. Controls the length of the model's response. If the response would exceed this limit, it will be truncated. Higher values allow for longer responses but may increase processing time and costs.
+
+​
+temperature
+numberdefault:0.2
+The amount of randomness in the response, valued between 0 and 2. Lower values (e.g., 0.1) make the output more focused, deterministic, and less creative. Higher values (e.g., 1.5) make the output more random and creative. Use lower values for factual/information retrieval tasks and higher values for creative applications.
+
+Required range: 0 <= x < 2
+​
+top_p
+numberdefault:0.9
+The nucleus sampling threshold, valued between 0 and 1. Controls the diversity of generated text by considering only the tokens whose cumulative probability exceeds the top_p value. Lower values (e.g., 0.5) make the output more focused and deterministic, while higher values (e.g., 0.95) allow for more diverse outputs. Often used as an alternative to temperature.
+
+​
+search_domain_filter
+any[]
+A list of domains to limit search results to. Currently limited to 10 domains for Allowlisting and Denylisting. For Denylisting, add a - at the beginning of the domain string. More information about this here.
+
+​
+return_images
+booleandefault:false
+Determines whether search results should include images.
+
+​
+return_related_questions
+booleandefault:false
+Determines whether related questions should be returned.
+
+​
+search_recency_filter
+string
+Filters search results based on time (e.g., 'week', 'day').
+
+​
+search_after_date_filter
+string
+Filters search results to only include content published after this date. Format can be flexible (e.g., '3/1/2025', 'March 1, 2025').
+
+​
+search_before_date_filter
+string
+Filters search results to only include content published before this date. Format can be flexible (e.g., '3/1/2025', 'March 1, 2025').
+
+​
+top_k
+numberdefault:0
+The number of tokens to keep for top-k filtering. Limits the model to consider only the k most likely next tokens at each step. Lower values (e.g., 10) make the output more focused and deterministic, while higher values allow for more diverse outputs. A value of 0 disables this filter. Often used in conjunction with top_p to control output randomness.
+
+​
+stream
+booleandefault:false
+Determines whether to stream the response incrementally.
+
+​
+presence_penalty
+numberdefault:0
+Positive values increase the likelihood of discussing new topics. Applies a penalty to tokens that have already appeared in the text, encouraging the model to talk about new concepts. Values typically range from 0 (no penalty) to 2.0 (strong penalty). Higher values reduce repetition but may lead to more off-topic text.
+
+​
+frequency_penalty
+numberdefault:0
+Decreases likelihood of repetition based on prior frequency. Applies a penalty to tokens based on how frequently they've appeared in the text so far. Values typically range from 0 (no penalty) to 2.0 (strong penalty). Higher values (e.g., 1.5) reduce repetition of the same words and phrases. Useful for preventing the model from getting stuck in loops.
+
+​
+response_format
+object
+Enables structured JSON output formatting.
+
+​
+web_search_options
+object
+Configuration for using web search in model responses.
+
+
+Show child attributes
+
+Example:
+{ "search_context_size": "high" }
+Response
+200
+application/json
+
+application/json
+OK
+
+​
+id
+stringrequired
+A unique identifier for the chat completion.
+
+​
+model
+stringrequired
+The model that generated the response.
+
+​
+created
+integerrequired
+The Unix timestamp (in seconds) of when the chat completion was created.
+
+​
+usage
+objectrequired
+
+Show child attributes
+
+​
+object
+stringdefault:chat.completionrequired
+The type of object, which is always chat.completion.
+
+​
+choices
+object[]required
+A list of chat completion choices. Can be more than one if n is greater than 1.
+
+
+Show child attributes
+
+​
+citations
+string[] | null
+A list of citation sources for the response.
+
+​
+search_results
+object[] | null
+A list of search results related to the response.
+
+
+Show child attributes
+
+Create Async Chat Completion
+twitter
+linkedin
+discord
+github
+website
