@@ -811,7 +811,16 @@ export async function registerRoutes(app: Express, existingServer?: Server): Pro
   app.post("/api/linkedin-agent-2/sample", createSampleLinkedinAgent2Data);
   
   // Content Research API routes
-  app.post("/api/content-research/search", searchContentIdeas);
+  app.post("/api/content-research/search", async (req: Request, res: Response) => {
+    console.log("=== ROUTE HIT: /api/content-research/search ===");
+    console.log("Request body:", req.body);
+    try {
+      return await searchContentIdeas(req, res);
+    } catch (error: any) {
+      console.error("Route error:", error);
+      return res.status(500).json({ error: "Route error", details: error.message });
+    }
+  });
   app.get("/api/content-research/trending", getTrendingTopics);
   
   // Route to get activities
