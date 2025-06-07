@@ -380,14 +380,23 @@ export default function ViralVideoAgent() {
                     </div>
                     
                     <div className="flex flex-col gap-3 pt-3 border-t">
-                      <Button
-                        className="w-full bg-green-400 hover:bg-green-500 text-black font-semibold"
-                        onClick={() => {
-                          toast({ title: "Uploading to all social platforms...", description: "Your video is being published to YouTube, TikTok, Instagram, and Facebook." });
-                        }}
-                      >
-                        Upload to All Social Platforms
-                      </Button>
+                      {video.status === 'published' ? (
+                        <Button
+                          className="w-full bg-gray-400 hover:bg-gray-500 text-white font-semibold cursor-not-allowed"
+                          disabled
+                        >
+                          Already Uploaded to All Platforms
+                        </Button>
+                      ) : (
+                        <Button
+                          className="w-full bg-green-400 hover:bg-green-500 text-black font-semibold"
+                          onClick={() => {
+                            toast({ title: "Uploading to all social platforms...", description: "Your video is being published to YouTube, TikTok, Instagram, and Facebook." });
+                          }}
+                        >
+                          Upload to All Social Platforms
+                        </Button>
+                      )}
                       
                       <div className="flex items-center justify-between">
                         <a 
