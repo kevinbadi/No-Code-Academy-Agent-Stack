@@ -339,7 +339,7 @@ export default function ViralVideoAgent() {
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3 mb-2">
                       <span className="text-lg">{getPlatformIcon(video.platform)}</span>
-                      <h3 className="font-semibold text-lg flex-1">{video.title || "VEO 3 Generated Video"}</h3>
+                      <h3 className="font-semibold text-lg flex-1">{video.title || "Untitled Video"}</h3>
                       <Badge className={getStatusColor(video.status)}>
                         {video.status}
                       </Badge>
