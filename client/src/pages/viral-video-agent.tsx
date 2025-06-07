@@ -61,7 +61,7 @@ export default function ViralVideoAgent() {
     }
   });
 
-  const { data: videos, isLoading: videosLoading } = useQuery<ViralVideo[]>({
+  const { data: videos = [], isLoading: videosLoading, error: videosError } = useQuery<ViralVideo[]>({
     queryKey: ["/api/viral-videos"],
     queryFn: async () => {
       const response = await fetch("/api/viral-videos");
