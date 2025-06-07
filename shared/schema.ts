@@ -314,3 +314,27 @@ export const insertLinkedinAgent2Schema = createInsertSchema(linkedinAgent2).omi
 
 export type InsertLinkedinAgent2 = z.infer<typeof insertLinkedinAgent2Schema>;
 export type LinkedinAgent2 = typeof linkedinAgent2.$inferSelect;
+
+// Viral Video Generator Agent Schema - stores generated video URLs
+export const viralVideoAgent = pgTable("viral_video_agent", {
+  id: serial("id").primaryKey(),
+  videoUrl: text("video_url").notNull(),
+  title: text("title"),
+  description: text("description"),
+  timestamp: timestamp("timestamp").notNull().defaultNow(),
+  status: text("status").notNull().default("generated"), // generated, uploaded, published
+  platform: text("platform"), // youtube, tiktok, instagram, etc.
+  views: integer("views").default(0),
+  likes: integer("likes").default(0),
+  shares: integer("shares").default(0),
+  metadata: json("metadata")
+});
+
+export const insertViralVideoAgentSchema = createInsertSchema(viralVideoAgent).omit({
+  id: true
+}).extend({
+  metadata: z.record(z.unknown()).optional()
+});
+
+export type InsertViralVideoAgent = z.infer<typeof insertViralVideoAgentSchema>;
+export type ViralVideoAgent = typeof viralVideoAgent.$inferSelect;

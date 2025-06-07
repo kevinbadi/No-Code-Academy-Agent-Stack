@@ -49,6 +49,7 @@ import { webhookPayloadSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { pool } from "./db"; // Import the database pool for Instagram leads
+import { viralVideoStorage } from "./viral-video-storage";
 
 const PORT = process.env.PORT || 5000;
 
@@ -408,6 +409,66 @@ app.post('/api/perplexity-chat', async (req, res) => {
     console.error("Error message:", error.message);
     console.error("Error stack:", error.stack);
     return res.status(500).json({ error: "Internal error", details: error.message });
+  }
+});
+
+// Viral Video Agent API endpoints
+app.get('/api/viral-videos', async (req, res) => {
+  try {
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+    const videos = await viralVideoStorage.getViralVideos(limit);
+    res.json(videos);
+  } catch (error) {
+    console.error("Error fetching viral videos:", error);
+    res.status(500).json({ error: "Failed to fetch viral videos" });
+  }
+});
+
+app.get('/api/viral-videos/stats', async (req, res) => {
+  try {
+    const stats = await viralVideoStorage.getVideoStats();
+    res.json(stats);
+  } catch (error) {
+    console.error("Error fetching viral video stats:", error);
+    res.status(500).json({ error: "Failed to fetch viral video stats" });
+  }
+});
+
+app.post('/api/viral-videos', async (req, res) => {
+  try {
+    const video = await viralVideoStorage.createViralVideo(req.body);
+    res.status(201).json(video);
+  } catch (error) {
+    console.error("Error creating viral video:", error);
+    res.status(500).json({ error: "Failed to create viral video" });
+  }
+});
+
+app.put('/api/viral-videos/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const video = await viralVideoStorage.updateViralVideo(id, req.body);
+    if (!video) {
+      return res.status(404).json({ error: "Video not found" });
+    }
+    res.json(video);
+  } catch (error) {
+    console.error("Error updating viral video:", error);
+    res.status(500).json({ error: "Failed to update viral video" });
+  }
+});
+
+app.delete('/api/viral-videos/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const success = await viralVideoStorage.deleteViralVideo(id);
+    if (!success) {
+      return res.status(404).json({ error: "Video not found" });
+    }
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting viral video:", error);
+    res.status(500).json({ error: "Failed to delete viral video" });
   }
 });
 
