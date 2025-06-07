@@ -13,6 +13,7 @@ import ColdEmailAgentPage from "@/pages/cold-email-agent";
 import SeoArticleWriterPage from "@/pages/seo-article-writer";
 import ContentResearchPage from "@/pages/content-research";
 import PerplexityChat from "@/pages/perplexity-chat";
+import ViralVideoAgent from "@/pages/viral-video-agent";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -28,6 +29,7 @@ function Router() {
       <Route path="/agent/seo-writer" component={SeoArticleWriterPage} />
       <Route path="/content-research" component={ContentResearchPage} />
       <Route path="/perplexity-chat" component={PerplexityChat} />
+      <Route path="/agent/viral-video" component={ViralVideoAgent} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>

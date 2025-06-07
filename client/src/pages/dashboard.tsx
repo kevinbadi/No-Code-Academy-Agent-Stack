@@ -93,6 +93,13 @@ export default function Dashboard() {
     queryFn: () => fetch(`/api/activities?limit=5`).then(res => res.json()),
     staleTime: 30000, // 30 seconds
   });
+
+  // Get viral video stats
+  const { data: videoStats } = useQuery({
+    queryKey: ['/api/viral-videos/stats'],
+    queryFn: () => fetch(`/api/viral-videos/stats`).then(res => res.json()),
+    staleTime: 30000, // 30 seconds
+  });
   
   const { mutate: refreshData, isPending: isRefreshing } = useRefreshData();
   

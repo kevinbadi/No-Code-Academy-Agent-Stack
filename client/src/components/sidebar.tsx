@@ -19,7 +19,8 @@ import {
   Edit3,
   FileSearch,
   Lightbulb,
-  MessageCircle
+  MessageCircle,
+  Video
 } from "lucide-react";
 import { Facebook } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -106,6 +107,9 @@ export default function Sidebar() {
             </NavItem>
             <NavItem href="/agent/seo-writer" icon={<FileSearch size={16} />} active={location.includes("seo-writer")}>
               SEO Article Writing Agent
+            </NavItem>
+            <NavItem href="/agent/viral-video" icon={<Video size={16} />} active={location.includes("viral-video")}>
+              Viral Video Generator Agent
             </NavItem>
           </div>
         </div>
