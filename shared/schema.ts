@@ -321,7 +321,6 @@ export const viralVideoAgent = pgTable("viral_video_agent", {
   videoUrl: text("video_url").notNull(),
   title: text("title"),
   description: text("description"),
-  timestamp: timestamp("timestamp").notNull().defaultNow(),
   status: text("status").notNull().default("generated"), // generated, uploaded, published
   platform: text("platform"), // youtube, tiktok, instagram, etc.
   views: integer("views").default(0),

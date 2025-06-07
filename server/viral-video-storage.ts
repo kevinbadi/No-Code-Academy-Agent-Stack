@@ -4,7 +4,7 @@ import { eq, desc } from "drizzle-orm";
 
 export class ViralVideoStorage {
   async getViralVideos(limit?: number): Promise<ViralVideoAgent[]> {
-    const query = db.select().from(viralVideoAgent).orderBy(desc(viralVideoAgent.timestamp));
+    const query = db.select().from(viralVideoAgent).orderBy(desc(viralVideoAgent.id));
     
     if (limit) {
       return await query.limit(limit);

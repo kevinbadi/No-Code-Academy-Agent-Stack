@@ -37,7 +37,6 @@ interface ViralVideo {
   videoUrl: string;
   title: string | null;
   description: string | null;
-  timestamp: string;
   status: string;
   platform: string | null;
   views: number | null;
@@ -342,7 +341,7 @@ export default function ViralVideoAgent() {
                         {video.platform && (
                           <span className="capitalize">{video.platform}</span>
                         )}
-                        <span>{new Date(video.timestamp).toLocaleDateString()}</span>
+                        <span>Video ID: {video.id}</span>
                         {video.views !== null && (
                           <span className="flex items-center gap-1">
                             <Eye className="h-3 w-3" />
