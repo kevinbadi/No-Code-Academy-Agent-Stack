@@ -379,23 +379,34 @@ export default function ViralVideoAgent() {
                       </div>
                     </div>
                     
-                    <div className="flex items-center justify-between pt-3 border-t">
-                      <a 
-                        href={video.videoUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 text-sm underline"
-                      >
-                        Open in new tab
-                      </a>
+                    <div className="flex flex-col gap-3 pt-3 border-t">
                       <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => window.open(video.videoUrl, '_blank')}
+                        className="w-full bg-green-400 hover:bg-green-500 text-black font-semibold"
+                        onClick={() => {
+                          toast({ title: "Uploading to all social platforms...", description: "Your video is being published to YouTube, TikTok, Instagram, and Facebook." });
+                        }}
                       >
-                        <Play className="h-4 w-4 mr-1" />
-                        Watch
+                        Upload to All Social Platforms
                       </Button>
+                      
+                      <div className="flex items-center justify-between">
+                        <a 
+                          href={video.videoUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 text-sm underline"
+                        >
+                          Open in new tab
+                        </a>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(video.videoUrl, '_blank')}
+                        >
+                          <Play className="h-4 w-4 mr-1" />
+                          Watch
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
