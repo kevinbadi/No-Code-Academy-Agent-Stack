@@ -580,6 +580,57 @@ export default function Dashboard() {
               </div>
             </CardContent>
           </Card>
+          
+          {/* Viral Video Generator Agent Summary */}
+          <Card className="shadow-sm hover:shadow-md transition-shadow duration-200">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center">
+                  <div className="bg-gradient-to-br from-[#FF0050] to-[#FF4500] p-2 rounded-md mr-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                      <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800">Viral Video Generator Agent</h3>
+                    <p className="text-sm text-gray-500">VEO 3 powered video creation</p>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm" asChild>
+                  <a href="/agent/viral-video">View Details</a>
+                </Button>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                <div className="bg-red-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-500 mb-1">Total Videos</p>
+                  <p className="text-2xl font-bold text-[#FF0050]">{videoStats?.totalVideos || 0}</p>
+                </div>
+                <div className="bg-red-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-500 mb-1">Published</p>
+                  <p className="text-2xl font-bold text-[#FF0050]">{videoStats?.publishedVideos || 0}</p>
+                </div>
+                <div className="bg-red-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-500 mb-1">Total Views</p>
+                  <p className="text-2xl font-bold text-[#FF0050]">{videoStats?.totalViews?.toLocaleString() || 0}</p>
+                </div>
+              </div>
+              
+              <div>
+                <div className="flex justify-between mb-1 text-xs">
+                  <span>Latest: "AI Agent Marketing Strategy 2025"</span>
+                  <span>{Math.round(((videoStats?.publishedVideos || 0) / (videoStats?.totalVideos || 1)) * 100)}% published</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-gradient-to-r from-[#FF0050] to-[#FF4500] h-2 rounded-full" 
+                    style={{ width: `${Math.min(100, ((videoStats?.publishedVideos || 0) / (videoStats?.totalVideos || 1)) * 100)}%` }}
+                  ></div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
         
         {/* Attribution */}
