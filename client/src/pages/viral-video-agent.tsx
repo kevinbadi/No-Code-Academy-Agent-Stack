@@ -128,6 +128,7 @@ export default function ViralVideoAgent() {
       case "published": return "bg-green-100 text-green-800";
       case "uploaded": return "bg-blue-100 text-blue-800";
       case "generated": return "bg-gray-100 text-gray-800";
+      case "ready to upload": return "bg-yellow-100 text-yellow-800";
       default: return "bg-gray-100 text-gray-800";
     }
   };
@@ -246,7 +247,7 @@ export default function ViralVideoAgent() {
                     </FormItem>
                   )}
                 />
-                <div className="flex justify-end space-x-2">
+                <div className="flex justify-end gap-3">
                   <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                     Cancel
                   </Button>
@@ -309,7 +310,7 @@ export default function ViralVideoAgent() {
         </Card>
       </div>
 
-      {/* Videos Table */}
+      {/* Generated Videos */}
       <Card>
         <CardHeader>
           <CardTitle>Generated Videos</CardTitle>
@@ -319,29 +320,44 @@ export default function ViralVideoAgent() {
             <div className="text-center py-8">Loading videos...</div>
           ) : !videos || videos.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              No videos generated yet. Start by adding your first video!
+              No videos generated yet. The AI agent will automatically add videos here when they're generated.
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {videos.map((video) => (
-                <div key={video.id} className="border rounded-lg p-4 hover:bg-gray-50">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="text-lg">{getPlatformIcon(video.platform)}</span>
-                        <h3 className="font-semibold text-lg">{video.title || "Untitled Video"}</h3>
-                        <Badge className={getStatusColor(video.status)}>
-                          {video.status}
-                        </Badge>
-                      </div>
-                      {video.description && (
-                        <p className="text-gray-600 mb-2">{video.description}</p>
-                      )}
+                <Card key={video.id} className="overflow-hidden">
+                  <div className="aspect-video bg-black rounded-t-lg">
+                    <video 
+                      className="w-full h-full object-cover rounded-t-lg"
+                      controls
+                      preload="metadata"
+                    >
+                      <source src={video.videoUrl} type="video/mp4" />
+                      Your browser does not support the video tag.
+                    </video>
+                  </div>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="text-lg">{getPlatformIcon(video.platform)}</span>
+                      <h3 className="font-semibold text-lg flex-1">{video.title || "VEO 3 Generated Video"}</h3>
+                      <Badge className={getStatusColor(video.status)}>
+                        {video.status}
+                      </Badge>
+                    </div>
+                    
+                    {video.description && (
+                      <p className="text-gray-600 mb-3 text-sm">{video.description}</p>
+                    )}
+                    
+                    <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-4 text-sm text-gray-500">
                         {video.platform && (
                           <span className="capitalize">{video.platform}</span>
                         )}
-                        <span>Video ID: {video.id}</span>
+                        <span>ID: {video.id}</span>
+                      </div>
+                      
+                      <div className="flex items-center gap-3 text-sm text-gray-500">
                         {video.views !== null && (
                           <span className="flex items-center gap-1">
                             <Eye className="h-3 w-3" />
@@ -362,25 +378,27 @@ export default function ViralVideoAgent() {
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    
+                    <div className="flex items-center justify-between pt-3 border-t">
+                      <a 
+                        href={video.videoUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 text-sm underline"
+                      >
+                        Open in new tab
+                      </a>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => window.open(video.videoUrl, '_blank')}
                       >
-                        <Play className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => deleteVideoMutation.mutate(video.id)}
-                        disabled={deleteVideoMutation.isPending}
-                      >
-                        <Trash2 className="h-4 w-4" />
+                        <Play className="h-4 w-4 mr-1" />
+                        Watch
                       </Button>
                     </div>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )}
